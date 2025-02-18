@@ -1,11 +1,11 @@
-defmodule Xarab.MixProject do
+defmodule Scarab.MixProject do
   use Mix.Project
 
   @version "0.1.0"
 
   def project do
     [
-      app: :xarab,
+      app: :scarab,
       version: @version,
       elixir: "~> 1.17",
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -54,14 +54,14 @@ defmodule Xarab.MixProject do
 
   defp description do
     """
-    Xarab is a reincarination of rabbitmq/khepri, specialized for use as an event store.
+    Scarab is a reincarination of rabbitmq/khepri, specialized for use as an event store.
     """
   end
 
   defp docs do
     [
-      main: "Xarab",
-      canonical: "http://hexdocs.pm/xarab",
+      main: "Scarab",
+      canonical: "http://hexdocs.pm/scarab",
       source_ref: "v#{@version}",
       extra_section: "GUIDES",
       extras: [
@@ -83,7 +83,7 @@ defmodule Xarab.MixProject do
       maintainers: ["Beamologist"],
       licenses: ["MIT"],
       links: %{
-        "GitHub" => "https://github.com/beam-campus/xarab"
+        "GitHub" => "https://github.com/beam-campus/scarab"
       }
     ]
   end

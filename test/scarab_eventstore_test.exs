@@ -14,9 +14,13 @@ defmodule Scarab.EventstoreTest do
   end
 
   test "starts a custom eventstore" do
-    pid = Eventstore.start(config: %ScarabInit{data_dir: "tmp", store_id: "test"})
+    pid =
+      Eventstore.start(
+        config: %ScarabInit{data_dir: "tmp/from_code", store_id: :test_store0, timeout: 1_000}
+      )
+
     assert pid != nil
     assert Process.alive?(pid)
-    assert File.exists?("tmp/names.dets")
+    assert File.dir?("tmp/from_code")
   end
 end

@@ -14,15 +14,25 @@ defmodule Scarab.Eventstore do
          store_id: store_id,
          timeout: timeout
        }),
-       do: Khepri.start(data_dir: data_dir, store_id: store_id, timeout: timeout)
+       do: Khepri.start(data_dir, store_id, timeout)
 
   defp start_khepri(nil), do: Khepri.start()
 
+  defp validate_config(config) when is_map(config),
+    do: ScarabInit.from_map(%ScarabInit{}, config)
+
   @impl true
   def init(opts) do
-    config = Keyword.get(opts, :config)
-    start_khepri(config)
-    {:ok, opts}
+    case Keyword.get(opts, :config) do
+      nil ->
+        start_khepri(nil)
+
+      config ->
+        scarab_init = validate_config(config)
+        Logger.info("Starting eventstore with config: #{inspect(scarab_init, pretty: true)}")
+        state = start_khepri(config)
+        {:ok, state}
+    end
   end
 
   #### PLUMBING
