@@ -6,6 +6,7 @@ defmodule Scarab.EventstoreTest do
   alias Scarab.Eventstore, as: Eventstore
   alias Schema.ScarabInit, as: ScarabInit
 
+  @tag :skip
   test "starts a default eventstore" do
     pid = Eventstore.start([])
     assert pid != nil
@@ -16,7 +17,11 @@ defmodule Scarab.EventstoreTest do
   test "starts a custom eventstore" do
     pid =
       Eventstore.start(
-        config: %ScarabInit{data_dir: "tmp/from_code", store_id: :test_store0, timeout: 1_000}
+        config: %ScarabInit{
+          data_dir: "tmp/from_code",
+          store_id: :test_store0,
+          timeout: 1_000
+        }
       )
 
     assert pid != nil

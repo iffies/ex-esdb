@@ -1,6 +1,6 @@
 defmodule Schema.ScarabInit do
   @moduledoc """
-  Initialization Parameters fpr Scarab
+  Initialization Parameters for Scarab
   """
   use Ecto.Schema
 

@@ -6,6 +6,9 @@ config :ex_unit,
   refute_receive_timeout: 1_000,
   exclude: [:skip]
 
-config :scarab,
-  data_dir: "tmp/test_dir",
-  store_id: :test_store
+config :test_app,
+  scarab: [
+    data_dir: "tmp/test_dir",
+    store_id: :test_store,
+    timeout: 1_000
+  ]
