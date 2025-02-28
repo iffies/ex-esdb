@@ -1,0 +1,11 @@
+#{id => {sell_goods_at_pos,nonode@nohost},
+  machine =>
+      {module,khepri_machine,
+              #{member => {sell_goods_at_pos,nonode@nohost},
+                store_id => sell_goods_at_pos}},
+  friendly_name => "Khepri store \"sell_goods_at_pos\"",
+  cluster_name => sell_goods_at_pos,initial_members => [],
+  uid => <<"SELL_G83PWU0WG6B6U">>,
+  log_init_args => #{uid => <<"SELL_G83PWU0WG6B6U">>},
+  broadcast_time => 100,tick_timeout => 1000,
+  install_snap_rpc_timeout => 120000,await_condition_timeout => 30000}.

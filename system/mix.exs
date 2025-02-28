@@ -14,7 +14,15 @@ defmodule Scarab.MixProject do
       docs: docs(),
       package: package(),
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      compilers: [:protoc] ++ Mix.compilers(),
+      protoc: [
+        path: "protoc",
+        plugins: [
+          {:protoc_gen_elixir, "protoc-gen-elixir", :system}
+        ],
+        output: "lib/generated"
+      ]
     ]
   end
 
@@ -48,7 +56,8 @@ defmodule Scarab.MixProject do
       {:elixir_uuid, "~> 1.2", override: true},
       {:jason, "~> 1.4.3", optional: true},
       {:commanded, "~> 1.4.8"},
-      {:khepri, "~> 0.16.0"}
+      {:khepri, "~> 0.16.0"},
+      {:protobuf, "~> 0.14.1"}
     ]
   end
 

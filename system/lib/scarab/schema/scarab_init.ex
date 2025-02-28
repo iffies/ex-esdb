@@ -11,7 +11,8 @@ defmodule Schema.ScarabInit do
   @fields [
     :data_dir,
     :store_id,
-    :timeout
+    :timeout,
+    :db_type
   ]
 
   @required_fields []
@@ -20,6 +21,7 @@ defmodule Schema.ScarabInit do
     field(:data_dir, :string)
     field(:store_id, :string)
     field(:timeout, :integer)
+    field(:db_type, :string)
   end
 
   def changeset(seed, params) when is_struct(params) do
