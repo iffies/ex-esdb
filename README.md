@@ -8,7 +8,7 @@ One of the arguments for BEAM development is that it comes "batteries included".
 
 For Event Sourcing use cases however, the Event Store is often a separate service.
 
-This project is attempt at addressing this point, by building further upon the work of the rabbitmq/khepri and
+This project is attempt at addressing this point, by building further upon the work of the rabbitmq/khepri and rabbitmq/ra subsystems.
 
 ## Usage
 
