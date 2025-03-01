@@ -16,7 +16,7 @@ khepri*/
 /doc
 /.fetch
 /tmp
-
+/system/tmp
 erl_crash.dump
 *.ez
 *.beam
