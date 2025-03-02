@@ -14,15 +14,7 @@ defmodule Scarab.MixProject do
       docs: docs(),
       package: package(),
       start_permanent: Mix.env() == :prod,
-      deps: deps(),
-      compilers: [:protoc] ++ Mix.compilers(),
-      protoc: [
-        path: "protoc",
-        plugins: [
-          {:protoc_gen_elixir, "protoc-gen-elixir", :system}
-        ],
-        output: "lib/generated"
-      ]
+      deps: deps()
     ]
   end
 
@@ -35,8 +27,6 @@ defmodule Scarab.MixProject do
 
   defp elixirc_paths(:test),
     do: [
-      "deps/commanded/test/event_store",
-      "deps/commanded/test/support",
       "lib",
       "test/support"
     ]
@@ -55,7 +45,6 @@ defmodule Scarab.MixProject do
       {:phoenix_pubsub, "~> 2.1.3"},
       {:elixir_uuid, "~> 1.2", override: true},
       {:jason, "~> 1.4.3", optional: true},
-      {:commanded, "~> 1.4.8"},
       {:khepri, "~> 0.16.0"},
       {:protobuf, "~> 0.14.1"}
     ]
@@ -75,7 +64,7 @@ defmodule Scarab.MixProject do
       extra_section: "GUIDES",
       extras: [
         "CHANGELOG.md",
-        "guides/Getting Started.md": [filename: "getting-started", title: "Khepri adapter"],
+        "guides/Getting Started.md": [filename: "getting-started", title: "Scarab Eventstore"],
         "guides/Testing.md": [title: "Testing"]
       ]
     ]

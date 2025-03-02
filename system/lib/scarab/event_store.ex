@@ -7,11 +7,11 @@ defmodule Scarab.EventStore do
 
   require Logger
 
-  alias Commanded.EventStore.EventData
-  alias Commanded.EventStore.RecordedEvent
-  alias Commanded.EventStore.SnapshotData
-  alias Commanded.EventStore.TypeProvider
-  alias Extreme.Msg
+  alias Scarab.EventData
+  alias Scarab.NewEvent
+  alias Scarab.RecordedEvent
+  alias Scarab.SnapshotData
+  alias Scarab.TypeProvider
 
   # Client API
   def start_link(%{store_id: store_id} = opts),
@@ -21,6 +21,13 @@ defmodule Scarab.EventStore do
         opts,
         name: Module.concat(__MODULE__, store_id)
       )
+
+  def get_state(store_id) do
+    GenServer.call(
+      Module.concat(__MODULE__, store_id),
+      {:get_state}
+    )
+  end
 
   @doc """
   Append events to a stream.
@@ -86,7 +93,7 @@ defmodule Scarab.EventStore do
   ## CALLBACKS
   @impl true
   def handle_call({:append_to_stream, stream_name, expected_version, events}, _from, state) do
-    path = "/streams/#{stream_name}"
+    path = [:streams, stream_name]
     current_version = get_current_version(path)
 
     if current_version == expected_version do
@@ -99,16 +106,21 @@ defmodule Scarab.EventStore do
 
   @impl true
   def handle_call({:read_stream_forward, stream_name, start_version, count}, _from, state) do
-    path = "/streams/#{stream_name}"
+    path = [:streams, stream_name]
     events = read_events(path, start_version, count)
     {:reply, {:ok, events}, state}
   end
 
   @impl true
   def handle_call({:stream_version, stream_name}, _from, state) do
-    path = "/streams/#{stream_name}"
+    path = [:streams, stream_name]
     version = get_current_version(path)
     {:reply, {:ok, version}, state}
+  end
+
+  @impl true
+  def handle_call({:get_state}, _from, state) do
+    {:reply, state, state}
   end
 
   # Helper functions
@@ -119,19 +131,22 @@ defmodule Scarab.EventStore do
     end
   end
 
-  defp append_events(path, events, current_version) do
+  defp append_events(path, events, current_version) when is_list(path) do
     events
-    |> Enum.reduce(current_version, fn event, version ->
-      new_version = version + 1
-      :khepri.put("#{path}/#{new_version}", event)
-      new_version
-    end)
+    |> Enum.reduce(
+      current_version,
+      fn event, version ->
+        new_version = version + 1
+        :khepri.put(path ++ new_version, event)
+        new_version
+      end
+    )
   end
 
-  defp read_events(path, start_version, count) do
+  defp read_events(path, start_version, count) when is_list(path) do
     start_version..(start_version + count - 1)
     |> Enum.map(fn version ->
-      case :khepri.get("#{path}/#{version}") do
+      case :khepri.get(path ++ version) do
         {:ok, {_, event}} -> event
         _ -> nil
       end

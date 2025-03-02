@@ -13,7 +13,7 @@ config :logger, :console,
   metadata: [:application, :module],
   level: :warning
 
-config :node_app,
+config :dev_app,
   scarab: [
     data_dir: "tmp/dev_dir",
     store_id: :sell_goods_at_pos,
@@ -22,12 +22,4 @@ config :node_app,
   ],
   ra: [
     name: :test_app
-  ]
-
-config :cluster_app,
-  scarab: [
-    data_dir: "tmp/scarab_data",
-    store_id: :receive_goods_at_wh,
-    timeout: 2_000,
-    db_type: :cluster
   ]
