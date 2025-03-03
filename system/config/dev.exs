@@ -9,17 +9,22 @@ config :ra,
   logger: false
 
 config :logger, :console,
-  format: "$time $metadata[$level] $message\n",
-  metadata: [:application, :module],
-  level: :warning
+  format: "$time ($metadata) [$level] $message\n",
+  metadata: [:mfa],
+  level: :debug
 
-config :dev_app,
+config :scarab_app,
   scarab: [
     data_dir: "tmp/dev_dir",
     store_id: :sell_goods_at_pos,
     timeout: 1_000,
     db_type: :node
-  ],
-  ra: [
-    name: :test_app
+  ]
+
+config :repl_app,
+  scarab: [
+    data_dir: "tmp/dev_dir",
+    store_id: :sell_goods_at_pos,
+    timeout: 1_000,
+    db_type: :node
   ]

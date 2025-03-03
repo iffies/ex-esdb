@@ -5,7 +5,7 @@ defmodule Scarab.MixProject do
 
   def project do
     [
-      app: :scarab,
+      app: :scarab_app,
       version: @version,
       elixir: "~> 1.17",
       elixirc_paths: elixirc_paths(Mix.env()),
