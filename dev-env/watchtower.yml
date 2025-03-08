@@ -1,7 +1,4 @@
-version: '3.5'
-
 services:
-
   watchtower-svc:
     image: local/watchtower
     build:
@@ -16,5 +13,4 @@ services:
     #   REPO_USER: "${LOGATRON_CID_USER}"
     #   REPO_PASS: "${LOGATRON_CID_PWD}"
     volumes:
-     - /var/run/docker.sock:/var/run/docker.sock
-
+      - /var/run/docker.sock:/var/run/docker.sock

@@ -21,7 +21,7 @@ defmodule Scarab.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger]
+      extra_applications: [:logger, :gen_retry]
     ]
   end
 
@@ -46,13 +46,15 @@ defmodule Scarab.MixProject do
       {:elixir_uuid, "~> 1.2", override: true},
       {:jason, "~> 1.4.3", optional: true},
       {:khepri, "~> 0.16.0"},
-      {:protobuf, "~> 0.14.1"}
+      {:protobuf, "~> 0.14.1"},
+      {:gen_retry, "~> 1.4"}
     ]
   end
 
   defp description do
     """
-    Scarab is a reincarination of rabbitmq/khepri, specialized for use as an event store.
+    Scarab is a reincarination of rabbitmq/khepri, 
+    specialized for use as an event store.
     """
   end
 

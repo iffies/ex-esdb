@@ -12,6 +12,8 @@ defmodule Scarab.EventStore do
   alias Scarab.RecordedEvent
   alias Scarab.SnapshotData
   alias Scarab.TypeProvider
+  alias Scarab.EventStreamWriter, as: ESWriter
+  alias Scarab.EventStreamReader, as: ESReader
 
   # Client API
   def start_link(opts),
@@ -22,19 +24,19 @@ defmodule Scarab.EventStore do
         name: __MODULE__
       )
 
-  def get_streams(store_id) do
-    GenServer.call(
-      __MODULE__,
-      {:get_streams, store_id}
-    )
-  end
+  def get_streams(store),
+    do:
+      GenServer.call(
+        __MODULE__,
+        {:get_streams, store}
+      )
 
   @doc """
   Append events to a stream.
 
   ## Parameters
 
-    - `stream_name`: The name of the stream to append to.
+    - `stream_id`: The id of the stream to append to.
     - `expected_version`: The expected version of the stream (for optimistic concurrency).
     - `events`: A list of events to append.
 
@@ -43,12 +45,12 @@ defmodule Scarab.EventStore do
     - `{:ok, new_stream_version}` if successful.
     - `{:error, reason}` if unsuccessful.
   """
-  def append_to_stream(store_id, stream_name, expected_version, events) do
-    GenServer.call(
-      __MODULE__,
-      {:append_to_stream, store_id, stream_name, expected_version, events}
-    )
-  end
+  def append_to_stream(store, stream_id, expected_version, events),
+    do:
+      GenServer.call(
+        __MODULE__,
+        {:append_to_stream, store, stream_id, expected_version, events}
+      )
 
   @doc """
   Read events from a stream.
@@ -64,12 +66,12 @@ defmodule Scarab.EventStore do
     - `{:ok, events}` if successful.
     - `{:error, reason}` if unsuccessful.
   """
-  def read_stream_forward(store_id, stream_id, start_version, count) do
-    GenServer.call(
-      __MODULE__,
-      {:read_stream_forward, store_id, stream_id, start_version, count}
-    )
-  end
+  def read_stream_forward(store, stream_id, start_version, count),
+    do:
+      GenServer.call(
+        __MODULE__,
+        {:read_stream_forward, store, stream_id, start_version, count}
+      )
 
   @doc """
   Get the current version of a stream.
@@ -83,10 +85,10 @@ defmodule Scarab.EventStore do
     - `{:ok, version}` if successful.
     - `{:error, reason}` if unsuccessful.
   """
-  def stream_version(store_id, stream_id) do
+  def stream_version(store, stream_id) do
     GenServer.call(
       __MODULE__,
-      {:stream_version, store_id, stream_id}
+      {:stream_version, store, stream_id}
     )
   end
 
@@ -94,23 +96,32 @@ defmodule Scarab.EventStore do
   #
   @impl true
   def handle_call(
-        {:get_streams, store_id},
+        {:get_streams, store},
         _from,
         state
       ) do
-    {:reply, :khepri.get!([store_id, :streams]), state}
+    streams =
+      store
+      |> :khepri.get!([:streams])
+
+    {:reply, streams, state}
   end
 
   @impl true
   def handle_call(
-        {:append_to_stream, store_id, stream_id, expected_version, events},
+        {:append_to_stream, store, stream_id, expected_version, events},
         _from,
         state
       ) do
-    current_version = get_current_version(store_id, stream_id)
+    current_version =
+      store
+      |> ESReader.get_current_version(stream_id)
 
     if current_version == expected_version do
-      new_version = append_events(store_id, stream_id, events, current_version)
+      new_version =
+        store
+        |> ESWriter.append_events(stream_id, events, current_version)
+
       {:reply, {:ok, new_version}, state}
     else
       {:reply, {:error, :wrong_expected_version}, state}
@@ -119,51 +130,37 @@ defmodule Scarab.EventStore do
 
   @impl true
   def handle_call(
-        {:read_stream_forward, store_id, stream_id, start_version, count},
+        {:read_stream_forward, store, stream_id, start_version, count},
         _from,
         state
       ) do
-    events = read_events(store_id, stream_id, start_version, count)
+    events =
+      store
+      |> read_events(stream_id, start_version, count)
+
     {:reply, {:ok, events}, state}
   end
 
   @impl true
-  def handle_call({:stream_version, store_id, stream_id}, _from, state) do
-    version = get_current_version(store_id, stream_id)
+  def handle_call(
+        {:stream_version, store, stream_id},
+        _from,
+        state
+      ) do
+    version =
+      store
+      |> ESReader.get_current_version(stream_id)
+
     {:reply, {:ok, version}, state}
   end
 
-  @impl true
-  def handle_call({:get_state}, _from, state) do
-    {:reply, state, state}
-  end
-
-  # Helper functions
-  defp get_current_version(store_id, stream_id) do
-    case :khepri.get([store_id, stream_id]) do
-      {:ok, {_, metadata}} -> metadata[:version] || 0
-      _ -> 0
-    end
-  end
-
-  defp append_events(store_id, stream_id, events, current_version) do
-    events
-    |> Enum.reduce(
-      current_version,
-      fn event, version ->
-        new_version = version + 1
-        padded_version = Scarab.VersionFormatter.pad_version(new_version, 6)
-        :khepri.put!([store_id, :streams, stream_id, padded_version], event)
-        new_version
-      end
-    )
-  end
-
-  defp read_events(store_id, stream_id, start_version, count) do
+  defp read_events(store, stream_id, start_version, count) do
     start_version..(start_version + count - 1)
     |> Enum.map(fn version ->
       padded_version = Scarab.VersionFormatter.pad_version(version, 6)
-      :khepri.get!([store_id, :streams, stream_id, padded_version])
+
+      store
+      |> :khepri.get!([:streams, stream_id, padded_version])
     end)
     |> Enum.reject(&is_nil/1)
   end
@@ -186,7 +183,7 @@ defmodule Scarab.EventStore do
       id: __MODULE__,
       start: {__MODULE__, :start_link, [opts]},
       restart: :permanent,
-      shutdown: 500,
+      shutdown: 10_000,
       type: :worker
     }
   end

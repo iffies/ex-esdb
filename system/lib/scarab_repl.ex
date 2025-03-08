@@ -30,15 +30,15 @@ defmodule ScarabRepl do
 
   def append_events do
     events =
-      EventGenerator.generate_events(10)
+      EventGenerator.generate_events(20)
 
     {:ok, expected_version} = ScarabEventStore.stream_version(@store_id, @stream_name1)
-    Logger.debug("Expected version: #{inspect(expected_version)}")
 
     {:ok, new_version} =
-      ScarabEventStore.append_to_stream(@store_id, @stream_name1, expected_version, events)
+      @store_id
+      |> ScarabEventStore.append_to_stream(@stream_name1, expected_version, events)
 
-    Logger.debug("New version: #{inspect(new_version)}")
-    ScarabEventStore.read_stream_forward(@store_id, @stream_name1, 0, 10)
+    {:ok, stream} = ScarabEventStore.read_stream_forward(@store_id, @stream_name1, 1, new_version)
+    {:ok, stream, stream |> Enum.count()}
   end
 end

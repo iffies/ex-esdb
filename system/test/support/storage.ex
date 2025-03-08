@@ -1,4 +1,4 @@
-defmodule Commanded.Scarab.Storage do
+defmodule Scarab.Storage do
   @moduledoc false
 
   alias Scarab.Config
@@ -25,5 +25,9 @@ defmodule Commanded.Scarab.Storage do
         :timer.sleep(1_000)
         scarab_check()
     end
+  end
+
+  def store do
+    Scarab.Config.store()
   end
 end

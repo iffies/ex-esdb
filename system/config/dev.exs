@@ -17,7 +17,7 @@ config :scarab_app,
   scarab: [
     data_dir: "tmp/dev_dir",
     store_id: :sell_goods_at_pos,
-    timeout: 1_000,
+    timeout: 10_000,
     db_type: :node
   ]
 
@@ -25,6 +25,6 @@ config :repl_app,
   scarab: [
     data_dir: "tmp/dev_dir",
     store_id: :sell_goods_at_pos,
-    timeout: 1_000,
+    timeout: 10_000,
     db_type: :node
   ]
