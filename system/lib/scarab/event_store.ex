@@ -136,7 +136,7 @@ defmodule Scarab.EventStore do
       ) do
     events =
       store
-      |> read_events(stream_id, start_version, count)
+      |> ESReader.read_events(stream_id, start_version, count)
 
     {:reply, {:ok, events}, state}
   end
@@ -152,17 +152,6 @@ defmodule Scarab.EventStore do
       |> ESReader.get_current_version(stream_id)
 
     {:reply, {:ok, version}, state}
-  end
-
-  defp read_events(store, stream_id, start_version, count) do
-    start_version..(start_version + count - 1)
-    |> Enum.map(fn version ->
-      padded_version = Scarab.VersionFormatter.pad_version(version, 6)
-
-      store
-      |> :khepri.get!([:streams, stream_id, padded_version])
-    end)
-    |> Enum.reject(&is_nil/1)
   end
 
   defp start_khepri(

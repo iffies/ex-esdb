@@ -25,9 +25,12 @@ defmodule Scarab.EventStreamWriter do
   def append_events_tx(store, stream_id, events, current_version) do
     store
     |> :khepri.transaction(fn ->
-      actual_version =
+      {:ok, actual_version} =
         store
         |> ESReader.get_current_version(stream_id)
+
+      store
+      |> append_events(stream_id, events, actual_version)
     end)
     |> handle_transaction_result()
   end

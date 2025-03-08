@@ -6,6 +6,8 @@ defmodule ScarabRepl do
   alias Scarab.EventStore, as: ScarabEventStore
   alias Scarab.Repl.EventGenerator, as: EventGenerator
   alias Scarab.System, as: ScarabSystem
+  alias Scarab.EventStreamReader, as: ESReader
+  alias Scarab.EventStreamWriter, as: ESWriter
 
   require Logger
 
@@ -40,5 +42,11 @@ defmodule ScarabRepl do
 
     {:ok, stream} = ScarabEventStore.read_stream_forward(@store_id, @stream_name1, 1, new_version)
     {:ok, stream, stream |> Enum.count()}
+  end
+
+  def read_all_events do
+    {:ok, version} = ScarabEventStore.stream_version(@store_id, @stream_name1)
+    {:ok, events} = ScarabEventStore.read_stream_forward(@store_id, @stream_name1, 1, version)
+    events
   end
 end
