@@ -31,7 +31,7 @@ defmodule ScarabRepl do
 
   def get_config, do: ScarabConfig.fetch_env!(@scarab_app)
   def start, do: ScarabSystem.start(get_config())
-  def get_streams, do: ESInfo.get_streams!(@store_id)
+  def get_streams, do: ESInfo.get_streams_raw!(@store_id)
 
   def append_events(stream, nbr_of_events) do
     events =

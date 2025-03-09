@@ -27,6 +27,26 @@ defmodule Scarab.EventStore do
       )
 
   @doc """
+  Join a cluster.
+
+  ## Parameters
+   
+    - `store`: The store to join.
+    - `cluster`: The cluster to join.
+
+  ## Returns
+
+    - `{:ok, result}` if successful.
+    - `{:error, reason}` if unsuccessful.
+  """
+  def join(store, cluster),
+    do:
+      GenServer.call(
+        __MODULE__,
+        {:join, {store, cluster}}
+      )
+
+  @doc """
   Append events to a stream.
 
   ## Parameters
@@ -88,7 +108,16 @@ defmodule Scarab.EventStore do
   end
 
   ## CALLBACKS
-  #
+
+  @impl true
+  def handle_call({:join, {store, cluster}}, _from, state) do
+    join_result =
+      store
+      |> :khepri_cluster.join(cluster)
+
+    {:reply, join_result, state}
+  end
+
   @impl true
   def handle_call(
         {:get_streams, store},
@@ -97,7 +126,7 @@ defmodule Scarab.EventStore do
       ) do
     streams =
       store
-      |> ESReader.get_streams!()
+      |> ESReader.get_streams()
 
     {:reply, streams, state}
   end
@@ -149,16 +178,13 @@ defmodule Scarab.EventStore do
     {:reply, {:ok, version}, state}
   end
 
-  defp start_khepri(
-         %{
-           data_dir: data_dir,
-           store_id: store_id,
-           timeout: timeout,
-           db_type: _db_type
-         } = opts
-       ) do
-    Logger.debug("Starting Khepri with config: #{inspect(opts, pretty: true)}")
-    :khepri.start(data_dir, store_id, timeout)
+  defp start_khepri(%{
+         data_dir: data_dir,
+         store_id: store,
+         timeout: timeout,
+         db_type: _db_type
+       }) do
+    :khepri.start(data_dir, store, timeout)
   end
 
   #### PLUMBING
@@ -178,13 +204,13 @@ defmodule Scarab.EventStore do
     Logger.debug("Starting Scarab EventStore with config: #{inspect(opts, pretty: true)}")
 
     case start_khepri(opts) do
-      {:ok, store_id} ->
-        Logger.debug("Started khepri with store_id: #{inspect(store_id)}")
+      {:ok, store} ->
+        Logger.debug("Started store: #{inspect(store)}")
 
         {:ok, opts}
 
-      result ->
-        Logger.error("Failed to start khepri with result: #{inspect(result)}")
+      reason ->
+        Logger.error("Failed to start khepri. reason: #{inspect(reason)}")
     end
   end
 end

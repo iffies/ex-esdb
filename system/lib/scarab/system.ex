@@ -7,6 +7,7 @@ defmodule Scarab.System do
   @impl true
   def init(config) do
     children = [
+      {Phoenix.PubSub.PG2, name: :scarab_pubsub},
       {Scarab.EventStore, config}
     ]
 
