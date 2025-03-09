@@ -5,29 +5,16 @@ defmodule Scarab.EventStreamWriter do
 
   @retry_attempts 3
   @retry_delay 500
-  defp put_event(store, stream_id, event, version) do
-    new_version = version + 1
-    padded_version = Scarab.VersionFormatter.pad_version(new_version, 6)
-    now = DateTime.utc_now()
-    created = now |> DateTime.to_unix(:millisecond)
-    created_epoch = now |> DateTime.to_unix(:nanosecond)
-    recorded_event = event |> to_event_record(stream_id, new_version, created, created_epoch)
-
-    store
-    |> :khepri.put!([:streams, stream_id, padded_version], recorded_event)
-  end
-
   defp handle_transaction_result({:ok, {:commit, result}}), do: {:ok, result}
   defp handle_transaction_result({:ok, {:abort, reason}}), do: {:error, reason}
   defp handle_transaction_result({:error, reason}), do: {:error, reason}
 
-  # Helper functions
-  def append_events_tx(store, stream_id, events, current_version) do
+  def append_events_tx(store, stream_id, events) do
     store
     |> :khepri.transaction(fn ->
-      {:ok, actual_version} =
+      actual_version =
         store
-        |> ESReader.get_current_version(stream_id)
+        |> ESReader.get_current_version!(stream_id)
 
       store
       |> append_events(stream_id, events, actual_version)

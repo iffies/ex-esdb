@@ -3,17 +3,22 @@ defmodule Scarab.EventStreamReader do
 
   import Scarab.Khepri.Conditions
 
-  def get_current_version(store, stream_id) do
+  def get_current_version!(store, stream_id) do
     case store
-         |> :khepri.count([
-           :streams,
-           stream_id,
-           if_path_matches(regex: :any)
-         ]) do
+         |> get_current_version(stream_id) do
       {:ok, count} -> count
       _ -> 0
     end
   end
+
+  def get_current_version(store, stream_id),
+    do:
+      store
+      |> :khepri.count([
+        :streams,
+        stream_id,
+        if_node_exists(exists: true)
+      ])
 
   def read_events(store, stream_id, start_version, count) do
     start_version..(start_version + count - 1)

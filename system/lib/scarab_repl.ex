@@ -6,8 +6,11 @@ defmodule ScarabRepl do
   alias Scarab.EventStore, as: ScarabEventStore
   alias Scarab.Repl.EventGenerator, as: EventGenerator
   alias Scarab.System, as: ScarabSystem
+
   alias Scarab.EventStreamReader, as: ESReader
   alias Scarab.EventStreamWriter, as: ESWriter
+
+  alias Scarab.EventStoreInfo, as: ESInfo
 
   require Logger
 
@@ -28,20 +31,25 @@ defmodule ScarabRepl do
 
   def get_config, do: ScarabConfig.fetch_env!(@scarab_app)
   def start, do: ScarabSystem.start(get_config())
-  def get_streams, do: ScarabEventStore.get_streams(@store_id)
+  def get_streams, do: ESInfo.get_streams!(@store_id)
 
-  def append_events do
+  def append_events(stream, nbr_of_events) do
     events =
-      EventGenerator.generate_events(20)
+      EventGenerator.generate_events(nbr_of_events)
 
-    {:ok, expected_version} = ScarabEventStore.stream_version(@store_id, @stream_name1)
+    {:ok, actual_version} =
+      @store_id
+      |> ScarabEventStore.stream_version(stream)
 
     {:ok, new_version} =
       @store_id
-      |> ScarabEventStore.append_to_stream(@stream_name1, expected_version, events)
+      |> ScarabEventStore.append_to_stream(stream, actual_version, events)
 
-    {:ok, stream} = ScarabEventStore.read_stream_forward(@store_id, @stream_name1, 1, new_version)
-    {:ok, stream, stream |> Enum.count()}
+    {:ok, result} =
+      @store_id
+      |> ScarabEventStore.read_stream_forward(stream, 1, new_version)
+
+    {:ok, result, result |> Enum.count()}
   end
 
   def read_all_events do

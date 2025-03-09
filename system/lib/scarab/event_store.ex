@@ -7,11 +7,6 @@ defmodule Scarab.EventStore do
 
   require Logger
 
-  alias Scarab.EventData
-  alias Scarab.NewEvent
-  alias Scarab.RecordedEvent
-  alias Scarab.SnapshotData
-  alias Scarab.TypeProvider
   alias Scarab.EventStreamWriter, as: ESWriter
   alias Scarab.EventStreamReader, as: ESReader
 
@@ -102,7 +97,7 @@ defmodule Scarab.EventStore do
       ) do
     streams =
       store
-      |> :khepri.get!([:streams])
+      |> ESReader.get_streams!()
 
     {:reply, streams, state}
   end
@@ -115,7 +110,7 @@ defmodule Scarab.EventStore do
       ) do
     current_version =
       store
-      |> ESReader.get_current_version(stream_id)
+      |> ESReader.get_current_version!(stream_id)
 
     if current_version == expected_version do
       new_version =
@@ -149,7 +144,7 @@ defmodule Scarab.EventStore do
       ) do
     version =
       store
-      |> ESReader.get_current_version(stream_id)
+      |> ESReader.get_current_version!(stream_id)
 
     {:reply, {:ok, version}, state}
   end
