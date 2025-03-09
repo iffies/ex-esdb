@@ -1,7 +1,7 @@
 defmodule Scarab.EventStreamReader do
   @moduledoc false
 
-  import Scarab.Khepri.IfPathMatches
+  import Scarab.Khepri.Conditions
 
   def get_current_version(store, stream_id) do
     case store
