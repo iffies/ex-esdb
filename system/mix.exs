@@ -25,6 +25,11 @@ defmodule Scarab.MixProject do
     ]
   end
 
+  defp erlc_paths(_),
+    do: [
+      "src"
+    ]
+
   defp elixirc_paths(:test),
     do: [
       "lib",

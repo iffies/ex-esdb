@@ -7,8 +7,9 @@ defmodule Scarab.EventStore do
 
   require Logger
 
-  alias Scarab.EventStreamWriter, as: ESWriter
+  alias Scarab.EventEmitter, as: ESEmitter
   alias Scarab.EventStreamReader, as: ESReader
+  alias Scarab.EventStreamWriter, as: ESWriter
 
   # Client API
   def start_link(opts),
@@ -206,6 +207,9 @@ defmodule Scarab.EventStore do
     case start_khepri(opts) do
       {:ok, store} ->
         Logger.debug("Started store: #{inspect(store)}")
+
+        #        store
+        # |> ESEmitter.register_emitter()
 
         {:ok, opts}
 
