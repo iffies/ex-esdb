@@ -34,6 +34,7 @@ services:
     environment:
       SCARAB_STORE: "reg-greenhouse"
       SCARAB_COOKIE: "reg-greenhouse-cookie"
+      SCARAB_DATA: "data"
 
   scarab1:
     image: local/scarab-es
@@ -48,6 +49,7 @@ services:
     environment:
       SCARAB_STORE: "reg-greenhouse"
       SCARAB_COOKIE: "reg-greenhouse-cookie"
+      SCARAB_DATA: "data"
 
   scarab2:
     image: local/scarab-es
@@ -62,3 +64,4 @@ services:
     environment:
       SCARAB_STORE: "reg-greenhouse"
       SCARAB_COOKIE: "reg-greenhouse-cookie"
+      SCARAB_DATA: "data"

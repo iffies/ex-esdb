@@ -32,7 +32,7 @@ defmodule Scarab.MixProject do
   def application do
     [
       mod: {Scarab.ESApp, []},
-      extra_applications: [:logger]
+      extra_applications: [:logger, :gen_retry]
     ]
   end
 

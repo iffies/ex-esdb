@@ -12,14 +12,6 @@ defmodule Scarab.EventStore do
   alias Scarab.EventStreamWriter, as: ESWriter
 
   # Client API
-  def start_link(opts),
-    do:
-      GenServer.start_link(
-        __MODULE__,
-        opts,
-        name: __MODULE__
-      )
-
   def get_streams(store),
     do:
       GenServer.call(
@@ -198,6 +190,16 @@ defmodule Scarab.EventStore do
       type: :worker
     }
   end
+
+  def start_link(opts),
+    do:
+      GenServer.start_link(
+        __MODULE__,
+        opts,
+        name: __MODULE__
+      )
+
+
 
   # Server Callbacks
   @impl true

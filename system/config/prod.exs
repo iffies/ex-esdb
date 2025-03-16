@@ -20,5 +20,3 @@ config :scarab_es,
     timeout: 10_000,
     db_type: :node
   ]
-
-import_config "runtime.exs"

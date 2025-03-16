@@ -42,9 +42,9 @@ ENV OTPROOT=/usr/lib/erlang
 ENV ERL_LIBS=/usr/lib/erlang/lib
 
 # copy sources
-COPY lib ./
-COPY src ./
-COPY priv ./
+COPY lib/ lib/
+COPY src/ src/
+COPY priv/ priv/
 
 COPY config/config.exs config/prod.exs config/runtime.exs  config/
 COPY mix.exs ./
@@ -78,7 +78,9 @@ ENV LC_ALL=en_US.UTF-8
 
 WORKDIR /system
 
+
 RUN chown nobody /system
+#RUN chown nobody /data
 
 COPY --from=builder --chown=nobody /build_space/_build/prod/rel/scarab_es ./
 
@@ -88,9 +90,11 @@ RUN chmod +x run-scarab-es.sh
 
 USER nobody
 
-VOLUME /system
+RUN mkdir data
 
 VOLUME /system/data
+
+#VOLUME /data
 
 EXPOSE 5000-5010/udp
 
