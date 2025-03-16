@@ -8,7 +8,7 @@ config :ex_unit,
   logger: true
 
 config :node_app,
-  scarab: [
+  khepri: [
     data_dir: "tmp/scarab_data",
     store_id: :sell_goods_at_pos,
     timeout: 1_000,
@@ -19,7 +19,7 @@ config :node_app,
   ]
 
 config :cluster_app,
-  scarab: [
+  khepri: [
     data_dir: "tmp/scarab_data",
     store_id: :receive_goods_at_wh,
     timeout: 2_000,

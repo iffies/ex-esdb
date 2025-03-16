@@ -2,12 +2,13 @@ defmodule Scarab.System do
   @moduledoc false
   use Supervisor
 
+  require Phoenix.PubSub
+
   require Logger
 
   @impl true
   def init(config) do
     children = [
-      {Phoenix.PubSub, name: :scarab_pubsub},
       {Scarab.EventStore, config}
     ]
 
@@ -37,5 +38,13 @@ defmodule Scarab.System do
       {:error, {:already_started, pid}} -> pid
       {:error, reason} -> raise "failed to start eventstores supervisor: #{inspect(reason)}"
     end
+  end
+
+  def child_spec(config) do
+    %{
+      id: __MODULE__,
+      start: {__MODULE__, :start, [config]},
+      type: :supervisor
+    }
   end
 end

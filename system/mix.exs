@@ -5,7 +5,7 @@ defmodule Scarab.MixProject do
 
   def project do
     [
-      app: :scarab_app,
+      app: :scarab_es,
       version: @version,
       elixir: "~> 1.17",
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -14,14 +14,16 @@ defmodule Scarab.MixProject do
       docs: docs(),
       package: package(),
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      erl_opts: erl_opts()
     ]
   end
 
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger, :gen_retry]
+      mod: {Scarab.ESApp, []},
+      extra_applications: [:logger]
     ]
   end
 
@@ -34,6 +36,11 @@ defmodule Scarab.MixProject do
     do: [
       "lib",
       "test/support"
+    ]
+
+  def erl_opts,
+    do: [
+      {:i, "deps/khepri/include"}
     ]
 
   defp elixirc_paths(_), do: ["lib"]

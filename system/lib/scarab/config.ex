@@ -27,8 +27,13 @@ defmodule Scarab.Config do
       config
       |> Keyword.get(:db_type) || :node
 
+   def khepri_config(config),
+    do:
+      config
+      |> Keyword.get(:khepri) || []
+
   def fetch_env!(app) do
-    case Application.fetch_env!(app, :scarab) do
+    case Application.fetch_env!(app, :khepri) do
       nil -> raise(ArgumentError, "no config for #{inspect(app)}")
       config -> Map.new(config)
     end

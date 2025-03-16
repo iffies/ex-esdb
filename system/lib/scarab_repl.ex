@@ -14,7 +14,7 @@ defmodule ScarabRepl do
 
   require Logger
 
-  @scarab_app :scarab_app
+  @scarab_app :scarab_es
   @store_id :sell_goods_at_pos
   @stream_name1 :order_stream1
   @stream_name2 :order_stream2
