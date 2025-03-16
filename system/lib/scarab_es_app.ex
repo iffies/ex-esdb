@@ -14,7 +14,7 @@ defmodule Scarab.ESApp do
 
     children = [
       {Phoenix.PubSub, name: :scarab_pubsub},
-      {Scarab.System, config}
+      {Scarab.System, config},
     ]
 
     Logger.info("
@@ -22,7 +22,6 @@ defmodule Scarab.ESApp do
                  || Starting Scarab Eventstore on #{inspect(node(), pretty: true)} ||
                  ===================================================
       ")
-
 
     opts = [strategy: :one_for_one, name: Scarab.ESApp.Supervisor]
     Supervisor.start_link(children, opts)

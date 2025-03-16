@@ -7,17 +7,26 @@ defmodule Scarab.MixProject do
     [
       app: :scarab_es,
       version: @version,
+      deps: deps(),
       elixir: "~> 1.17",
       elixirc_paths: elixirc_paths(Mix.env()),
+      erl_opts: erl_opts(),
+      erlc_paths: erlc_paths(Mix.env()),
       consolidate_protocols: Mix.env() != :test,
       description: description(),
       docs: docs(),
       package: package(),
-      start_permanent: Mix.env() == :prod,
-      deps: deps(),
-      erl_opts: erl_opts()
+      releases: releases(),
+      start_permanent: Mix.env() == :prod
     ]
   end
+
+  defp releases,
+    do: [
+      scarab_es: [
+        cookies: "${SCARAB_COOKIE}"
+      ]
+    ]
 
   # Run "mix help compile.app" to learn about applications.
   def application do
@@ -32,15 +41,15 @@ defmodule Scarab.MixProject do
       "src"
     ]
 
+  def erl_opts,
+    do: [
+      {:i, "deps/khepri/include"}
+    ]
+
   defp elixirc_paths(:test),
     do: [
       "lib",
       "test/support"
-    ]
-
-  def erl_opts,
-    do: [
-      {:i, "deps/khepri/include"}
     ]
 
   defp elixirc_paths(_), do: ["lib"]

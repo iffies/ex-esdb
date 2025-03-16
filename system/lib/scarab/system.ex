@@ -14,9 +14,7 @@ defmodule Scarab.System do
 
     Supervisor.init(
       children,
-      strategy: :one_for_one,
-      max_restarts: 10,
-      max_seconds: 60
+      strategy: :one_for_one
     )
   end
 
@@ -27,6 +25,11 @@ defmodule Scarab.System do
     Supervisor.restart_child(__MODULE__, pid)
     {:noreply, state}
   end
+
+  def start_link(config) do
+    Supervisor.start_link(__MODULE__, config, name: __MODULE__)
+  end
+ 
 
   def start(config) do
     case Supervisor.start_link(
@@ -39,12 +42,17 @@ defmodule Scarab.System do
       {:error, reason} -> raise "failed to start eventstores supervisor: #{inspect(reason)}"
     end
   end
-
-  def child_spec(config) do
-    %{
-      id: __MODULE__,
-      start: {__MODULE__, :start, [config]},
-      type: :supervisor
-    }
-  end
+  #
+  # def start_link(config) do
+  #   Supervisor.start_link(__MODULE__, config, name: __MODULE__)
+  # end
+  #
+  #
+  # def child_spec(config) do
+  #   %{
+  #     id: __MODULE__,
+  #     start: {__MODULE__, :start, [config]},
+  #     type: :supervisor
+  #   }
+  # end
 end

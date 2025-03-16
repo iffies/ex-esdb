@@ -1,0 +1,64 @@
+volumes:
+  scarab0-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /volume/scarab/data0
+
+  scarab1-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /volume/scarab/data1
+
+  scarab2-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /volume/scarab/data2
+
+services:
+  scarab0:
+    image: local/scarab_es
+    build:
+      context: ../system
+    hostname: scarab0
+    container_name: scarab0
+    networks:
+      - dev-net
+    volumes:
+      - scarab0-data:/system/data
+    environment:
+      SCARAB_STORE: "reg-greenhouse"
+      SCARAB_COOKIE: "reg-greenhouse-cookie"
+
+  scarab1:
+    image: local/scarab-es
+    build:
+      context: ../system
+    hostname: scarab1
+    container_name: scarab1
+    networks:
+      - dev-net
+    volumes:
+      - scarab1-data:/system/data
+    environment:
+      SCARAB_STORE: "reg-greenhouse"
+      SCARAB_COOKIE: "reg-greenhouse-cookie"
+
+  scarab2:
+    image: local/scarab-es
+    build:
+      context: ../system
+    hostname: scarab2
+    container_name: scarab2
+    networks:
+      - dev-net
+    volumes:
+      - scarab2-data:/system/data
+    environment:
+      SCARAB_STORE: "reg-greenhouse"
+      SCARAB_COOKIE: "reg-greenhouse-cookie"

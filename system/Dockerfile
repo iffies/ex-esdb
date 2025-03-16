@@ -2,11 +2,15 @@
 #ARG ELIXIR_VERSION=1.17.2
 #ARG OTP_VERSION=27.0.1
 #ARG OS_VERSION=bullseye-20240722-slim
-ARG ELIXIR_VERSION=1.17.3
-ARG OTP_VERSION=27.1.2
-ARG OS_VERSION=bullseye-20241111-slim
+# ARG ELIXIR_VERSION=1.17.3
+# ARG OTP_VERSION=27.1.2
+# ARG OS_VERSION=bullseye-20241111-slim
+# ARG OS_TYPE=debian
+
+ARG ELIXIR_VERSION=1.18.3
+ARG OTP_VERSION=27.3
+ARG OS_VERSION=bullseye-20250224-slim
 ARG OS_TYPE=debian
-ARG RUST_VERSION=1.82.0
 
 ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-${OS_TYPE}-${OS_VERSION}"
 ARG RUNNER_IMAGE="${OS_TYPE}:${OS_VERSION}"
@@ -16,11 +20,13 @@ ARG RUNNER_IMAGE="${OS_TYPE}:${OS_VERSION}"
 FROM ${BUILDER_IMAGE} AS builder
 
 RUN apt-get update -y && \
-  apt-get install -y pkg-config openssl curl build-essential git npm esbuild libc6 libsrtp2-dev && \
   apt-get upgrade -y --autoremove && \
-  apt-get clean && \
-  rm -f /var/lib/apt/lists/*_*
+  apt-get clean 
 
+# && \
+# rm -f /var/lib/apt/lists/*_*
+
+RUN apt-get install -y pkg-config openssl curl build-essential git
 # prepare build dir
 WORKDIR /build_space
 
@@ -36,8 +42,9 @@ ENV OTPROOT=/usr/lib/erlang
 ENV ERL_LIBS=/usr/lib/erlang/lib
 
 # copy sources
-COPY lib/ lib/
-COPY src/ src/
+COPY lib ./
+COPY src ./
+COPY priv ./
 
 COPY config/config.exs config/prod.exs config/runtime.exs  config/
 COPY mix.exs ./
@@ -45,30 +52,26 @@ COPY mix.exs ./
 # install mix dependencies
 RUN MIX_ENV="prod" mix do deps.get --only "prod", deps.update --all, deps.compile
 # build assets
-COPY apps/${EDGE_APP} ./apps/${EDGE_APP}
 
 RUN MIX_ENV="prod" mix compile && \
-  MIX_ENV="prod" mix release for_swai_aco
+  MIX_ENV="prod" mix release scarab_es
 
 ###################################
 ########### RUNTIME ###############
 ###################################
 
-FROM ${RUNNER_IMAGE} AS for_edge
-
-ARG CORE_APP=swai_core
-ARG EDGE_APP=swai_aco
-ARG APIS_APP=apis
+FROM ${RUNNER_IMAGE} AS scarab_es
 
 RUN apt-get update -y && \
-  apt-get install -y libstdc++6 pkg-config openssl libncurses5 locales ca-certificates curl systemd libc6 libnspr4 libnss3 libsrtp2-dev && \
   apt-get upgrade -y --autoremove && \
   apt-get clean && \
+  apt-get install -y pkg-config openssl libncurses5 locales ca-certificates curl systemd && \
   rm -f /var/lib/apt/lists/*_* 
-
+#
 # Set the locale
+#RUN locale-gen en_US.UTF-8
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
-
+#
 ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US:en
 ENV LC_ALL=en_US.UTF-8
@@ -77,23 +80,25 @@ WORKDIR /system
 
 RUN chown nobody /system
 
-COPY --from=builder --chown=nobody /build_space/_build/prod/rel/for_swai_aco .
+COPY --from=builder --chown=nobody /build_space/_build/prod/rel/scarab_es ./
 
-COPY run-edge.sh .
+COPY run-scarab-es.sh .
 
-RUN chmod +x run-edge.sh
+RUN chmod +x run-scarab-es.sh
 
 USER nobody
 
 VOLUME /system
+
+VOLUME /system/data
 
 EXPOSE 5000-5010/udp
 
 ENV HOME=/system
 ENV MIX_ENV="prod"
 
-ENV SWAI_DB_URL="irrelevant"
-ENV SWAI_SECRET_KEY_BASE="irrelevant"
-ENV SWAI_BIOTOPE_ID="b105f59e-42ce-4e85-833e-d123e36ce943"
+ARG SCARAB_COOKIE
+ARG SCARAB_DATA
+ARG SCARAB_STORE
 
-CMD ["./run-edge.sh"]
+CMD ["./run-scarab-es.sh"]
