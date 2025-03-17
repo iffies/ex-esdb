@@ -15,7 +15,7 @@ config :logger, :console,
 
 config :scarab_es,
   khepri: [
-    data_dir: "data",
+    data_dir: "/data",
     store_id: :default_scarab_es,
     timeout: 10_000,
     db_type: :node

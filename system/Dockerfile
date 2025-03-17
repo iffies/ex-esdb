@@ -52,7 +52,6 @@ COPY mix.exs ./
 # install mix dependencies
 RUN MIX_ENV="prod" mix do deps.get --only "prod", deps.update --all, deps.compile
 # build assets
-
 RUN MIX_ENV="prod" mix compile && \
   MIX_ENV="prod" mix release scarab_es
 
@@ -78,9 +77,9 @@ ENV LC_ALL=en_US.UTF-8
 
 WORKDIR /system
 
+RUN mkdir /data
 
-RUN chown nobody /system
-#RUN chown nobody /data
+RUN chown -R nobody /data
 
 COPY --from=builder --chown=nobody /build_space/_build/prod/rel/scarab_es ./
 
@@ -88,15 +87,15 @@ COPY run-scarab-es.sh .
 
 RUN chmod +x run-scarab-es.sh
 
-USER nobody
+# RUN chown nobody /system
 
-RUN mkdir data
-
-VOLUME /system/data
-
-#VOLUME /data
+VOLUME /data
 
 EXPOSE 5000-5010/udp
+
+# USER nobody
+
+#VOLUME /data
 
 ENV HOME=/system
 ENV MIX_ENV="prod"

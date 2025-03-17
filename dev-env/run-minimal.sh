@@ -28,4 +28,4 @@ docker-compose -f livebook.yml \
   -f xoom-designer.yml \
   -f excalidraw.yml \
   -f networks.yml \
-  up --build $1
+  up --remove-orphans --build $1

@@ -171,13 +171,35 @@ defmodule Scarab.EventStore do
     {:reply, {:ok, version}, state}
   end
 
+  @impl true
+  def handle_info(:check_store, [config: config, store: store] = state) do
+    case store
+      |>:khepri_cluster.members() do
+     {:error, reason} -> Logger.error("Failed to get store members. reason: #{inspect(reason)}")
+      members -> Logger.debug("Store members: #{inspect(members, pretty: true)}")
+    end
+    Process.send_after(self(), :check_store, config.timeout)
+    {:noreply, state}
+  end
+
   defp start_khepri(%{
          data_dir: data_dir,
          store_id: store,
          timeout: timeout,
          db_type: _db_type
        }) do
-    :khepri.start(data_dir, store, timeout)
+    case :khepri.start(data_dir, store, timeout) do
+      {:ok, store} ->
+        Logger.debug("Started store: #{inspect(store)}")
+
+        store
+        |> ESEmitter.register_emitter()
+
+        {:ok, store}
+
+      reason ->
+        Logger.error("Failed to start khepri. reason: #{inspect(reason)}")
+    end
   end
 
   #### PLUMBING
@@ -199,11 +221,11 @@ defmodule Scarab.EventStore do
         name: __MODULE__
       )
 
-
-
   # Server Callbacks
   @impl true
-  def init(opts) do
+  def init(%{timeout: timeout} = opts) do
+    Process.flag(:trap_exit, true)
+    Process.send_after(self(), :check_store, timeout)
     Logger.debug("Starting Scarab EventStore with config: #{inspect(opts, pretty: true)}")
 
     case start_khepri(opts) do
@@ -213,10 +235,12 @@ defmodule Scarab.EventStore do
         #        store
         # |> ESEmitter.register_emitter()
 
-        {:ok, opts}
+        {:ok, [config: opts, store: store]}
 
       reason ->
         Logger.error("Failed to start khepri. reason: #{inspect(reason)}")
+
+        {:error, [config: opts, store: nil]}
     end
   end
 end
