@@ -62,6 +62,8 @@ RUN MIX_ENV="prod" mix do compile, release scarab_es
 
 FROM ${RUNNER_IMAGE} AS scarab_es
 
+ARG ERTS_VERSION=erts-15.2.3
+
 RUN echo "!!!!!!!! Building runner image...!!!!!!!" && sleep 2
 
 RUN apt-get update -y && \
@@ -90,6 +92,8 @@ COPY run-scarab-es.sh .
 
 RUN chmod +x run-scarab-es.sh
 
+ARG PATH="${PATH}:/system/${ERTS_VERSION}/bin"
+
 # RUN chown nobody /system
 
 VOLUME /data
@@ -104,9 +108,14 @@ EXPOSE 4369 9000-9100
 
 ENV HOME=/system
 ENV MIX_ENV="prod"
+ENV PATH="${PATH}"
 
 ARG SCARAB_COOKIE
 ARG SCARAB_DATA
 ARG SCARAB_STORE
+
+# RUN ls -lha && sleep 10
+
+# RUN epmd -names
 
 CMD ["./run-scarab-es.sh"]

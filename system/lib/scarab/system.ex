@@ -9,7 +9,7 @@ defmodule Scarab.System do
   @impl true
   def init(config) do
     children = [
-      #{Scarab.EventStore, config},
+      {Scarab.EventStore, config},
       {Scarab.Cluster, config}
     ]
     

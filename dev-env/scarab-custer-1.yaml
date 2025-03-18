@@ -39,12 +39,16 @@ services:
     environment:
       SCARAB_STORE: "reg_greenhouse"
       SCARAB_COOKIE: "reg_greenhouse_cookie"
-      SCARAB_SEEDS: "scarab_es@scarab0, scarab_es@scarab1, scarab_es@scarab2"
-  #    healthcheck:
-  #    test: ["CMD", "epmd", -names | grep scarab_es@scarab0]
+      SCARAB_SEEDS: "scarab_es@scarab0,scarab_es@scarab1,scarab_es@scarab2"
+    healthcheck:
+      test: ["CMD-SHELL", "epmd -names | grep scarab"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
 
   scarab1:
-    image: local/scarab-es
+    image: local/scarab_es
     build:
       context: ../system
     hostname: scarab1
@@ -58,10 +62,11 @@ services:
       SCARAB_COOKIE: "reg_greenhouse_cookie"
       SCARAB_SEEDS: "scarab_es@scarab0"
     depends_on:
-      - scarab0
+      scarab0:
+        condition: service_healthy
 
   scarab2:
-    image: local/scarab-es
+    image: local/scarab_es
     build:
       context: ../system
     hostname: scarab2
@@ -75,4 +80,5 @@ services:
       SCARAB_COOKIE: "reg_greenhouse_cookie"
       SCARAB_SEEDS: "scarab_es@scarab0"
     depends_on:
-      - scarab0
+      scarab0:
+        condition: service_healthy

@@ -34,7 +34,7 @@ defmodule Scarab.Cluster do
     {:ok, config}
   end
 
-  def start_link(opts), 
+  def start_link(opts),
     do:
     GenServer.start_link(
       __MODULE__, 
@@ -42,7 +42,7 @@ defmodule Scarab.Cluster do
       name: __MODULE__
     )
 
-  def child_spec(opts), 
+  def child_spec(opts),
     do:
     %{
       id: __MODULE__,
