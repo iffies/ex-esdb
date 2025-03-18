@@ -89,8 +89,9 @@ RUN chown -R nobody /data
 COPY --from=builder --chown=nobody /build_space/_build/prod/rel/scarab_es ./
 
 COPY run-scarab-es.sh .
+COPY check-scarab-es.sh .
 
-RUN chmod +x run-scarab-es.sh
+RUN chmod +x run-scarab-es.sh check-scarab-es.sh
 
 ARG PATH="${PATH}:/system/${ERTS_VERSION}/bin"
 
@@ -98,7 +99,6 @@ ARG PATH="${PATH}:/system/${ERTS_VERSION}/bin"
 
 VOLUME /data
 
-EXPOSE 5000-5010/udp
 EXPOSE 4369 9000-9100
 
 
@@ -117,5 +117,9 @@ ARG SCARAB_STORE
 # RUN ls -lha && sleep 10
 
 # RUN epmd -names
+#
+
+HEALTHCHECK --interval=10s --timeout=3s \
+  CMD ["./check-scarab-es.sh"]
 
 CMD ["./run-scarab-es.sh"]
