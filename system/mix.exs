@@ -24,17 +24,30 @@ defmodule Scarab.MixProject do
   defp releases,
     do: [
       scarab_es: [
-        cookies: "${SCARAB_COOKIE}"
+        #        cookie: String.to_atom(System.get_env("SCARAB_COOKIE") || "T0pS3cr3t")
+        include_executables_for: [:unix],
+        steps: [:assemble, :tar],
+        applications: [
+          runtime_tools: :permanent,
+          logger: :permanent,
+          os_mon: :permanent
+        ]
       ]
     ]
 
   # Run "mix help compile.app" to learn about applications.
-  def application do
-    [
+  def application,
+    do: [
       mod: {Scarab.ESApp, []},
-      extra_applications: [:logger, :gen_retry]
+      extra_applications: [
+        :logger,
+        :eex,
+        :os_mon,
+        :runtime_tools,
+        :khepri,
+        :gen_retry
+      ]
     ]
-  end
 
   defp erlc_paths(_),
     do: [

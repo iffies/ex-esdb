@@ -3,8 +3,8 @@ defmodule Scarab.EventStreamWriter do
 
   alias Scarab.EventStreamReader, as: ESReader
 
-  @retry_attempts 3
-  @retry_delay 500
+  #  @retry_attempts 3
+  # @retry_delay 500
   defp handle_transaction_result({:ok, {:commit, result}}), do: {:ok, result}
   defp handle_transaction_result({:ok, {:abort, reason}}), do: {:error, reason}
   defp handle_transaction_result({:error, reason}), do: {:error, reason}

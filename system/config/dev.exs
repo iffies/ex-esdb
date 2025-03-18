@@ -16,7 +16,7 @@ config :logger, :console,
 config :scarab_es,
   khepri: [
     data_dir: "tmp/dev_dir",
-    store_id: :sell_goods_at_pos,
+    store_id: String.to_atom(System.get_env("SCARAB_STORE") || "default_scarab_es"),
     timeout: 10_000,
     db_type: :node
   ]

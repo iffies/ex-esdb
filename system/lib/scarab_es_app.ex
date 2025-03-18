@@ -19,7 +19,7 @@ defmodule Scarab.ESApp do
 
     Logger.info("
                  ===================================================
-                 || Starting Scarab Eventstore on #{inspect(node(), pretty: true)} ||
+                 || Starting Scarab on Node #{inspect(node(), pretty: true)} 
                  ===================================================
       ")
 

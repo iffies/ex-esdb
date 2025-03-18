@@ -2,11 +2,11 @@ import Config
 
 config :khepri,
   log_level: :warning,
-  logger: false
+  logger: true
 
 config :ra,
   log_level: :warning,
-  logger: false
+  logger: true
 
 config :logger, :console,
   format: "$time ($metadata) [$level] $message\n",
@@ -14,6 +14,7 @@ config :logger, :console,
   level: :debug
 
 config :scarab_es,
+  log_level: :information,
   khepri: [
     data_dir: "/data",
     store_id: :default_scarab_es,

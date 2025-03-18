@@ -30,4 +30,13 @@ defmodule Scarab.EventStreamReader do
     end)
     |> Enum.reject(&is_nil/1)
   end
+
+
+  def get_streams(store) do
+    store
+    |> :khepri.get!([:streams])
+    |> Enum.reduce([], fn {stream_id, _stream}, acc -> stream_id ++ acc end)
+  end
+
+
 end

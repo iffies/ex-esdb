@@ -1,3 +1,8 @@
+networks:
+  scarab-net:
+    name: scarab-net
+    driver: bridge
+
 volumes:
   scarab0-data:
     driver: local
@@ -28,12 +33,15 @@ services:
     hostname: scarab0
     container_name: scarab0
     networks:
-      - dev-net
+      - scarab-net
     volumes:
       - scarab0-data:/data
     environment:
-      SCARAB_STORE: "reg-greenhouse"
-      SCARAB_COOKIE: "reg-greenhouse-cookie"
+      SCARAB_STORE: "reg_greenhouse"
+      SCARAB_COOKIE: "reg_greenhouse_cookie"
+      SCARAB_SEEDS: "scarab_es@scarab0, scarab_es@scarab1, scarab_es@scarab2"
+  #    healthcheck:
+  #    test: ["CMD", "epmd", -names | grep scarab_es@scarab0]
 
   scarab1:
     image: local/scarab-es
@@ -42,12 +50,13 @@ services:
     hostname: scarab1
     container_name: scarab1
     networks:
-      - dev-net
+      - scarab-net
     volumes:
       - scarab1-data:/data
     environment:
-      SCARAB_STORE: "reg-greenhouse"
-      SCARAB_COOKIE: "reg-greenhouse-cookie"
+      SCARAB_STORE: "reg_greenhouse"
+      SCARAB_COOKIE: "reg_greenhouse_cookie"
+      SCARAB_SEEDS: "scarab_es@scarab0"
     depends_on:
       - scarab0
 
@@ -58,11 +67,12 @@ services:
     hostname: scarab2
     container_name: scarab2
     networks:
-      - dev-net
+      - scarab-net
     volumes:
       - scarab2-data:/data
     environment:
-      SCARAB_STORE: "reg-greenhouse"
-      SCARAB_COOKIE: "reg-greenhouse-cookie"
+      SCARAB_STORE: "reg_greenhouse"
+      SCARAB_COOKIE: "reg_greenhouse_cookie"
+      SCARAB_SEEDS: "scarab_es@scarab0"
     depends_on:
       - scarab0

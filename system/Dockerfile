@@ -52,14 +52,17 @@ COPY mix.exs ./
 # install mix dependencies
 RUN MIX_ENV="prod" mix do deps.get --only "prod", deps.update --all, deps.compile
 # build assets
-RUN MIX_ENV="prod" mix compile && \
-  MIX_ENV="prod" mix release scarab_es
+RUN MIX_ENV="prod" mix do compile, release scarab_es
+## Release
+#RUN MIX_ENV="prod" mix release scarab_es
 
 ###################################
 ########### RUNTIME ###############
 ###################################
 
 FROM ${RUNNER_IMAGE} AS scarab_es
+
+RUN echo "!!!!!!!! Building runner image...!!!!!!!" && sleep 2
 
 RUN apt-get update -y && \
   apt-get upgrade -y --autoremove && \
@@ -92,6 +95,8 @@ RUN chmod +x run-scarab-es.sh
 VOLUME /data
 
 EXPOSE 5000-5010/udp
+EXPOSE 4369 9000-9100
+
 
 # USER nobody
 

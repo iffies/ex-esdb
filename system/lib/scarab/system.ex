@@ -9,9 +9,10 @@ defmodule Scarab.System do
   @impl true
   def init(config) do
     children = [
-      {Scarab.EventStore, config}
+      #{Scarab.EventStore, config},
+      {Scarab.Cluster, config}
     ]
-
+    
     Supervisor.init(
       children,
       strategy: :one_for_one
@@ -42,6 +43,8 @@ defmodule Scarab.System do
       {:error, reason} -> raise "failed to start eventstores supervisor: #{inspect(reason)}"
     end
   end
+
+
   #
   # def start_link(config) do
   #   Supervisor.start_link(__MODULE__, config, name: __MODULE__)

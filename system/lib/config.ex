@@ -38,4 +38,29 @@ defmodule Scarab.Config do
       config -> Map.new(config)
     end
   end
+
+
+  def scarab_seeds()  do 
+      System.get_env("SCARAB_SEEDS") || to_string(node())
+      |> String.trim()
+      |> String.downcase()
+      |> String.replace( " ", "_")
+      |> String.replace(~r/[^\w_@]/, "")
+      |> String.split(",")
+      |> Enum.reject(
+        fn seed -> 
+          seed == "" or 
+            seed == "nil" or 
+            seed == to_string(node()) 
+      end)
+      |> Enum.map(
+          fn seed -> 
+            case String.to_existing_atom(seed) do
+              :error -> String.to_atom(seed)
+              atom -> atom
+            end
+        end
+        )
+  end
+
 end

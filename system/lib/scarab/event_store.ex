@@ -10,6 +10,7 @@ defmodule Scarab.EventStore do
   alias Scarab.EventEmitter, as: ESEmitter
   alias Scarab.EventStreamReader, as: ESReader
   alias Scarab.EventStreamWriter, as: ESWriter
+  
 
   # Client API
   def get_streams(store),
@@ -176,7 +177,7 @@ defmodule Scarab.EventStore do
     case store
       |>:khepri_cluster.members() do
      {:error, reason} -> Logger.error("Failed to get store members. reason: #{inspect(reason)}")
-      members -> Logger.debug("Store members: #{inspect(members, pretty: true)}")
+      members -> IO.puts("Store members: #{inspect(members, pretty: true)}")
     end
     Process.send_after(self(), :check_store, config.timeout)
     {:noreply, state}
@@ -190,7 +191,7 @@ defmodule Scarab.EventStore do
        }) do
     case :khepri.start(data_dir, store, timeout) do
       {:ok, store} ->
-        Logger.debug("Started store: #{inspect(store)}")
+        IO.puts("Started store: #{inspect(store, pretty: true)}")
 
         store
         |> ESEmitter.register_emitter()
@@ -226,7 +227,7 @@ defmodule Scarab.EventStore do
   def init(%{timeout: timeout} = opts) do
     Process.flag(:trap_exit, true)
     Process.send_after(self(), :check_store, timeout)
-    Logger.debug("Starting Scarab EventStore with config: #{inspect(opts, pretty: true)}")
+    IO.puts("Starting Scarab EventStore with config: #{inspect(opts, pretty: true)}")
 
     case start_khepri(opts) do
       {:ok, store} ->

@@ -7,8 +7,8 @@ defmodule ScarabRepl do
   alias Scarab.Repl.EventGenerator, as: EventGenerator
   alias Scarab.System, as: ScarabSystem
 
-  alias Scarab.EventStreamReader, as: ESReader
-  alias Scarab.EventStreamWriter, as: ESWriter
+  #  alias Scarab.EventStreamReader, as: ESReader
+  # alias Scarab.EventStreamWriter, as: ESWriter
 
   alias Scarab.EventStoreInfo, as: ESInfo
 
