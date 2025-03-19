@@ -17,6 +17,8 @@ defmodule Scarab.ESApp do
       {Scarab.System, config},
     ]
 
+    :os.set_signal(:sigterm, :handle)
+
     Logger.info("
                  ===================================================
                  || Starting Scarab on Node #{inspect(node(), pretty: true)} 
@@ -26,4 +28,16 @@ defmodule Scarab.ESApp do
     opts = [strategy: :one_for_one, name: Scarab.ESApp.Supervisor]
     Supervisor.start_link(children, opts)
   end
+
+  def handle_info(:sigterm, _state) do
+    Logger.info("SIGTERM received. Stopping Scarab")
+    Application.stop(:scarab_es)
+  end
+
+  @impl true
+  def stop(state) do
+    Logger.info("STOPPING APP #{inspect(state, pretty: true)}")
+  end
+
+
 end

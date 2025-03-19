@@ -13,6 +13,7 @@ defmodule Scarab.System do
       {Scarab.Cluster, config},
     ]
     
+
     Supervisor.init(
       children,
       strategy: :one_for_one,
@@ -20,6 +21,7 @@ defmodule Scarab.System do
       max_seconds: 10
     )
   end
+
 
   # def handle_info({:EXIT, pid, reason}, state) do
   #   Logger.warning("Scarab trapped EXIT from [#{inspect(pid)}] 

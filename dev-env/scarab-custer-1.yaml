@@ -25,6 +25,20 @@ volumes:
       o: bind
       device: /volume/scarab/data2
 
+  scarab3-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /volume/scarab/data3
+
+  scarab4-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /volume/scarab/data4
+
 services:
   scarab0:
     image: local/scarab_es
@@ -37,9 +51,9 @@ services:
     volumes:
       - scarab0-data:/data
     environment:
-      SCARAB_STORE: "reg_greenhouse"
+      SCARAB_STORE: "reg_gh"
       SCARAB_COOKIE: "reg_greenhouse_cookie"
-      SCARAB_SEEDS: "scarab_es@scarab0,scarab_es@scarab1,scarab_es@scarab2"
+      SCARAB_SEEDS: "scarab_es@scarab1,scarab_es@scarab2,scarab_es@scarab3,scarab_es@scarab4"
     healthcheck:
       test: ["CMD-SHELL", "epmd -names | grep scarab_es"]
       interval: 10s
@@ -58,9 +72,9 @@ services:
     volumes:
       - scarab1-data:/data
     environment:
-      SCARAB_STORE: "reg_greenhouse"
+      SCARAB_STORE: "reg_gh"
       SCARAB_COOKIE: "reg_greenhouse_cookie"
-      SCARAB_SEEDS: "scarab_es@scarab0"
+      SCARAB_SEEDS: "scarab_es@scarab0,scarab_es@scarab2,scarab_es@scarab3,scarab_es@scarab4"
     depends_on:
       scarab0:
         condition: service_healthy
@@ -82,9 +96,57 @@ services:
     volumes:
       - scarab2-data:/data
     environment:
-      SCARAB_STORE: "reg_greenhouse"
+      SCARAB_STORE: "reg_gh"
       SCARAB_COOKIE: "reg_greenhouse_cookie"
-      SCARAB_SEEDS: "scarab_es@scarab0"
+      SCARAB_SEEDS: "scarab_es@scarab0,scarab_es@scarab1,scarab_es@scarab3,scarab_es@scarab4"
+    depends_on:
+      scarab0:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "epmd -names | grep scarab_es"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  scarab3:
+    image: local/scarab_es
+    build:
+      context: ../system
+    hostname: scarab3
+    container_name: scarab3
+    networks:
+      - scarab-net
+    volumes:
+      - scarab3-data:/data
+    environment:
+      SCARAB_STORE: "reg_gh"
+      SCARAB_COOKIE: "reg_greenhouse_cookie"
+      SCARAB_SEEDS: "scarab_es@scarab0,scarab_es@scarab1,scarab_es@scarab2,scarab_es@scarab4"
+    depends_on:
+      scarab0:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "epmd -names | grep scarab_es"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  scarab4:
+    image: local/scarab_es
+    build:
+      context: ../system
+    hostname: scarab4
+    container_name: scarab4
+    networks:
+      - scarab-net
+    volumes:
+      - scarab4-data:/data
+    environment:
+      SCARAB_STORE: "reg_gh"
+      SCARAB_COOKIE: "reg_greenhouse_cookie"
+      SCARAB_SEEDS: "scarab_es@scarab0,scarab_es@scarab1,scarab_es@scarab2,scarab_es@scarab3"
     depends_on:
       scarab0:
         condition: service_healthy

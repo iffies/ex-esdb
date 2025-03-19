@@ -10,7 +10,6 @@ defmodule Scarab.EventStore do
   alias Scarab.EventEmitter, as: ESEmitter
   alias Scarab.EventStreamReader, as: ESReader
   alias Scarab.EventStreamWriter, as: ESWriter
-  
 
   # Client API
   def get_streams(store),
@@ -20,29 +19,9 @@ defmodule Scarab.EventStore do
         {:get_streams, store}
       )
 
-  @doc """
-  Join a cluster.
-
-  ## Parameters
-   
-    - `store`: The store to join.
-    - `cluster`: The cluster to join.
-
-  ## Returns
-
-    - `{:ok, result}` if successful.
-    - `{:error, reason}` if unsuccessful.
-  """
-  def join(store, cluster),
-    do:
-      GenServer.call(
-        __MODULE__,
-        {:join, {store, cluster}}
-      )
 
   @doc """
   Append events to a stream.
-
   ## Parameters
 
     - `stream_id`: The id of the stream to append to.
@@ -101,17 +80,21 @@ defmodule Scarab.EventStore do
     )
   end
 
-  ## CALLBACKS
 
   @impl true
-  def handle_call({:join, {store, cluster}}, _from, state) do
-    join_result =
-      store
-      |> :khepri_cluster.join(cluster)
-
-    {:reply, join_result, state}
+  def handle_info(:sigterm, %{store_id: store}) do
+    Logger.info("#{Colors.store_theme(self())} => SIGTERM received. Resetting cluster #{inspect(store, pretty: true)}")
+    {:stop, :normal, nil}
   end
 
+  @impl true
+  def handle_info(:register_emitter, [config: _, store: store] = state) do
+    store
+    |> ESEmitter.register_erl_emitter()
+    {:noreply, state}
+  end
+
+  ## CALLBACKS
   @impl true
   def handle_call(
         {:get_streams, store},
@@ -172,17 +155,6 @@ defmodule Scarab.EventStore do
     {:reply, {:ok, version}, state}
   end
 
-  @impl true
-  def handle_info(:check_store, [config: config, store: store] = state) do
-    case store
-      |>:khepri_cluster.members() do
-     {:error, reason} -> Logger.error("Failed to get store members. reason: #{inspect(reason)}")
-      members -> IO.puts("Store members: #{inspect(members, pretty: true)}")
-    end
-    Process.send_after(self(), :check_store, config.timeout)
-    {:noreply, state}
-  end
-
   defp start_khepri(%{
          data_dir: data_dir,
          store_id: store,
@@ -191,11 +163,11 @@ defmodule Scarab.EventStore do
        }) do
     case :khepri.start(data_dir, store, timeout) do
       {:ok, store} ->
-        IO.puts("Started store: #{inspect(store, pretty: true)}")
+        Logger.info("#{Colors.store_theme(self())} => Started store: #{inspect(store, pretty: true)}")
 
-        # store
-        # |> ESEmitter.register_emitter()
-        #
+        #store
+        #|> ESEmitter.register_emitter()
+ 
         {:ok, store}
 
       reason ->
@@ -224,18 +196,17 @@ defmodule Scarab.EventStore do
 
   # Server Callbacks
   @impl true
-  def init(%{timeout: timeout} = opts) do
+  def init(opts) do
     Process.flag(:trap_exit, true)
-    Process.send_after(self(), :check_store, timeout)
+    Process.send_after(self(), :register_emitter, 10_000)
+
     IO.puts("Starting Scarab EventStore with config: #{inspect(opts, pretty: true)}")
 
     case start_khepri(opts) do
       {:ok, store} ->
         Logger.debug("Started store: #{inspect(store)}")
-
-        #        store
-        # |> ESEmitter.register_emitter()
-
+        :os.set_signal(:sigterm, :handle)
+        
         {:ok, [config: opts, store: store]}
 
       reason ->

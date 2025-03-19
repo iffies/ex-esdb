@@ -5,7 +5,7 @@ defmodule Scarab.Cluster do
   require Logger
   require Colors
 
-  def join(store) do
+  defp join(store) do
       Scarab.Config.scarab_seeds()
       |> Enum.map(
       fn seed -> 
@@ -15,24 +15,67 @@ defmodule Scarab.Cluster do
       end)
   end
 
-  def leave,
-    do: :khepri_cluster.reset()
+  defp leave(store) do 
+    case store |> :khepri_cluster.reset() do
+     :ok ->
+        Logger.info("left cluster")
+        :ok
+     {:error, reason} -> 
+        Logger.error("Failed to leave cluster. reason: #{inspect(reason)}")
+        {:error, reason}
+    end
+  end
 
-  def members(store),
-    do:
-      store
-      |> :khepri_cluster.members()
+  defp members(store)  do 
+    case store
+      |>:khepri_cluster.members() do
+     {:error, reason} -> 
+        Logger.error("Failed to get store members. reason: #{inspect(reason)}")
+      members -> 
+        Logger.info("
+        Store members: 
+        #{inspect(members, pretty: true)}
+        ")
+    end
+  end
 
 
+  @impl true
+  def handle_info(:join, %{store_id: store} = state) do
+    store 
+    |> join()
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_info(:members, %{store_id: store, timeout: timeout} = state) do
+    store 
+    |> members()
+    Process.send_after(self(), :members, 2 * timeout)
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_info({:EXIT, pid, reason}, %{store_id: store} = state) do
+    Logger.warning("Cluster #{Colors.cluster_theme(pid)} exited with reason: #{inspect(reason)}")
+    store |> leave()
+    {:noreply, state}
+  end
 
 
   ############# PLUMBING #############
-  #
   @impl true
-  def init(%{store_id: store, db_type: _db_type} = config) do
+  def terminate(reason, %{store_id: store} = state) do
+    IO.puts("#{Colors.cluster_theme(self())} terminating with reason: #{inspect(reason)}")
+    store |> leave()
+  end
+
+  @impl true
+  def init(%{timeout: timeout} = config) do
     Logger.info("#{Colors.cluster_theme(self())} => Starting Cluster with config: #{inspect(config, pretty: true)}")
-    store
-    |> join()
+    Process.flag(:trap_exit, true)
+    Process.send_after(self(), :join, timeout)
+    Process.send_after(self(), :members, 6 * timeout)
     {:ok, config}
   end
 
