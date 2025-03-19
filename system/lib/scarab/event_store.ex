@@ -193,9 +193,9 @@ defmodule Scarab.EventStore do
       {:ok, store} ->
         IO.puts("Started store: #{inspect(store, pretty: true)}")
 
-        store
-        |> ESEmitter.register_emitter()
-
+        # store
+        # |> ESEmitter.register_emitter()
+        #
         {:ok, store}
 
       reason ->

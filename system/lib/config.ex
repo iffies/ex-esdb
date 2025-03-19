@@ -2,6 +2,9 @@ defmodule Scarab.Config do
   @moduledoc """
   This module is responsible for loading the configuration for the application.
   """
+
+    require Logger
+
   def data_dir(config),
     do:
       config
@@ -41,11 +44,13 @@ defmodule Scarab.Config do
 
 
   def scarab_seeds()  do 
-      System.get_env("SCARAB_SEEDS") || to_string(node())
+    seeds =      System.get_env("SCARAB_SEEDS") || to_string(node())
+    Logger.info("SCARAB_SEEDS: #{inspect(seeds, pretty: true)}")
+
+    nodes =  seeds
       |> String.trim()
       |> String.downcase()
-      |> String.replace( " ", "_")
-      |> String.replace(~r/[^\w_@]/, "")
+      |> String.replace(" ", "_")
       |> String.split(",")
       |> Enum.reject(
         fn seed -> 
@@ -53,14 +58,23 @@ defmodule Scarab.Config do
             seed == "nil" or 
             seed == to_string(node()) 
       end)
+
+    Logger.info("CLUSTER NODES: #{inspect(nodes, pretty: true)}")
+
+    atoms = nodes
       |> Enum.map(
-          fn seed -> 
-            case String.to_existing_atom(seed) do
-              :error -> String.to_atom(seed)
-              atom -> atom
-            end
+          fn seed ->
+
+          try do
+            String.to_existing_atom(seed) 
+          rescue
+           _ -> String.to_atom(seed)
+          end
+
         end
         )
+    Logger.info("CLUSTER ATOMS: #{inspect(atoms, pretty: true)}")
+    atoms
   end
 
 end

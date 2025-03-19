@@ -5,11 +5,11 @@ defmodule Scarab.Cluster do
   require Logger
   require Colors
 
-  def join(store) do     
+  def join(store) do
       Scarab.Config.scarab_seeds()
       |> Enum.map(
       fn seed -> 
-        Logger.debug("Joining node #{inspect(seed)} in cluster #{inspect(store)}")
+        Logger.info("Joining node #{inspect(seed)} in cluster #{inspect(store)}")
         store 
         |> :khepri_cluster.join(seed) 
       end)
@@ -29,8 +29,10 @@ defmodule Scarab.Cluster do
   ############# PLUMBING #############
   #
   @impl true
-  def init(%{store_id: _store, db_type: _db_type} = config) do
+  def init(%{store_id: store, db_type: _db_type} = config) do
     Logger.info("#{Colors.cluster_theme(self())} => Starting Cluster with config: #{inspect(config, pretty: true)}")
+    store
+    |> join()
     {:ok, config}
   end
 
