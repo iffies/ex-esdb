@@ -12,12 +12,42 @@ defmodule Scarab.EventStore do
   alias Scarab.EventStreamWriter, as: ESWriter
 
   # Client API
+  @doc """
+  Get the list of streams in the store.
+  ## Parameters
+  
+    - `store`: The store to get the streams from.
+
+  ## Returns
+
+    - `{:ok, streams}`  if successful.
+
+  """
   def get_streams(store),
     do:
       GenServer.call(
         __MODULE__,
         {:get_streams, store}
       )
+
+  @doc """
+  Get the current state of the store.
+  ## Parameters
+
+    - `store`: The store to get the state of.
+  
+  ## Returns
+  
+      - `{:ok, state}`  if successful.
+      - `{:error, reason}` if unsuccessful.
+
+  """
+  def get_state(_store),
+    do:
+      GenServer.call(
+      __MODULE__,
+      {:get_state}
+    )
 
 
   @doc """
@@ -94,7 +124,14 @@ defmodule Scarab.EventStore do
     {:noreply, state}
   end
 
+
   ## CALLBACKS
+  @impl true
+  def handle_call({:get_state}, _from, state) do
+    {:reply, {:ok, state}, state}
+  end
+
+
   @impl true
   def handle_call(
         {:get_streams, store},
@@ -105,7 +142,7 @@ defmodule Scarab.EventStore do
       store
       |> ESReader.get_streams()
 
-    {:reply, streams, state}
+    {:reply, {:ok, streams}, state}
   end
 
   @impl true
@@ -164,10 +201,6 @@ defmodule Scarab.EventStore do
     case :khepri.start(data_dir, store, timeout) do
       {:ok, store} ->
         Logger.info("#{Colors.store_theme(self())} => Started store: #{inspect(store, pretty: true)}")
-
-        #store
-        #|> ESEmitter.register_emitter()
- 
         {:ok, store}
 
       reason ->

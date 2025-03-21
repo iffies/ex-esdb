@@ -5,6 +5,7 @@ defmodule ScarabRepl do
   alias Scarab.Config, as: ScarabConfig
   alias Scarab.EventStore, as: ScarabEventStore
   alias Scarab.Repl.EventGenerator, as: EventGenerator
+  alias Scarab.Repl.EventStreamMonitor, as: EventStreamMonitor
 
   # alias Scarab.EventStreamReader, as: ESReader
   # alias Scarab.EventStreamWriter, as: ESWriter
@@ -30,6 +31,18 @@ defmodule ScarabRepl do
 
   def get_config, do: ScarabConfig.fetch_env!(@scarab_app)
   def get_streams, do: ESInfo.get_streams_raw!(@store)
+
+  def start_monitor(store) do
+    
+    case  store 
+      |> ScarabEventStore.get_state() do
+        {:ok, [config: config, store: _]} -> 
+          IO.puts "Starting monitor for #{inspect(config, pretty: true)}"
+          {:ok, _pid} = EventStreamMonitor.start_link(config)
+     
+        {:error, reason} -> raise "Failed to get state. Reason: #{inspect(reason)}"
+    end
+  end
 
   def initialize(stream) do
     initialized = EventGenerator.initialize()

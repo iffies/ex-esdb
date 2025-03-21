@@ -33,13 +33,11 @@ defmodule Scarab.EventStreamWriter do
         now =
           DateTime.utc_now()
 
-        created =
-          now
-          |> DateTime.to_unix(:millisecond)
+        created = now
 
         created_epoch =
           now
-          |> DateTime.to_unix(:nanosecond)
+          |> DateTime.to_unix(:microsecond)
 
         recorded_event =
           event
