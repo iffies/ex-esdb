@@ -7,21 +7,13 @@ config :ex_unit,
   exclude: [:skip],
   logger: true
 
-config :node_app,
+config :scarab_es,
   khepri: [
-    data_dir: "tmp/scarab_data",
-    store_id: :sell_goods_at_pos,
+    data_dir: "tmp/reg_gh",
+    store_id: :reg_gh,
     timeout: 1_000,
     db_type: :node
   ],
   ra: [
     name: :test_app
-  ]
-
-config :cluster_app,
-  khepri: [
-    data_dir: "tmp/scarab_data",
-    store_id: :receive_goods_at_wh,
-    timeout: 2_000,
-    db_type: :cluster
   ]

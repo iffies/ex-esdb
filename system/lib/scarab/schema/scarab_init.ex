@@ -15,7 +15,10 @@ defmodule Schema.ScarabInit do
     :db_type
   ]
 
-  @required_fields []
+  @required_fields [
+    :data_dir,
+    :store_id,
+  ]
 
   embedded_schema do
     field(:data_dir, :string)

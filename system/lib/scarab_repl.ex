@@ -39,7 +39,6 @@ defmodule ScarabRepl do
         {:ok, [config: config, store: _]} -> 
           IO.puts "Starting monitor for #{inspect(config, pretty: true)}"
           {:ok, _pid} = EventStreamMonitor.start_link(config)
-     
         {:error, reason} -> raise "Failed to get state. Reason: #{inspect(reason)}"
     end
   end

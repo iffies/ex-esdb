@@ -15,7 +15,7 @@ register_emitter(PubSub, Store) ->
       NewEventFilter = khepri_evf:tree([Store, streams], #{on_actions => [create]}),
       khepri:register_trigger(Store, on_new_event, NewEventFilter, [procs, on_new_event]);
     {error, Reason} ->
-      io:format("Registration failed: ~p~n", [Reason]),
+      io:format("Khepri registration failed: ~p~n", [Reason]),
       {error, Reason}
   end.
 

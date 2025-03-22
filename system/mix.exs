@@ -17,7 +17,9 @@ defmodule Scarab.MixProject do
       docs: docs(),
       package: package(),
       releases: releases(),
-      start_permanent: Mix.env() == :prod
+      start_permanent: Mix.env() == :prod,
+      test_coverage: [tool: coverage_tool()],
+      preferred_cli_env: [coveralls: :test]
     ]
   end
 
@@ -73,16 +75,23 @@ defmodule Scarab.MixProject do
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:mix_test_watch, "~> 1.1", only: [:dev, :test], runtime: false},
+      {:meck, "~> 0.9.2", only: [:test]},
+      {:eunit_formatters, "~> 0.5", only: [:test]},
       {:ex_doc, "~> 0.37", only: [:dev], runtime: false},
       {:mox, "~> 1.0", only: [:test], runtime: false},
       {:ecto_sql, "~> 3.12.1", optional: true},
       {:phoenix_pubsub, "~> 2.1.3"},
-      {:elixir_uuid, "~> 1.2", override: true},
+      {:elixir_uuid, "~> 1.2"},
       {:jason, "~> 1.4.3", optional: true},
       {:khepri, "~> 0.16.0"},
       {:protobuf, "~> 0.14.1"},
       {:gen_retry, "~> 1.4"}
     ]
+  end
+
+  defp coverage_tool do
+    # Optional coverage configuration
+    {:cover, [output: "_build/cover"]}
   end
 
   defp description do
@@ -94,11 +103,12 @@ defmodule Scarab.MixProject do
 
   defp docs do
     [
-      main: "Scarab",
+      main: "Scarab.ESApp",
       canonical: "http://hexdocs.pm/scarab",
       source_ref: "v#{@version}",
       extra_section: "GUIDES",
       extras: [
+        "ADR.md",
         "CHANGELOG.md",
         "guides/Getting Started.md": [filename: "getting-started", title: "Scarab Eventstore"],
         "guides/Testing.md": [title: "Testing"]
@@ -108,17 +118,24 @@ defmodule Scarab.MixProject do
 
   defp package do
     [
+      name: "scarab_es",
+      description:
+        "Scarab is a reincarnation of rabbitmq/khepri, specialized for use as an event store.",
+      version: @version,
       files: [
         "lib",
+        "src",
         "mix.exs",
-        "README*",
-        "LICENSE*"
+        "../README*",
+        "../LICENSE*"
       ],
-      maintainers: ["Beamologist"],
+      maintainers: ["rgfaber"],
+      organization: "beam-campus",
       licenses: ["MIT"],
       links: %{
         "GitHub" => "https://github.com/beam-campus/scarab"
-      }
+      },
+      source_url: "https://github.com/beam-campus/scarab"
     ]
   end
 end

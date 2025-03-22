@@ -3,13 +3,24 @@ defmodule Scarab.Config do
   This module is responsible for loading the configuration for the application.
   """
 
-    require Logger
+  require Logger
 
-  def data_dir(config),
+  @doc """
+    Returns the data directory for the application when passed a map or a keyword list.
+  """
+  def data_dir(config) when is_map(config),
     do:
       config
-      |> Keyword.get(:data_dir) || "scarab_data"
+      |> Map.get(:data_dir) || "data"
 
+  def data_dir(config) when is_list(config),
+    do:
+      config
+      |> Keyword.get(:data_dir) || "data"
+
+  @doc """
+    Returns the store id for the application when passed a map or a keyword list.
+  """
   def store_id(config) when is_map(config),
     do:
       config
@@ -23,7 +34,7 @@ defmodule Scarab.Config do
   def timeout(config),
     do:
       config
-      |> Keyword.get(:timeout) || 5_000
+      |> Keyword.get(:timeout) || 10_000
 
   def db_type(config),
     do:
@@ -35,9 +46,9 @@ defmodule Scarab.Config do
       config
       |> Keyword.get(:khepri) || []
 
-  def fetch_env!(app) do
-    case Application.fetch_env!(app, :khepri) do
-      nil -> raise(ArgumentError, "no config for #{inspect(app)}")
+  def fetch_env!() do
+    case Application.fetch_env!(:scarab_es, :khepri) do
+      nil -> raise(ArgumentError, "no config found!")
       config -> Map.new(config)
     end
   end

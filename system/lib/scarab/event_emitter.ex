@@ -8,22 +8,27 @@ defmodule Scarab.EventEmitter do
   def emit(store, event),
     do:
       :scarab_pubsub
-      |> PubSub.broadcast(store, %{event: event})
+      |> PubSub.broadcast("#{store}", %{event: event})
 
   def emit!(store, event),
     do:
       :scarab_pubsub
-      |> PubSub.broadcast!(store, %{event: event})
+      |> PubSub.broadcast!("#{store}", %{event: event})
 
-  def on_new_event(props),
-    do: IO.puts("Seen New event: #{inspect(props, pretty: true)}")
+  def on_new_event(store, props) do 
+    IO.puts("Seen New event: #{inspect(props, pretty: true)}")
+    store
+    |> emit(props)
+  end
 
   def register_emitter(store) do
     case store
          |> :khepri.put!(
            [:procs, :on_new_event],
-           fn props -> on_new_event(props) end
-         ) do
+           fn props -> 
+             store 
+             |> on_new_event(props) 
+           end) do
       :ok ->
         on_new_event_filter =
           :khepri_evf.tree([store, :streams], %{on_actions: [:create]})
@@ -32,9 +37,8 @@ defmodule Scarab.EventEmitter do
         |> :khepri.register_trigger(
           :on_new_event_filter,
           on_new_event_filter,
-          [store, :procs, :on_new_event]
+          [:procs, :on_new_event]
         )
-
         :ok
 
       reason ->
