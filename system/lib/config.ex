@@ -1,4 +1,4 @@
-defmodule Scarab.Config do
+defmodule ScarabES.Config do
   @moduledoc """
   This module is responsible for loading the configuration for the application.
   """
@@ -55,8 +55,8 @@ defmodule Scarab.Config do
 
 
   def scarab_seeds()  do 
-    seeds =      System.get_env("SCARAB_SEEDS") || to_string(node())
-    Logger.info("SCARAB_SEEDS: #{inspect(seeds, pretty: true)}")
+    seeds =      System.get_env("SCARABES_SEEDS") || to_string(node())
+    Logger.info("SCARABES_SEEDS: #{inspect(seeds, pretty: true)}")
 
     nodes =  seeds
       |> String.trim()

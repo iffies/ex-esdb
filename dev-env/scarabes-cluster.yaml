@@ -1,0 +1,158 @@
+networks:
+  scarabes-net:
+    name: scarabes-net
+    driver: bridge
+
+volumes:
+  scarabes0-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /volume/scarabes/data0
+
+  scarabes1-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /volume/scarabes/data1
+
+  scarabes2-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /volume/scarabes/data2
+
+  scarabes3-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /volume/scarabes/data3
+
+  scarabes4-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /volume/scarabes/data4
+
+services:
+  scarabes0:
+    image: local/scarabes
+    build:
+      context: ../system
+    hostname: node0
+    container_name: scarabes0
+    networks:
+      - scarabes-net
+    volumes:
+      - scarabes0-data:/data
+    environment:
+      SCARABES_STORE: "reg_gh"
+      SCARABES_COOKIE: "reg_greenhouse_cookie"
+      SCARABES_SEEDS: "scarabes@node1,scarabes@s2.l,scarabes@s3.l,scarabes@s4.l"
+    healthcheck:
+      test: ["CMD-SHELL", "epmd -names | grep scarab_es"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  scarabes1:
+    image: local/scarabes
+    build:
+      context: ../system
+    hostname: node1
+    container_name: scarabes1
+    networks:
+      - scarabes-net
+    volumes:
+      - scarabes1-data:/data
+    environment:
+      SCARABES_STORE: "reg_gh"
+      SCARABES_COOKIE: "reg_greenhouse_cookie"
+      SCARABES_SEEDS: "scarabes@node0,scarabes@s2.l,scarabes@s3.l,scarabes@s4.l"
+    depends_on:
+      scarabes0:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "epmd -names | grep scarab_es"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  scarabes2:
+    image: local/scarabes
+    build:
+      context: ../system
+    hostname: s2.l
+    container_name: scarabes2
+    networks:
+      - scarabes-net
+    volumes:
+      - scarabes2-data:/data
+    environment:
+      SCARABES_STORE: "reg_gh"
+      SCARABES_COOKIE: "reg_greenhouse_cookie"
+      SCARABES_SEEDS: "scarabes@node0,scarabes@node1,scarabes@s3.l,scarabes@s4.l"
+    depends_on:
+      scarabes0:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "epmd -names | grep scarab_es"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  scarabes3:
+    image: local/scarabes
+    build:
+      context: ../system
+    hostname: s3.l
+    container_name: scarabes3
+    networks:
+      - scarabes-net
+    volumes:
+      - scarabes3-data:/data
+    environment:
+      SCARABES_STORE: "reg_gh"
+      SCARABES_COOKIE: "reg_greenhouse_cookie"
+      SCARABES_SEEDS: "scarabes@node0,scarabes@node1,scarabes@s2.l,scarabes@s4.l"
+    depends_on:
+      scarabes0:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "epmd -names | grep scarab_es"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  scarabes4:
+    image: local/scarabes
+    build:
+      context: ../system
+    hostname: s4.l
+    container_name: scarabes4
+    networks:
+      - scarabes-net
+    volumes:
+      - scarabes4-data:/data
+    environment:
+      SCARABES_STORE: "reg_gh"
+      SCARABES_COOKIE: "reg_greenhouse_cookie"
+      SCARABES_SEEDS: "scarabes@node0,scarabes@node1,scarabes@s2.l,scarabes@s3.l"
+    depends_on:
+      scarabes0:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "epmd -names | grep scarab_es"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s

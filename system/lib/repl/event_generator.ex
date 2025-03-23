@@ -1,4 +1,4 @@
-defmodule Scarab.Repl.EventGenerator do
+defmodule ScarabES.Repl.EventGenerator do
   @moduledoc false
 
   require UUID
@@ -9,9 +9,9 @@ defmodule Scarab.Repl.EventGenerator do
   @humidity_measured_v1 "humidity_measured:v1"
   @light_measured_v1 "light_measured:v1"
   
-  @fan_acrivated_v1 "fan_acrivated:v1"
+  @fan_activated_v1 "fan_activated:v1"
   @fan_deactivated_v1 "fan_deactivated:v1"
-  @light_acrivated_v1 "light_acrivated:v1"
+  @light_activated_v1 "light_activated:v1"
   @light_deactivated_v1 "light_deactivated:v1"
   @heater_activated_v1 "heater_activated:v1"
   @heater_deactivated_v1 "heater_deactivated:v1"
@@ -33,9 +33,9 @@ defmodule Scarab.Repl.EventGenerator do
     @desired_humidity_set_v1,
     @desired_light_set_v1,
 
-    @light_acrivated_v1,
+    @light_activated_v1,
     @light_deactivated_v1,
-    @fan_acrivated_v1,
+    @fan_activated_v1,
     @fan_deactivated_v1,
     @heater_activated_v1,
     @heater_deactivated_v1,
@@ -62,7 +62,7 @@ defmodule Scarab.Repl.EventGenerator do
 
   def initialize(),
     do:
-    %Scarab.NewEvent{
+    %ScarabES.NewEvent{
       event_id: generate_uuid(),
       event_type: @initialized_v1,
       data_content_type: 1,
@@ -84,7 +84,7 @@ defmodule Scarab.Repl.EventGenerator do
     event_id = generate_uuid()
     event_type = Enum.random(@event_types)
 
-    %Scarab.NewEvent{
+    %ScarabES.NewEvent{
       event_id: event_id,
       event_type: event_type,
       data_content_type: Enum.random(@content_types),

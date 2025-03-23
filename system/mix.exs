@@ -1,19 +1,28 @@
 defmodule Scarab.MixProject do
+  @moduledoc false
   use Mix.Project
 
-  @version "0.2.0"
+  @app_name :scarab_es
+  @elixir_version "~> 1.17"
+  @version "0.1.0"
+  @source_url "https://github.com/beam-campus/scarab"
+  @homepage_url "https://github.com/beam-campus/scarab"
+  @docs_url "https://hexdocs.pm/scarab"
+  @package_url "https://hex.pm/packages/scarab"
+  @issues_url "https://github.com/beam-campus/scarab/issues"
+  @description "Scarab is a reincarnation of rabbitmq/khepri, specialized for use as an event store."
 
   def project do
     [
-      app: :scarab_es,
+      app: @app_name,
       version: @version,
       deps: deps(),
-      elixir: "~> 1.17",
+      elixir: @elixir_version,
       elixirc_paths: elixirc_paths(Mix.env()),
       erl_opts: erl_opts(),
       erlc_paths: erlc_paths(Mix.env()),
       consolidate_protocols: Mix.env() != :test,
-      description: description(),
+      description: @description,
       docs: docs(),
       package: package(),
       releases: releases(),
@@ -40,7 +49,7 @@ defmodule Scarab.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application,
     do: [
-      mod: {Scarab.ESApp, []},
+      mod: {ScarabES.App, []},
       extra_applications: [
         :logger,
         :eex,
@@ -73,18 +82,19 @@ defmodule Scarab.MixProject do
     [
       {:dialyze, "~> 0.2.0", only: [:dev]},
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
-      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
-      {:mix_test_watch, "~> 1.1", only: [:dev, :test], runtime: false},
-      {:meck, "~> 0.9.2", only: [:test]},
-      {:eunit_formatters, "~> 0.5", only: [:test]},
+      {:makeup_html, ">= 0.0.0", only: :dev, runtime: false},
       {:ex_doc, "~> 0.37", only: [:dev], runtime: false},
+      {:mix_test_watch, "~> 1.1", only: [:dev, :test], runtime: false},
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+      {:meck, "~> 0.9.2", only: [:test], runtime: false},
+      {:eunit_formatters, "~> 0.5", only: [:test], runtime: false},
       {:mox, "~> 1.0", only: [:test], runtime: false},
       {:ecto_sql, "~> 3.12.1", optional: true},
-      {:phoenix_pubsub, "~> 2.1.3"},
+      {:jason, "~> 1.4", optional: true},
+      {:phoenix_pubsub, "~> 2.1"},
       {:elixir_uuid, "~> 1.2"},
-      {:jason, "~> 1.4.3", optional: true},
-      {:khepri, "~> 0.16.0"},
-      {:protobuf, "~> 0.14.1"},
+      {:khepri, "~> 0.16"},
+      {:protobuf, "~> 0.14"},
       {:gen_retry, "~> 1.4"}
     ]
   end
@@ -96,15 +106,15 @@ defmodule Scarab.MixProject do
 
   defp description do
     """
-    Scarab is a reincarination of rabbitmq/khepri, 
+    ScarabES is a reincarination of rabbitmq/khepri, 
     specialized for use as an event store.
     """
   end
 
   defp docs do
     [
-      main: "Scarab.ESApp",
-      canonical: "http://hexdocs.pm/scarab",
+      main: "ScarabES.App",
+      canonical: "http://hexdocs.pm/scarab_es",
       source_ref: "v#{@version}",
       extra_section: "GUIDES",
       extras: [

@@ -1,7 +1,7 @@
-defmodule Scarab.Storage do
+defmodule ScarabES.Storage do
   @moduledoc false
 
-  alias Scarab.Config
+  alias ScarabES.Config
 
   def wait_for_event_store(timeout \\ 5_000) when is_integer(timeout) do
     task = Task.async(&scarab_check/0)
@@ -16,7 +16,7 @@ defmodule Scarab.Storage do
   end
 
   defp scarab_check do
-    case Scarab.System.start(Config.get()) do
+    case ScarabES.System.start(Config.get()) do
       {:ok, state} ->
         :timer.sleep(1_000)
         :ok
@@ -28,6 +28,6 @@ defmodule Scarab.Storage do
   end
 
   def store do
-    Scarab.Config.store()
+    ScarabES.Config.store()
   end
 end

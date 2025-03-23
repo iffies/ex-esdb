@@ -8,18 +8,18 @@
 echo "Creating caches folder"
 sudo mkdir -p /volume/caches
 # SCARAB
-echo "creating scarab data folders"
+echo "creating Scarabes data folders"
 sudo mkdir -p \
-  /volume/scarab/data0 \
-  /volume/scarab/data1 \
-  /volume/scarab/data2 \
-  /volume/scarab/data3 \
-  /volume/scarab/data4
+  /volume/scarabes/data0 \
+  /volume/scarabes/data1 \
+  /volume/scarabes/data2 \
+  /volume/scarabes/data3 \
+  /volume/scarabes/data4
 
 sudo chown "$USER" -R /volume/
 
-docker-compose -f scarab-custer-1.yaml \
+docker-compose -f scarabes-cluster.yaml \
   down
 
-docker-compose -f scarab-custer-1.yaml \
+docker-compose -f scarabes-cluster.yaml \
   up --remove-orphans --build $1

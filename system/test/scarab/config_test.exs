@@ -1,7 +1,7 @@
-defmodule Scarab.ConfigTest do
+defmodule ScarabES.ConfigTest do
   use ExUnit.Case
-  doctest Scarab.Config
-  alias Scarab.Config
+  doctest ScarabES.Config
+  alias ScarabES.Config
 
   @app :scarab_es
 

@@ -1,9 +1,9 @@
-defmodule Scarab.EventStoreTest do
+defmodule ScarabES.EventStoreTest do
   use ExUnit.Case
-  doctest Scarab.EventStore
+  doctest ScarabES.EventStore
 
-  alias Scarab.EventStore
-  alias Scarab.Config
+  alias ScarabES.EventStore
+  alias ScarabES.Config
 
   require Logger
 
