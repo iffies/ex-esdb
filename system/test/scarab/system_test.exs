@@ -1,17 +1,17 @@
-defmodule ScarabES.SystemTest do
+defmodule ExESDB.SystemTest do
   use ExUnit.Case
-  doctest ScarabES.System
+  doctest ExESDB.System
 
   require Logger
 
-  alias ScarabES.System, as: ScarabSystem
-  alias ScarabES.EventStore, as: ScarabEventStore
-  alias ScarabES.Config, as: ScarabConfig
+  alias ExESDB.System, as: ESDBSystem
+  alias ExESDB.EventStore, as: EventStore
+  alias ExESDB.Options, as: Opttions
 
   @tag :skip
   test "that the Scarab System starts the EventStore in single node mode" do
-    config = ScarabConfig.fetch_env!(:node_app)
-    res = ScarabSystem.start(config)
+    opts = Options.esdb_khepri()
+    res = ScarabSystem.start(opts)
     Logger.debug("System pid: #{inspect(res, pretty: true)}")
   end
 end

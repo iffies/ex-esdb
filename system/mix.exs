@@ -49,7 +49,7 @@ defmodule Scarab.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application,
     do: [
-      mod: {ScarabES.App, []},
+      #      mod: {ExESDB.App, []},
       extra_applications: [
         :logger,
         :eex,

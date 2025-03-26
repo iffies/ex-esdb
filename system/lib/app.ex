@@ -3,29 +3,31 @@ defmodule ExESDB.App do
   This module is used to start the Scarab system.
   """
   use Application,
-    otp_app: :scarab_es
+    otp_app: :ex_esdb
+
+    alias ExESDB.Options, as: Options
 
   require Logger
   require Phoenix.PubSub
 
   @impl true
   def start(_type, _args) do
-    config = ExESDB.Options.fetch!()
+    opts = Options.esdb_khepri()
 
     children = [
       {Phoenix.PubSub, name: :scarab_pubsub},
-      {ExESDB.System, config},
+      {ExESDB.System, opts},
     ]
 
     :os.set_signal(:sigterm, :handle)
 
     Logger.info("
                  ===================================================
-                 || Starting Scarab on Node #{inspect(node(), pretty: true)} 
+                 || Starting ExESDB on Node #{inspect(node(), pretty: true)} 
                  ===================================================
       ")
 
-    opts = [strategy: :one_for_one, name: Scarab.ESApp.Supervisor]
+    opts = [strategy: :one_for_one, name: EsESD.Supervisor]
     Supervisor.start_link(children, opts)
   end
 
@@ -38,6 +40,5 @@ defmodule ExESDB.App do
   def stop(state) do
     Logger.info("STOPPING APP #{inspect(state, pretty: true)}")
   end
-
 
 end

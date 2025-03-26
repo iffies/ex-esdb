@@ -1,60 +1,51 @@
 defmodule ExESDB.Options do
-  @moduledoc """
-  This module is responsible for loading the configuration for the application.
-  """
-
-  require Logger
+  @moduledoc false
+  
   alias ExESDB.EnVars, as: EnVars
 
-  @doc """
-    Returns the data directory for the application when passed a map or a keyword list.
-  """
-  def data_dir(config) when is_map(config),
-    do: Map.get(config, :data_dir) || "data"
-  def data_dir(config) when is_list(config),
-    do: Keyword.get(config, :data_dir) || "data"
-  @doc """
-    Returns the store id for the application when passed a map or a keyword list.
-  """
-  def store_id(config) when is_map(config),
-    do: Map.get(config, :store_id) || :exesdb
-  def store_id(config) when is_list(config),
-    do: Keyword.get(config, :store_id) || :exesdb
-  @doc """
-    Returns the timeout for the application when passed a map or a keyword list.
-  """
-  def timeout(config) when is_map(config),
-    do: Map.get(config, :timeout) || 10_000
-  def timeout(config) when is_list(config),
-    do: Keyword.get(config, :timeout) || 10_000
-  @doc """
-    Returns the db type for the application when passed a map or a keyword list.
-  """
-  def db_type(config) when is_map(config),
-    do: Map.get(config, :db_type) || :single
-  def db_type(config) when is_list(config),
-    do: Keyword.get(config, :db_type) || :single
+  def esdb_khepri, do: Application.get_env(:ex_esdb, :khepri)
+  def esdb_khepri(key), do: esdb_khepri()[key]
 
-  def seed_nodes(config) when is_map(config),
-    do: Map.get(config, :seed_nodes)
-  def seed_nodes(config) when is_list(config),
-    do: Keyword.get(config, :seed_nodes)
-
-  defp defaults!,
-    do:
-      %{
-        data_dir: "/data",
-        store_id: :ex_esdb,
-        db_type: :single,
-        timeout: 10_000,
-        seed_nodes: nil
-      }
-
-  def fetch! do
-    case Application.fetch_env!(:ex_esdb, :khepri) do
-      nil -> defaults!()
-      config -> Map.new(config)
+  def data_dir do
+    case System.get_env(EnVars.data_dir()) do
+      nil -> esdb_khepri(:data_dir) || "/data"
+      data_dir -> data_dir
     end
+  end
+
+  def store_id do
+    case System.get_env(EnVars.store_id()) do
+      nil -> esdb_khepri(:store_id) || :ex_store
+      store_id -> String.to_atom(store_id)
+    end
+  end
+
+  def timeout do
+    case System.get_env(EnVars.timeout()) do
+      nil -> esdb_khepri(:timeout) || 10_000
+      timeout -> String.to_integer(timeout)
+    end
+  end
+
+  def db_type do
+    case System.get_env(EnVars.db_type()) do
+      nil -> esdb_khepri(:db_type) || :single
+      db_type -> String.to_atom(db_type)
+    end
+  end
+
+  def seed_nodes do
+    case System.get_env(EnVars.seed_nodes()) do
+      nil -> esdb_khepri(:seeds_nodes) || [node()]
+      seeds -> to_atoms_list(seeds)
+    end
+  end
+
+  defp to_atoms_list(seeds) do
+    seeds
+    |> String.split(",")
+    |> Enum.map(&clean_node/1)
+    |> Enum.map(&seed_to_atom/1)
   end
 
   defp clean_node(node),
@@ -71,22 +62,6 @@ defmodule ExESDB.Options do
       :undefined -> String.to_atom(seed)
       atom -> atom
     end
-  end
-
-  def seeds do
-    seeds =  System.get_env(EnVars.seed_nodes())
-
-    Logger.info("EX_ESDB_SEEDS: #{inspect(seeds, pretty: true)}")
-    nodes =
-      seeds
-      |> String.split(",")
-      |> Enum.map(fn _ -> &clean_node/1 end)
-      |> Enum.reject(fn seed -> seed == to_string(node()) end)
-      |> Enum.map(fn _ -> &seed_to_atom/1       end)
-
-    Logger.info("SEED NODES: #{inspect(nodes, pretty: true)}")
-
-    nodes
   end
 
 end

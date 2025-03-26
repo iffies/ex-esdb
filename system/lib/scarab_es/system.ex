@@ -1,4 +1,4 @@
-defmodule ScarabES.System do
+defmodule ExESDB.System do
   @moduledoc false
   use Supervisor
 
@@ -9,8 +9,8 @@ defmodule ScarabES.System do
   @impl true
   def init(config) do
     children = [
-      {ScarabES.EventStore, config},
-      {ScarabES.Cluster, config},
+      {ExESDB.EventStore, config},
+      {ExESDB.Cluster, config},
     ]
     
 
@@ -22,9 +22,8 @@ defmodule ScarabES.System do
     )
   end
 
-
   # def handle_info({:EXIT, pid, reason}, state) do
-  #   Logger.warning("ScarabES.trapped EXIT from [#{inspect(pid)}] 
+  #   Logger.warning("ExESDB.trapped EXIT from [#{inspect(pid)}] 
   #     with reason [#{inspect(reason, pretty: true)}]")
   #   Supervisor.terminate_child(__MODULE__, pid)
   #   Supervisor.restart_child(__MODULE__, pid)

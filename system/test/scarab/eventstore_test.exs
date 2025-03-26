@@ -1,14 +1,14 @@
-defmodule ScarabES.EventStoreTest do
+defmodule ExESDB.EventStoreTest do
   use ExUnit.Case
-  doctest ScarabES.EventStore
+  doctest ExESDB.EventStore
 
-  alias ScarabES.EventStore
-  alias ScarabES.Config
+  alias ExESDB.EventStore
+  alias ExESDB.Options, as: Options
 
   require Logger
 
   setup do
-    opts = Config.fetch_env!(:node_app)
+    opts = Options.esdb_khepri()
 
     start_supervised!({EventStore, opts})
 

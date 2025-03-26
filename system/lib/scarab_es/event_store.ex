@@ -15,7 +15,7 @@ defmodule ExESDB.EventStore do
   @doc """
   Get the list of streams in the store.
   ## Parameters
-  
+
     - `store`: The store to get the streams from.
 
   ## Returns
@@ -35,9 +35,9 @@ defmodule ExESDB.EventStore do
   ## Parameters
 
     - `store`: The store to get the state of.
-  
+ 
   ## Returns
-  
+ 
       - `{:ok, state}`  if successful.
       - `{:error, reason}` if unsuccessful.
 
@@ -212,7 +212,7 @@ defmodule ExESDB.EventStore do
   def child_spec(opts) do
     %{
       id: __MODULE__,
-      start: {__MODULE__, :start_link, [opts]},
+      start: {__MODULE__, :start_link, opts},
       restart: :permanent,
       shutdown: 10_000,
       type: :worker
