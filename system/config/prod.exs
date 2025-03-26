@@ -13,11 +13,11 @@ config :logger, :console,
   metadata: [:mfa],
   level: :debug
 
-config :scarab_es,
-  log_level: :information,
-  khepri: [
-    data_dir: "/data",
-    store_id: :default_scarab_es,
-    timeout: 10_000,
-    db_type: :node
-  ]
+config :ex_esdb, :logger, level: :debug
+
+config :ex_esdb, :khepri,
+  data_dir: "/data",
+  store_id: :ex_esdb,
+  timeout: 10_000,
+  db_type: :single,
+  seed_nodes: []

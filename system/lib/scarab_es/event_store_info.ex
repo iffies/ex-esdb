@@ -1,7 +1,7 @@
-defmodule ScarabES.EventStoreInfo do
+defmodule ExESDB.EventStoreInfo do
   @moduledoc false
 
-  import ScarabES.Khepri.Conditions
+  import ExESDB.Khepri.Conditions
 
   def get_streams_raw(store),
     do:

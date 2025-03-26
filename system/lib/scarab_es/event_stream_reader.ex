@@ -1,7 +1,7 @@
-defmodule ScarabES.EventStreamReader do
+defmodule ExESDB.EventStreamReader do
   @moduledoc false
 
-  import ScarabES.Khepri.Conditions
+  import ExESDB.Khepri.Conditions
 
   def get_current_version!(store, stream_id) do
     case store
@@ -23,7 +23,7 @@ defmodule ScarabES.EventStreamReader do
   def read_events(store, stream_id, start_version, count) do
     start_version..(start_version + count - 1)
     |> Enum.map(fn version ->
-      padded_version = ScarabES.VersionFormatter.pad_version(version, 6)
+      padded_version = ExESDB.VersionFormatter.pad_version(version, 6)
 
       store
       |> :khepri.get!([:streams, stream_id, padded_version])

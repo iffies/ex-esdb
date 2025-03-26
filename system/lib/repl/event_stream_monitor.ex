@@ -1,4 +1,4 @@
-defmodule ScarabES.Repl.EventStreamMonitor do
+defmodule ExESDB.Repl.EventStreamMonitor do
   @moduledoc false
   use GenServer
   require Logger

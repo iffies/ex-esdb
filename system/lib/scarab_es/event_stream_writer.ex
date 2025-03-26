@@ -1,7 +1,7 @@
-defmodule ScarabES.EventStreamWriter do
+defmodule ExESDB.EventStreamWriter do
   @moduledoc false
 
-  alias ScarabES.EventStreamReader, as: ESReader
+  alias ExESDB.EventStreamReader, as: ESReader
 
   #  @retry_attempts 3
   # @retry_delay 500
@@ -28,7 +28,7 @@ defmodule ScarabES.EventStreamWriter do
       current_version,
       fn event, version ->
         new_version = version + 1
-        padded_version = ScarabES.VersionFormatter.pad_version(new_version, 6)
+        padded_version = ExESDB.VersionFormatter.pad_version(new_version, 6)
 
         now =
           DateTime.utc_now()
@@ -57,13 +57,13 @@ defmodule ScarabES.EventStreamWriter do
   end
 
   defp to_event_record(
-         %ScarabES.NewEvent{} = new_event,
+         %ExESDB.NewEvent{} = new_event,
          stream_id,
          version,
          created,
          created_epoch
        ),
-       do: %ScarabES.EventRecord{
+       do: %ExESDB.EventRecord{
          event_stream_id: stream_id,
          event_number: version,
          event_id: new_event.event_id,

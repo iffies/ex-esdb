@@ -1,4 +1,4 @@
-defmodule ScarabES.NewEvent do
+defmodule ExESDB.NewEvent do
   @moduledoc false
 
   use Protobuf, protoc_gen_elixir_version: "0.14.1", syntax: :proto2

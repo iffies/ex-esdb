@@ -1,4 +1,4 @@
-defmodule ScarabES.EventEmitter do
+defmodule ExESDB.EventEmitter do
   @moduledoc false
 
   alias Phoenix.PubSub, as: PubSub

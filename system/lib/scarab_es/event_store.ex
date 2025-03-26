@@ -1,4 +1,4 @@
-defmodule ScarabES.EventStore do
+defmodule ExESDB.EventStore do
   @moduledoc """
   A GenServer wrapper around :khepri to act as an event store.
   Inspired by EventStoreDB's API.
@@ -7,9 +7,9 @@ defmodule ScarabES.EventStore do
 
   require Logger
 
-  alias ScarabES.EventEmitter, as: ESEmitter
-  alias ScarabES.EventStreamReader, as: ESReader
-  alias ScarabES.EventStreamWriter, as: ESWriter
+  alias ExESDB.EventEmitter, as: ESEmitter
+  alias ExESDB.EventStreamReader, as: ESReader
+  alias ExESDB.EventStreamWriter, as: ESWriter
 
   # Client API
   @doc """
@@ -233,7 +233,7 @@ defmodule ScarabES.EventStore do
     Process.flag(:trap_exit, true)
     Process.send_after(self(), :register_emitter, 10_000)
 
-    IO.puts("Starting ScarabES.EventStore with config: #{inspect(opts, pretty: true)}")
+    IO.puts("Starting ExESDB.EventStore with config: #{inspect(opts, pretty: true)}")
 
     case start_khepri(opts) do
       {:ok, store} ->

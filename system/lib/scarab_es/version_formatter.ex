@@ -1,4 +1,4 @@
-defmodule ScarabES.VersionFormatter do
+defmodule ExESDB.VersionFormatter do
   @moduledoc false
 
   ## Examples

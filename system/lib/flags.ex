@@ -1,4 +1,5 @@
 defmodule Flags do
+  @moduledoc false
   import Bitwise
 
   # def set(target, flag), do: bor(target, flag)

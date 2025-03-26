@@ -1,12 +1,19 @@
-defmodule ScarabES.Cluster do
+defmodule ExESDB.Cluster do
   @moduledoc false
   use GenServer
 
   require Logger
   require Colors
 
+  # defp ping?(node) do
+  #   case :net_adm.ping(node) do
+  #     :pong -> true
+  #     _ -> false
+  #   end
+  # end
+
   defp join(store) do
-      ScarabES.Config.scarab_seeds()
+      ExESDB.Options.seeds()
       |> Enum.map(
       fn seed -> 
         Logger.info("Joining node #{inspect(seed)} in cluster #{inspect(store)}")

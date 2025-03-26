@@ -7,13 +7,9 @@ config :ex_unit,
   exclude: [:skip],
   logger: true
 
-config :scarab_es,
-  khepri: [
-    data_dir: "tmp/reg_gh",
-    store_id: :reg_gh,
-    timeout: 1_000,
-    db_type: :node
-  ],
-  ra: [
-    name: :test_app
-  ]
+config :ex_esdb, :khepri,
+  data_dir: "tmp/reg_gh",
+  store_id: :reg_gh,
+  timeout: 1_000,
+  db_type: :single,
+  seed_nodes: []

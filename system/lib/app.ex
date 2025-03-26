@@ -1,4 +1,4 @@
-defmodule ScarabES.App do
+defmodule ExESDB.App do
   @moduledoc """
   This module is used to start the Scarab system.
   """
@@ -10,11 +10,11 @@ defmodule ScarabES.App do
 
   @impl true
   def start(_type, _args) do
-    config = ScarabES.Config.fetch_env!()
+    config = ExESDB.Options.fetch!()
 
     children = [
       {Phoenix.PubSub, name: :scarab_pubsub},
-      {ScarabES.System, config},
+      {ExESDB.System, config},
     ]
 
     :os.set_signal(:sigterm, :handle)

@@ -1,4 +1,4 @@
-defmodule Scarab do
+defmodule ExESDB do
   @moduledoc false
   defmodule OperationResult do
     @moduledoc false

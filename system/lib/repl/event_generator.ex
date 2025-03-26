@@ -1,4 +1,4 @@
-defmodule ScarabES.Repl.EventGenerator do
+defmodule ExESDB.Repl.EventGenerator do
   @moduledoc false
 
   require UUID
@@ -62,7 +62,7 @@ defmodule ScarabES.Repl.EventGenerator do
 
   def initialize(),
     do:
-    %ScarabES.NewEvent{
+    %ExESDB.NewEvent{
       event_id: generate_uuid(),
       event_type: @initialized_v1,
       data_content_type: 1,
@@ -84,7 +84,7 @@ defmodule ScarabES.Repl.EventGenerator do
     event_id = generate_uuid()
     event_type = Enum.random(@event_types)
 
-    %ScarabES.NewEvent{
+    %ExESDB.NewEvent{
       event_id: event_id,
       event_type: event_type,
       data_content_type: Enum.random(@content_types),
