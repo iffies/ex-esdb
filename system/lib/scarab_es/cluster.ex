@@ -48,8 +48,8 @@ defmodule ExESDB.Cluster do
 
 
   @impl true
-  def handle_info(:join, %{store_id: store} = state) do
-    store 
+  def handle_info(:join, state) do
+    state[:store_id]
     |> join()
     {:noreply, state}
   end
@@ -72,13 +72,15 @@ defmodule ExESDB.Cluster do
 
   ############# PLUMBING #############
   @impl true
-  def terminate(reason, %{store_id: store}) do
+  def terminate(reason, state) do
+
     IO.puts("#{Colors.cluster_theme(self())} terminating with reason: #{inspect(reason)}")
-    store |> leave()
+    state[:store_id] |> leave()
   end
 
   @impl true
-  def init(%{timeout: timeout} = config) do
+  def init(config) do
+    timeout = config[:timeout] || 1000
     Logger.info("#{Colors.cluster_theme(self())} => Starting Cluster with config: #{inspect(config, pretty: true)}")
     Process.flag(:trap_exit, true)
     Process.send_after(self(), :join, timeout)

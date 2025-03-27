@@ -11,8 +11,8 @@ defmodule ExESDB.System do
     Logger.info("Starting ExESDB.System with config: #{inspect(config, pretty: true)}")
 
     children = [
-      {ExESDB.EventStore, config}
-      #      {ExESDB.Cluster, config},
+      {ExESDB.EventStore, config},
+      {ExESDB.Cluster, config},
     ]
 
     Supervisor.init(
