@@ -15,7 +15,7 @@ config :logger, :console,
   metadata: [:mfa],
   level: :debug
 
-config :ex_esdb, :logger, level: :debug
+config :ex_esdb, :logger, level: :information
 
 config :ex_esdb, :khepri,
   data_dir: "tmp/reg_gh",

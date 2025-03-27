@@ -8,17 +8,16 @@ defmodule ExESDB.System do
 
   @impl true
   def init(config) do
+    Logger.info("Starting ExESDB.System with config: #{inspect(config, pretty: true)}")
+
     children = [
-      {ExESDB.EventStore, config},
-      {ExESDB.Cluster, config},
+      {ExESDB.EventStore, config}
+      #      {ExESDB.Cluster, config},
     ]
-    
 
     Supervisor.init(
       children,
-      strategy: :one_for_one,
-      max_restarts: 10,
-      max_seconds: 10
+      strategy: :one_for_one
     )
   end
 
@@ -30,14 +29,13 @@ defmodule ExESDB.System do
   #   {:noreply, state}
   # end
 
-  def start_link(config), 
+  def start_link(config),
     do:
-    Supervisor.start_link(
-      __MODULE__, 
-      config, 
-      name: __MODULE__
-    )
- 
+      Supervisor.start_link(
+        __MODULE__,
+        config,
+        name: __MODULE__
+      )
 
   # def start(config) do
   #   case Supervisor.start_link(
@@ -50,7 +48,6 @@ defmodule ExESDB.System do
   #     {:error, reason} -> raise "failed to start eventstores supervisor: #{inspect(reason)}"
   #   end
   # end
-
 
   #
   # def start_link(config) do

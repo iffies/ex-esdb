@@ -13,7 +13,7 @@ defmodule ExESDB.Cluster do
   # end
 
   defp join(store) do
-      ExESDB.Options.seeds()
+      ExESDB.Options.seed_nodes()
       |> Enum.map(
       fn seed -> 
         Logger.info("Joining node #{inspect(seed)} in cluster #{inspect(store)}")
@@ -72,7 +72,7 @@ defmodule ExESDB.Cluster do
 
   ############# PLUMBING #############
   @impl true
-  def terminate(reason, %{store_id: store} = state) do
+  def terminate(reason, %{store_id: store}) do
     IO.puts("#{Colors.cluster_theme(self())} terminating with reason: #{inspect(reason)}")
     store |> leave()
   end

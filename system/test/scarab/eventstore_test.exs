@@ -19,9 +19,10 @@ defmodule ExESDB.EventStoreTest do
     opts
   end
 
-  describe "test that the EventStore starts" do
-    test "that the EventStore starts" do
-      opts = Config.fetch_env!(:node_app)
+  describe "GIVEN a valid set of options" do
+    test "WHEN the EventStore is started
+          THEN the EventStore is started and the pid is returned" do
+      opts = Options.esdb_khepri()
       res = EventStore.start_link(opts)
       Logger.warning("EventStore pid: #{inspect(res, pretty: true)}")
     end

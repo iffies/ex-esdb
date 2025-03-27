@@ -192,12 +192,10 @@ defmodule ExESDB.EventStore do
     {:reply, {:ok, version}, state}
   end
 
-  defp start_khepri(%{
-         data_dir: data_dir,
-         store_id: store,
-         timeout: timeout,
-         db_type: _db_type
-       }) do
+  defp start_khepri(opts) do
+    store = opts[:store_id]
+    timeout = opts[:timeout]
+    data_dir = opts[:data_dir]
     case :khepri.start(data_dir, store, timeout) do
       {:ok, store} ->
         Logger.info("#{Colors.store_theme(self())} => Started store: #{inspect(store, pretty: true)}")
@@ -212,7 +210,7 @@ defmodule ExESDB.EventStore do
   def child_spec(opts) do
     %{
       id: __MODULE__,
-      start: {__MODULE__, :start_link, opts},
+      start: {__MODULE__, :start_link, [opts]},
       restart: :permanent,
       shutdown: 10_000,
       type: :worker
@@ -230,10 +228,10 @@ defmodule ExESDB.EventStore do
   # Server Callbacks
   @impl true
   def init(opts) do
+    IO.puts("Starting ExESDB.EventStore with config: #{inspect(opts, pretty: true)}")
     Process.flag(:trap_exit, true)
     Process.send_after(self(), :register_emitter, 10_000)
 
-    IO.puts("Starting ExESDB.EventStore with config: #{inspect(opts, pretty: true)}")
 
     case start_khepri(opts) do
       {:ok, store} ->

@@ -25,6 +25,9 @@ defmodule ExESDB.App do
                  ===================================================
                  || Starting ExESDB on Node #{inspect(node(), pretty: true)} 
                  ===================================================
+      
+     Options: #{inspect(opts, pretty: true)}
+
       ")
 
     opts = [strategy: :one_for_one, name: EsESD.Supervisor]

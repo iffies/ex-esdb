@@ -23,12 +23,11 @@ defmodule ExESDB.Repl do
   def stream4, do: @greenhouse4
   def stream5, do: @greenhouse5
 
-  def get_config, do: ExESDB.Options.fetch!()
+  def get_config, do: ExESDB.Options.esdb_khepri()
   def get_streams, do: ESInfo.get_streams_raw(@store)
 
   def start_monitor(store) do
-    
-    case  store 
+       case  store 
       |> ExESDB.EventStore.get_state() do
         {:ok, [config: config, store: _]} -> 
           IO.puts "Starting monitor for #{inspect(config, pretty: true)}"
