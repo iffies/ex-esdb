@@ -58,9 +58,10 @@ defmodule ExESDB.Options do
     |> String.replace(":", "")
 
   defp seed_to_atom(seed)  do
-    case String.to_existing_atom(seed) do
-      :undefined -> String.to_atom(seed)
-      atom -> atom
+    try do 
+      String.to_existing_atom(seed) 
+    rescue
+      _ -> String.to_atom(seed)
     end
   end
 

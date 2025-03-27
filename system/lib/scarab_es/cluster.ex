@@ -55,17 +55,18 @@ defmodule ExESDB.Cluster do
   end
 
   @impl true
-  def handle_info(:members, %{store_id: store, timeout: timeout} = state) do
-    store 
+  def handle_info(:members, state) do
+    state[:store_id]
     |> members()
-    Process.send_after(self(), :members, 2 * timeout)
+    Process.send_after(self(), :members, 2 * state[:timeout])
     {:noreply, state}
   end
 
   @impl true
-  def handle_info({:EXIT, pid, reason}, %{store_id: store} = state) do
+  def handle_info({:EXIT, pid, reason}, state) do
     Logger.warning("Cluster #{Colors.cluster_theme(pid)} exited with reason: #{inspect(reason)}")
-    store |> leave()
+    state[:store_id] 
+    |> leave()
     {:noreply, state}
   end
 
