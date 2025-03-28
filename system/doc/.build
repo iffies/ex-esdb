@@ -3,10 +3,9 @@ Colors.html
 ExESDB.App.html
 ExESDB.EnVars.html
 ExESDB.EventStore.html
+ExESDB.Messages.html
 ExESDB.Repl.html
-ScarabES.Messages.html
-ScarabES.Schema.ScarabInit.html
-ScarabES.html
+ExESDB.html
 adr.html
 api-reference.html
 changelog.html
@@ -17,8 +16,8 @@ dist/lato-latin-700-normal-2XVSBPG4.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-4E70F69F.js
-dist/sidebar_items-D43B08C6.js
+dist/search_data-7D86A33E.js
+dist/sidebar_items-7606DB42.js
 getting-started.html
 index.html
 search.html

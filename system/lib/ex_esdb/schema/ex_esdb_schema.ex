@@ -1,4 +1,4 @@
-defmodule ExESDB do
+defmodule ExESDB.Schema do
   @moduledoc false
   defmodule OperationResult do
     @moduledoc false
