@@ -6,7 +6,7 @@
 .lexical/
 .elixir-tools/
 .obsidian/
-khepri*/
+tmp/
 
 
 ## Elixir

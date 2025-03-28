@@ -89,7 +89,6 @@ defmodule Scarab.MixProject do
       {:meck, "~> 0.9.2", only: [:test], runtime: false},
       {:eunit_formatters, "~> 0.5", only: [:test], runtime: false},
       {:mox, "~> 1.0", only: [:test], runtime: false},
-      {:ecto_sql, "~> 3.12.1", optional: true},
       {:jason, "~> 1.4", optional: true},
       {:phoenix_pubsub, "~> 2.1"},
       {:elixir_uuid, "~> 1.2"},
