@@ -8,8 +8,9 @@ config :ex_unit,
   logger: true
 
 config :ex_esdb, :khepri,
-  data_dir: "tmp/reg_gh",
-  store_id: :reg_gh,
+  data_dir: "tmp/ex_esdb_store",
+  store_id: :ex_esdb_store,
   timeout: 1_000,
   db_type: :single,
-  seed_nodes: []
+  seed_nodes: [],
+  pub_sub: :ex_esdb_pub_sub

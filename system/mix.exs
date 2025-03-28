@@ -1,10 +1,10 @@
-defmodule Scarab.MixProject do
+defmodule ExESDB.MixProject do
   @moduledoc false
   use Mix.Project
 
   @app_name :ex_esdb
   @elixir_version "~> 1.17"
-  @version "0.0.1"
+  @version "0.0.2-alfa"
   @source_url "https://github.com/beam-campus/ex-esdb"
   #  @homepage_url "https://github.com/beam-campus/ex-esdb"
   @docs_url "https://hexdocs.pm/ex_esdb"
@@ -120,18 +120,19 @@ defmodule Scarab.MixProject do
 
   defp package do
     [
-      name: "ex_esdb",
+      name: @app_name,
       description: @description,
       version: @version,
-      files: [
-        "lib",
-        "src",
-        "mix.exs",
-        "../README*",
-        "../LICENSE*"
-      ],
+      # files: [
+      #   "lib",
+      #   "src",
+      #   "priv",
+      #   "mix.exs",
+      #   "../README*",
+      #   "../LICENSE*"
+      # ],
       maintainers: ["rgfaber"],
-      organization: "beam-campus",
+      #      organization: "beam-campus",
       licenses: ["MIT"],
       links: %{
         "GitHub" => @source_url

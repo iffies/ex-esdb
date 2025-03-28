@@ -7,7 +7,7 @@ defmodule ExESDB.EnVars do
   """
   def data_dir, do: "EX_ESDB_DATA_DIR"
   @doc """
-    Returns the khepri store id. default: `ex_esdb`
+    Returns the khepri store id. default: `ex_esdb_store`
   """
   def store_id, do: "EX_ESDB_STORE_ID"
   @doc """
@@ -22,4 +22,8 @@ defmodule ExESDB.EnVars do
     Returns the seed nodes. default: `nil`
   """
   def seed_nodes, do: "EX_ESDB_SEED_NODES"
+  @doc """
+    Returns the name of the pub/sub. default: `ex_esdb_pub_sub`
+  """
+  def pub_sub, do: "EX_ESDB_PUB_SUB"
 end

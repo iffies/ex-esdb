@@ -1,5 +1,7 @@
 defmodule ExESDB.EventStoreInfo do
-  @moduledoc false
+  @moduledoc """
+    This module provides functions to get information about the EXESDB event store.
+  """
 
   import ExESDB.Khepri.Conditions
 
@@ -22,12 +24,12 @@ defmodule ExESDB.EventStoreInfo do
       {:ok, streams} ->
         streams
         |> Stream.map(
-          fn {[:streams, stream_name], %{child_list_length: nbr_of_events}} ->  
+          fn {[:streams, stream_name], %{child_list_length: nbr_of_events}} ->
             [stream_name, nbr_of_events]
           end)
         |> Enum.to_list()
 
-      result -> 
+      result ->
           result
   end
 

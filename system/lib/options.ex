@@ -1,43 +1,61 @@
 defmodule ExESDB.Options do
-  @moduledoc false
+  @moduledoc """
+    This module contains the options helper functions for ExESDB
+  """
   
   alias ExESDB.EnVars, as: EnVars
 
-  def esdb_khepri, do: Application.get_env(:ex_esdb, :khepri)
-  def esdb_khepri(key), do: esdb_khepri()[key]
+  @data_dir EnVars.data_dir()
+  @store_id EnVars.store_id()
+  @timeout EnVars.timeout()
+  @db_type EnVars.db_type()
+  @seed_nodes EnVars.seed_nodes()
+  @pub_sub EnVars.pub_sub()
+
+
+  def sys_env(key), do: System.get_env(key)
+  def app_env, do: Application.get_env(:ex_esdb, :khepri)
+  def app_env(key), do: app_env()[key]
 
   def data_dir do
-    case System.get_env(EnVars.data_dir()) do
-      nil -> esdb_khepri(:data_dir) || "/data"
+    case sys_env(@data_dir) do
+      nil -> app_env(:data_dir) || "/data"
       data_dir -> data_dir
     end
   end
 
   def store_id do
-    case System.get_env(EnVars.store_id()) do
-      nil -> esdb_khepri(:store_id) || :ex_store
+    case sys_env(@store_id) do
+      nil -> app_env(:store_id) || :ex_esdb_store
       store_id -> to_unique_atom(store_id)
     end
   end
 
   def timeout do
-    case System.get_env(EnVars.timeout()) do
-      nil -> esdb_khepri(:timeout) || 10_000
+    case sys_env(@timeout) do
+      nil -> app_env(:timeout) || 10_000
       timeout -> String.to_integer(timeout)
     end
   end
 
   def db_type do
-    case System.get_env(EnVars.db_type()) do
-      nil -> esdb_khepri(:db_type) || :single
+    case sys_env(@db_type) do
+      nil -> app_env(:db_type) || :single
       db_type -> String.to_atom(db_type)
     end
   end
 
   def seed_nodes do
-    case System.get_env(EnVars.seed_nodes()) do
-      nil -> esdb_khepri(:seeds) || [node()]
+    case sys_env(@seed_nodes) do
+      nil -> app_env(:seeds) || [node()]
       seeds -> to_atoms_list(seeds)
+    end
+  end
+
+  def pub_sub do
+    case sys_env(@pub_sub) do
+      nil -> app_env(:pub_sub) || :ex_esdb_pub_sub
+      pub_sub -> to_unique_atom(pub_sub)
     end
   end
 

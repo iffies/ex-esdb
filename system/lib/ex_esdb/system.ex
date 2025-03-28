@@ -1,5 +1,11 @@
 defmodule ExESDB.System do
-  @moduledoc false
+  @moduledoc """
+    This module is the top level supervisor for the ExESDB system.
+    It is responsible for supervising:
+    - the event store
+    - the cluster
+    - the Event Enitter (pub/sub)
+  """
   use Supervisor
 
   require Phoenix.PubSub

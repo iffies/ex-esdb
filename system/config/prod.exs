@@ -17,7 +17,8 @@ config :ex_esdb, :logger, level: :debug
 
 config :ex_esdb, :khepri,
   data_dir: "/data",
-  store_id: :ex_store,
+  store_id: :ex_esdb_store,
   timeout: 10_000,
   db_type: :single,
-  seed_nodes: []
+  seed_nodes: [],
+  pub_sub: :ex_esdb_pub_sub

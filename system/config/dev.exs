@@ -22,4 +22,5 @@ config :ex_esdb, :khepri,
   store_id: :reg_gh,
   timeout: 10_000,
   db_type: :single,
-  seed_nodes: []
+  seed_nodes: [],
+  pub_sub: :ex_esdb_pub_sub

@@ -5,17 +5,17 @@ defmodule ExESDB.App do
   use Application,
     otp_app: :ex_esdb
 
-    alias ExESDB.Options, as: Options
+  alias ExESDB.Options, as: Options
 
   require Logger
   require Phoenix.PubSub
 
   @impl true
   def start(_type, _args) do
-    opts = Options.esdb_khepri()
+    opts = Options.app_env()
 
     children = [
-      {Phoenix.PubSub, name: :scarab_pubsub},
+      {Phoenix.PubSub, name: :ex_esdb_pubsub},
       {ExESDB.System, opts},
     ]
 
@@ -30,7 +30,7 @@ defmodule ExESDB.App do
 
       ")
 
-    opts = [strategy: :one_for_one, name: EsESD.Supervisor]
+    opts = [strategy: :one_for_one, name: EsESDB.Supervisor]
     Supervisor.start_link(children, opts)
   end
 
