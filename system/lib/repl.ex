@@ -1,20 +1,14 @@
-defmodule ScarabES.Repl do
+defmodule ExESDB.Repl do
   @moduledoc """
-  This module is used to start a REPL with the ScarabES.system running.
+  This module is used to start a REPL with the ExESDB.system running.
   """
-  alias ScarabES.Config, as: ScarabConfig
-  alias ScarabES.EventStore, as: ScarabEventStore
-  alias ScarabES.Repl.EventGenerator, as: EventGenerator
-  alias ScarabES.Repl.EventStreamMonitor, as: EventStreamMonitor
+  alias ExESDB.Repl.EventGenerator, as: EventGenerator
+  alias ExESDB.Repl.EventStreamMonitor, as: EventStreamMonitor
 
-  # alias ScarabES.EventStreamReader, as: ESReader
-  # alias ScarabES.EventStreamWriter, as: ESWriter
-
-  alias ScarabES.EventStoreInfo, as: ESInfo
+  alias ExESDB.EventStoreInfo, as: ESInfo
 
   require Logger
 
-  @scarab_app :scarab_es
   @store :reg_gh
   @greenhouse1 :greenhouse1
   @greenhouse2 :greenhouse2
@@ -29,13 +23,12 @@ defmodule ScarabES.Repl do
   def stream4, do: @greenhouse4
   def stream5, do: @greenhouse5
 
-  def get_config, do: ScarabES.onfig.fetch_env!(@scarab_app)
-  def get_streams, do: ESInfo.get_streams_raw!(@store)
+  def get_config, do: ExESDB.Options.esdb_khepri()
+  def get_streams, do: ESInfo.get_streams_raw(@store)
 
   def start_monitor(store) do
-    
-    case  store 
-      |> ScarabES.ventStore.get_state() do
+       case  store 
+      |> ExESDB.EventStore.get_state() do
         {:ok, [config: config, store: _]} -> 
           IO.puts "Starting monitor for #{inspect(config, pretty: true)}"
           {:ok, _pid} = EventStreamMonitor.start_link(config)
@@ -47,13 +40,13 @@ defmodule ScarabES.Repl do
     initialized = EventGenerator.initialize()
     {:ok, actual_version} =
       @store
-      |> ScarabES.ventStore.stream_version(stream)
+      |> ExESDB.EventStore.stream_version(stream)
     {:ok, new_version} =
       @store
-      |> ScarabES.ventStore.append_to_stream(stream, actual_version, [initialized])
+      |> ExESDB.EventStore.append_to_stream(stream, actual_version, [initialized])
     {:ok, result} =
       @store
-      |> ScarabES.ventStore.read_stream_forward(stream, 1, new_version)
+      |> ExESDB.EventStore.read_stream_forward(stream, 1, new_version)
     {:ok, result, result |> Enum.count()}
   end
 
@@ -71,27 +64,27 @@ defmodule ScarabES.Repl do
 
         {:ok, actual_version} =
           @store
-          |> ScarabES.ventStore.stream_version(stream)
+          |> ExESDB.EventStore.stream_version(stream)
         {:ok, new_version} =
           @store
-          |> ScarabES.ventStore.append_to_stream(stream, actual_version, events)
+          |> ExESDB.EventStore.append_to_stream(stream, actual_version, events)
         {:ok, result} =
           @store
-          |> ScarabES.ventStore.read_stream_forward(stream, 1, new_version)
+          |> ExESDB.EventStore.read_stream_forward(stream, 1, new_version)
       {:ok, result, result |> Enum.count()}
     end
   end
 
   def all(stream) do
     case @store
-         |> ScarabES.ventStore.stream_version(stream) do
+         |> ExESDB.EventStore.stream_version(stream) do
       {:ok, 0} -> 
          nil
 
-      {:ok, version} ->    
-         {:ok, events} =              
-            @store               
-            |> ScarabES.ventStore.read_stream_forward(stream, 1, version)
+      {:ok, version} ->
+         {:ok, events} =
+            @store
+            |> ExESDB.EventStore.read_stream_forward(stream, 1, version)
             events
     end
   end

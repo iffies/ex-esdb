@@ -1,11 +1,11 @@
 import Config
 
-config :logger, level: :info
+alias ExESDB.EnVars, as: EnVars
+import ExESDB.Options
 
-config :scarab_es,
-  khepri: [
-    data_dir: System.get_env("SCARABES_DATA") || "/data",
-    store_id: String.to_atom(System.get_env("SCARABES_STORE") || "default_scarab_es"),
-    timeout: System.get_env("SCARABES_TIMEOUT") || 10_000,
-    db_type: :node
-  ]
+config :ex_esdb, :khepri,
+  data_dir: data_dir(),
+  store_id: store_id(),
+  timeout: timeout(),
+  db_type: db_type(),
+  seed_nodes: seed_nodes()

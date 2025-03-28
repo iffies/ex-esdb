@@ -1,20 +1,16 @@
-defmodule ScarabES.TestCase do
+defmodule ExESDB.TestCase do
   @moduledoc false
   use ExUnit.CaseTemplate
 
-  alias ScarabES.System, as: ScarabSystem
-  alias ScarabES.Config, as: ScarabConfig
+  alias ExESDB.System, as: ESDBSystem
+  alias ExESDB.Options, as: Options
 
   require Logger
 
   setup do
-    {:ok, scarab_meta} = start_scarab()
-    Logger.debug("scarab_meta: #{inspect(scarab_meta, pretty: true)}")
-    [scarab_meta: scarab_meta]
+    {:ok, esdb_meta} = start_supervised({ESDBSystem, Options.fetch!()})
+    Logger.debug("esdb_meta: #{inspect(esdb_meta, pretty: true)}")
+    [esdb_meta: esdb_meta]
   end
 
-  def start_scarab(config \\ []) do
-    config = ScarabConfig.fetch_env!(:node_app)
-    start_supervised!({ScarabSystem, config})
-  end
 end

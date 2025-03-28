@@ -52,15 +52,14 @@ COPY mix.exs ./
 # install mix dependencies
 RUN MIX_ENV="prod" mix do deps.get --only "prod", deps.update --all, deps.compile
 # build assets
-RUN MIX_ENV="prod" mix do compile, release scarab_es
+RUN MIX_ENV="prod" mix do compile, release ex_esdb
 ## Release
-#RUN MIX_ENV="prod" mix release scarab_es
 
 ###################################
 ########### RUNTIME ###############
 ###################################
 
-FROM ${RUNNER_IMAGE} AS scarab_es
+FROM ${RUNNER_IMAGE} AS ex_esdb
 
 ARG ERTS_VERSION=erts-15.2.3
 
@@ -86,12 +85,12 @@ RUN mkdir /data
 
 RUN chown -R nobody /data
 
-COPY --from=builder --chown=nobody /build_space/_build/prod/rel/scarab_es ./
+COPY --from=builder --chown=nobody /build_space/_build/prod/rel/ex_esdb/ ./
 
-COPY run-scarab-es.sh .
-COPY check-scarab-es.sh .
+COPY run-ex-esdb.sh .
+COPY check-ex-esdb.sh .
 
-RUN chmod +x run-scarab-es.sh check-scarab-es.sh
+RUN chmod +x run-ex-esdb.sh check-ex-esdb.sh
 
 ARG PATH="${PATH}:/system/${ERTS_VERSION}/bin"
 
@@ -110,9 +109,9 @@ ENV HOME=/system
 ENV MIX_ENV="prod"
 ENV PATH="${PATH}"
 
-ARG SCARAB_COOKIE
-ARG SCARAB_DATA
-ARG SCARAB_STORE
+ARG EX_ESDB_COOKIE
+ARG EX_ESDB_DATA_DIR
+ARG EX_ESDB_STORE_ID
 
 # RUN ls -lha && sleep 10
 
@@ -120,6 +119,6 @@ ARG SCARAB_STORE
 #
 
 HEALTHCHECK --interval=10s --timeout=3s \
-  CMD ["./check-scarab-es.sh"]
+  CMD ["./check-ex-esdb.sh"]
 
-CMD ["./run-scarab-es.sh"]
+CMD ["./run-ex-esdb.sh"]

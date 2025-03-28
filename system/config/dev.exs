@@ -1,5 +1,7 @@
 import Config
 
+alias ExESDB.EnVars, as: EnVars
+
 config :khepri,
   log_level: :warning,
   logger: false
@@ -13,10 +15,11 @@ config :logger, :console,
   metadata: [:mfa],
   level: :debug
 
-config :scarab_es,
-  khepri: [
-    data_dir: "tmp/dev_dir",
-    store_id: String.to_atom(System.get_env("SCARAB_STORE") || "default_scarab_es"),
-    timeout: 10_000,
-    db_type: :node
-  ]
+config :ex_esdb, :logger, level: :information
+
+config :ex_esdb, :khepri,
+  data_dir: "tmp/reg_gh",
+  store_id: :reg_gh,
+  timeout: 10_000,
+  db_type: :single,
+  seed_nodes: []

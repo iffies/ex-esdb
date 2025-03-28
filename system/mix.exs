@@ -2,15 +2,15 @@ defmodule Scarab.MixProject do
   @moduledoc false
   use Mix.Project
 
-  @app_name :scarab_es
+  @app_name :ex_esdb
   @elixir_version "~> 1.17"
-  @version "0.1.0"
-  @source_url "https://github.com/beam-campus/scarab"
-  @homepage_url "https://github.com/beam-campus/scarab"
-  @docs_url "https://hexdocs.pm/scarab"
-  @package_url "https://hex.pm/packages/scarab"
-  @issues_url "https://github.com/beam-campus/scarab/issues"
-  @description "Scarab is a reincarnation of rabbitmq/khepri, specialized for use as an event store."
+  @version "0.0.1"
+  @source_url "https://github.com/beam-campus/ex-esdb"
+  #  @homepage_url "https://github.com/beam-campus/ex-esdb"
+  @docs_url "https://hexdocs.pm/ex_esdb"
+  # @package_url "https://hex.pm/packages/ex_esdb"
+  # @issues_url "https://github.com/beam-campus/ex-esdb/issues"
+  @description "ExESDB is a reincarnation of rabbitmq/khepri, specialized for use as a BEAM-native event store."
 
   def project do
     [
@@ -34,7 +34,7 @@ defmodule Scarab.MixProject do
 
   defp releases,
     do: [
-      scarab_es: [
+      ex_esdb: [
         #        cookie: String.to_atom(System.get_env("SCARAB_COOKIE") || "T0pS3cr3t")
         include_executables_for: [:unix],
         steps: [:assemble, :tar],
@@ -49,7 +49,7 @@ defmodule Scarab.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application,
     do: [
-      mod: {ScarabES.App, []},
+      mod: {ExESDB.App, []},
       extra_applications: [
         :logger,
         :eex,
@@ -104,23 +104,16 @@ defmodule Scarab.MixProject do
     {:cover, [output: "_build/cover"]}
   end
 
-  defp description do
-    """
-    ScarabES is a reincarination of rabbitmq/khepri, 
-    specialized for use as an event store.
-    """
-  end
-
   defp docs do
     [
-      main: "ScarabES.App",
-      canonical: "http://hexdocs.pm/scarab_es",
+      main: "ExESDB.App",
+      canonical: @docs_url,
       source_ref: "v#{@version}",
       extra_section: "GUIDES",
       extras: [
         "ADR.md",
         "CHANGELOG.md",
-        "guides/Getting Started.md": [filename: "getting-started", title: "Scarab Eventstore"],
+        "guides/Getting Started.md": [filename: "getting-started", title: "ExESDB Eventstore"],
         "guides/Testing.md": [title: "Testing"]
       ]
     ]
@@ -128,9 +121,8 @@ defmodule Scarab.MixProject do
 
   defp package do
     [
-      name: "scarab_es",
-      description:
-        "Scarab is a reincarnation of rabbitmq/khepri, specialized for use as an event store.",
+      name: "ex_esdb",
+      description: @description,
       version: @version,
       files: [
         "lib",
@@ -143,9 +135,9 @@ defmodule Scarab.MixProject do
       organization: "beam-campus",
       licenses: ["MIT"],
       links: %{
-        "GitHub" => "https://github.com/beam-campus/scarab"
+        "GitHub" => @source_url
       },
-      source_url: "https://github.com/beam-campus/scarab"
+      source_url: @source_url
     ]
   end
 end
