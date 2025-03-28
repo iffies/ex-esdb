@@ -10,16 +10,16 @@ sudo mkdir -p /volume/caches
 # SCARAB
 echo "creating Scarabes data folders"
 sudo mkdir -p \
-  /volume/scarabes/data0 \
-  /volume/scarabes/data1 \
-  /volume/scarabes/data2 \
-  /volume/scarabes/data3 \
-  /volume/scarabes/data4
+  /volume/ex-esdb/data0 \
+  /volume/ex-esdb/data1 \
+  /volume/ex-esdb/data2 \
+  /volume/ex-esdb/data3 \
+  /volume/ex-esdb/data4
 
 sudo chown "$USER" -R /volume/
 
-docker-compose -f scarabes-cluster.yaml \
+docker-compose -f ex-esdb-clique1.yaml \
   down
 
-docker-compose -f scarabes-cluster.yaml \
-  up --remove-orphans --build $1
+docker-compose -f ex-esdb-clique1.yaml \
+  up --remove-orphans --build -d

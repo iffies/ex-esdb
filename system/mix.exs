@@ -135,7 +135,7 @@ defmodule Scarab.MixProject do
       organization: "beam-campus",
       licenses: ["MIT"],
       links: %{
-        "GitHub" => "https://github.com/beam-campus/ex-esdb"
+        "GitHub" => @source_url
       },
       source_url: @source_url
     ]

@@ -16,7 +16,7 @@ defmodule ExESDB.Options do
   def store_id do
     case System.get_env(EnVars.store_id()) do
       nil -> esdb_khepri(:store_id) || :ex_store
-      store_id -> String.to_atom(store_id)
+      store_id -> to_unique_atom(store_id)
     end
   end
 
@@ -36,7 +36,7 @@ defmodule ExESDB.Options do
 
   def seed_nodes do
     case System.get_env(EnVars.seed_nodes()) do
-      nil -> esdb_khepri(:seeds_nodes) || [node()]
+      nil -> esdb_khepri(:seeds) || [node()]
       seeds -> to_atoms_list(seeds)
     end
   end
@@ -45,7 +45,7 @@ defmodule ExESDB.Options do
     seeds
     |> String.split(",")
     |> Enum.map(&clean_node/1)
-    |> Enum.map(&seed_to_atom/1)
+    |> Enum.map(&to_unique_atom/1)
   end
 
   defp clean_node(node),
@@ -57,11 +57,11 @@ defmodule ExESDB.Options do
     |> String.replace(".", "")
     |> String.replace(":", "")
 
-  defp seed_to_atom(seed)  do
+  defp to_unique_atom(candidate)  do
     try do 
-      String.to_existing_atom(seed) 
+      String.to_existing_atom(candidate) 
     rescue
-      _ -> String.to_atom(seed)
+      _ -> String.to_atom(candidate)
     end
   end
 
