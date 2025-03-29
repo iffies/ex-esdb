@@ -8,11 +8,11 @@
     <meta name="project" content="ex_esdb v0.0.6-alpha">
 
 
-    <title>ExESDB.EventStoreInfo — ex_esdb v0.0.6-alpha</title>
+    <title>Read Me — ex_esdb v0.0.6-alpha</title>
 
     <link rel="stylesheet" href="dist/html-elixir-6X3L5KMG.css" />
 
-      <link rel="canonical" href="https://hexdocs.pm/ex_esdb/ExESDB.EventStoreInfo.html" />
+      <link rel="canonical" href="https://hexdocs.pm/ex_esdb/readme.html" />
 
     <script defer src="dist/sidebar_items-481EA09A.js"></script>
     <script defer src="docs_config.js"></script>
@@ -49,7 +49,7 @@ ex_esdb
 
 <output role="status" id="toast"></output>
 
-<main class="content page-module" id="main" data-type="modules">
+<main class="content page-extra" id="main" data-type="extras">
   <div id="content" class="content-inner">
     <div class="top-search">
       <div class="search-settings">
@@ -76,104 +76,43 @@ ex_esdb
 
 <div id="top-content">
   <div class="heading-with-actions top-heading">
-    <h1>
-      <span translate="no">ExESDB.EventStoreInfo</span> 
-      <small class="app-vsn" translate="no">(ex_esdb v0.0.6-alpha)</small>
+    <h1>ExESDB - A BEAM-native Event Store</h1>
 
-    </h1>
 
   </div>
 
-
-    <section id="moduledoc">
-<p>  This module provides functions to get information about the EXESDB event store.</p>
-    </section>
-
+<p><a href="ExESDB.html"><code class="inline">ExESDB</code></a> is a BEAM-native Event Store, built on top of the <a href="https://github.com/rabbitmq/khepri">khepri</a> and <a href="https://github.com/rabbitmq/ra">ra</a> subsystems.</p><h2 id="motivation" class="section-heading">
+  <a href="#motivation" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Motivation</span>
+</h2>
+<p>One of the arguments for BEAM development is that it comes &quot;batteries included&quot;. Be it caching, storage, pub/sub, observability etc... the Erlang ecosystem always has the option to avoid external dependencies.</p><p>For Event Sourcing use cases however, the Event Store is often a separate service.</p><p>This project is attempt at addressing this point, by building further upon the work of the <code class="inline">rabbitmq/khepri</code> and <code class="inline">rabbitmq/ra</code> subsystems.</p><h2 id="contents" class="section-heading">
+  <a href="#contents" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Contents</span>
+</h2>
+<ul><li><a href="getting-started.html">Getting Started</a></li></ul>
 </div>
 
-  <section id="summary" class="details-list">
-    <h1 class="section-heading">
-      <a class="hover-link" href="#summary">
-        <i class="ri-link-m" aria-hidden="true"></i>
+<div class="bottom-actions" id="bottom-actions">
+  <div class="bottom-actions-item">
+
+      <a href="testing.html" class="bottom-actions-button" rel="prev">
+        <span class="subheader">
+          ← Previous Page
+        </span>
+        <span class="title">
+Testing
+        </span>
       </a>
-      <span class="text">Summary</span>
-    </h1>
-<div class="summary-functions summary">
-  <h2>
-    <a href="#functions">Functions</a>
-  </h2>
 
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#get_streams!/1" data-no-tooltip="" translate="no">get_streams!(store)</a>
+  </div>
+  <div class="bottom-actions-item">
 
-      </div>
-
-        <div class="summary-synopsis"><p>  Returns the list of streams in the store.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#get_streams_raw/1" data-no-tooltip="" translate="no">get_streams_raw(store)</a>
-
-      </div>
-
-    </div>
-
+  </div>
 </div>
-
-  </section>
-
-
-  <section id="functions" class="details-list">
-    <h1 class="section-heading">
-      <a class="hover-link" href="#functions">
-        <i class="ri-link-m" aria-hidden="true"></i>
-      </a>
-      <span class="text">Functions</span>
-    </h1>
-    <div class="functions-list">
-<section class="detail" id="get_streams!/1">
-
-  <div class="detail-header">
-    <a href="#get_streams!/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">get_streams!(store)</h1>
-
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-<p>  Returns the list of streams in the store.</p>
-  </section>
-</section>
-<section class="detail" id="get_streams_raw/1">
-
-  <div class="detail-header">
-    <a href="#get_streams_raw/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">get_streams_raw(store)</h1>
-
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-
-    </div>
-  </section>
-
     <footer class="footer">
       <p>
 
@@ -181,6 +120,8 @@ ex_esdb
             <a href="https://hex.pm/packages/ex_esdb/0.0.6-alpha" class="footer-hex-package">Hex Package</a>
 
             <a href="https://preview.hex.pm/preview/ex_esdb/0.0.6-alpha">Hex Preview</a>
+
+              (<a href="https://preview.hex.pm/preview/ex_esdb/0.0.6-alpha/show/../README.md">current file</a>)
 
           </span>
 

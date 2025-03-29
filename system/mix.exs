@@ -4,7 +4,7 @@ defmodule ExESDB.MixProject do
 
   @app_name :ex_esdb
   @elixir_version "~> 1.17"
-  @version "0.0.3-alpha"
+  @version "0.0.6-alpha"
   @source_url "https://github.com/beam-campus/ex-esdb"
   #  @homepage_url "https://github.com/beam-campus/ex-esdb"
   @docs_url "https://hexdocs.pm/ex_esdb"
@@ -104,15 +104,25 @@ defmodule ExESDB.MixProject do
 
   defp docs do
     [
-      main: "ExESDB.App",
+      main: "readme",
       canonical: @docs_url,
       source_ref: "v#{@version}",
-      extra_section: "GUIDES",
+      extra_section: "guides",
       extras: [
         "ADR.md",
         "CHANGELOG.md",
-        "guides/Getting Started.md": [filename: "getting-started", title: "ExESDB Eventstore"],
-        "guides/Testing.md": [title: "Testing"]
+        "guides/getting_started.md": [
+          filename: "getting-started",
+          title: "Getting Started"
+        ],
+        "guides/testing.md": [
+          filename: "testing",
+          title: "Testing"
+        ],
+        "../README.md": [
+          filename: "readme",
+          title: "Read Me"
+        ]
       ]
     ]
   end

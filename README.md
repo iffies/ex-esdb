@@ -1,6 +1,6 @@
 # ExESDB - A BEAM-native Event Store
 
-ExESDB is a BEAM-native Event Store, built on top of the [khepri](https://github.com/rabbitmq/khepri) and [ra](https://github.com/rabbitmq/ra) subsystems.
+`ExESDB` is a BEAM-native Event Store, built on top of the [khepri](https://github.com/rabbitmq/khepri) and [ra](https://github.com/rabbitmq/ra) subsystems.
 
 ## Motivation
 

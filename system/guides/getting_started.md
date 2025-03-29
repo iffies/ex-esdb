@@ -25,7 +25,7 @@ In your `mix.exs` file:
 ```elixir
 def deps do
   [
-    {:ex_esdb, "~> 0.0.3-alpha"}
+    {:ex_esdb, "~> 0.0.6-alpha"}
   ]
 end
 ```
@@ -37,7 +37,7 @@ end
 ```elixir
 config :ex_esdb, :khepri,
   # the directory where the khepri store will be created
-  data_dir: "/ex_esdb/data",
+  data_dir: "/data",
   # the id of the khepri store.
   store_id: :ex_esdb_store,
   # the type of database setup to use
@@ -55,11 +55,11 @@ config :ex_esdb, :khepri,
 
 ```bash
 
-EX_ESDB_DATA_DIR=/ex_esdb/data
+EX_ESDB_DATA_DIR="/data"
 EX_ESDB_STORE_ID=ex_esdb_store
 EX_ESDB_DB_TYPE=single
 EX_ESDB_TIMEOUT=10000
-EX_ESDB_SEED_NODES=
+EX_ESDB_SEED_NODES=""
 EX_ESDB_PUB_SUB=ex_esdb_pub_sub
 
 ```

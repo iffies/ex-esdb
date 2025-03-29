@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.37.3">
-    <meta name="project" content="ex_esdb v0.0.3-alpha">
+    <meta name="project" content="ex_esdb v0.0.6-alpha">
 
 
-    <title>ExESDB Eventstore — ex_esdb v0.0.3-alpha</title>
+    <title>Getting Started — ex_esdb v0.0.6-alpha</title>
 
     <link rel="stylesheet" href="dist/html-elixir-6X3L5KMG.css" />
 
       <link rel="canonical" href="https://hexdocs.pm/ex_esdb/getting-started.html" />
 
-    <script defer src="dist/sidebar_items-EFB193C8.js"></script>
+    <script defer src="dist/sidebar_items-481EA09A.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-ALU6OERS.js"></script>
 
@@ -35,15 +35,15 @@
     <div class="sidebar-projectInfo">
 
       <div>
-        <a href="ExESDB.App.html" class="sidebar-projectName" translate="no">
+        <a href="readme.html" class="sidebar-projectName" translate="no">
 ex_esdb
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.0.3-alpha
+          v0.0.6-alpha
         </div>
       </div>
     </div>
-    <ul id="sidebar-list-nav" class="sidebar-list-nav" role="tablist" data-extras="GUIDES"></ul>
+    <ul id="sidebar-list-nav" class="sidebar-list-nav" role="tablist" data-extras="guides"></ul>
   </div>
 </nav>
 
@@ -99,11 +99,11 @@ ex_esdb
   </a>
   <span class="text">Installation</span>
 </h2>
-<p>In your <code class="inline">mix.exs</code> file:</p><pre><code class="makeup elixir" translate="no"><span class="kd">def</span><span class="w"> </span><span class="nf">deps</span><span class="w"> </span><span class="k" data-group-id="6384077651-1">do</span><span class="w">
-  </span><span class="p" data-group-id="6384077651-2">[</span><span class="w">
-    </span><span class="p" data-group-id="6384077651-3">{</span><span class="ss">:ex_esdb</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;~&gt; 0.0.3-alpha&quot;</span><span class="p" data-group-id="6384077651-3">}</span><span class="w">
-  </span><span class="p" data-group-id="6384077651-2">]</span><span class="w">
-</span><span class="k" data-group-id="6384077651-1">end</span></code></pre><h2 id="configuration" class="section-heading">
+<p>In your <code class="inline">mix.exs</code> file:</p><pre><code class="makeup elixir" translate="no"><span class="kd">def</span><span class="w"> </span><span class="nf">deps</span><span class="w"> </span><span class="k" data-group-id="8019033921-1">do</span><span class="w">
+  </span><span class="p" data-group-id="8019033921-2">[</span><span class="w">
+    </span><span class="p" data-group-id="8019033921-3">{</span><span class="ss">:ex_esdb</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;~&gt; 0.0.6-alpha&quot;</span><span class="p" data-group-id="8019033921-3">}</span><span class="w">
+  </span><span class="p" data-group-id="8019033921-2">]</span><span class="w">
+</span><span class="k" data-group-id="8019033921-1">end</span></code></pre><h2 id="configuration" class="section-heading">
   <a href="#configuration" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
@@ -111,7 +111,7 @@ ex_esdb
 </h2>
 <ol><li>in your <code class="inline">config/config.exs</code> file:</li></ol><pre><code class="makeup elixir" translate="no"><span class="n">config</span><span class="w"> </span><span class="ss">:ex_esdb</span><span class="p">,</span><span class="w"> </span><span class="ss">:khepri</span><span class="p">,</span><span class="w">
   </span><span class="c1"># the directory where the khepri store will be created</span><span class="w">
-  </span><span class="ss">data_dir</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/ex_esdb/data&quot;</span><span class="p">,</span><span class="w">
+  </span><span class="ss">data_dir</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/data&quot;</span><span class="p">,</span><span class="w">
   </span><span class="c1"># the id of the khepri store.</span><span class="w">
   </span><span class="ss">store_id</span><span class="p">:</span><span class="w"> </span><span class="ss">:ex_esdb_store</span><span class="p">,</span><span class="w">
   </span><span class="c1"># the type of database setup to use</span><span class="w">
@@ -119,15 +119,15 @@ ex_esdb
   </span><span class="c1"># a global timeout in milliseconds</span><span class="w">
   </span><span class="ss">timeout</span><span class="p">:</span><span class="w"> </span><span class="mi">10_000</span><span class="p">,</span><span class="w">
   </span><span class="c1"># a list of seed nodes to connect to</span><span class="w">
-  </span><span class="ss">seed_nodes</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="7992485641-1">[</span><span class="p" data-group-id="7992485641-1">]</span><span class="p">,</span><span class="w">
+  </span><span class="ss">seed_nodes</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="4017465825-1">[</span><span class="p" data-group-id="4017465825-1">]</span><span class="p">,</span><span class="w">
   </span><span class="c1"># the name of the pub/sub module to use</span><span class="w">
   </span><span class="ss">pub_sub</span><span class="p">:</span><span class="w"> </span><span class="ss">:ex_esdb_pub_sub</span><span class="w">
 </span></code></pre><ol start="2"><li>from the ENVIRONMENT:</li></ol><pre><code class="makeup bash" translate="no"><span class="">
-</span><span class="">EX_ESDB_DATA_DIR=/ex_esdb/data
+</span><span class="">EX_ESDB_DATA_DIR=&quot;/data&quot;
 </span><span class="">EX_ESDB_STORE_ID=ex_esdb_store
 </span><span class="">EX_ESDB_DB_TYPE=single
 </span><span class="">EX_ESDB_TIMEOUT=10000
-</span><span class="">EX_ESDB_SEED_NODES=
+</span><span class="">EX_ESDB_SEED_NODES=&quot;&quot;
 </span><span class="">EX_ESDB_PUB_SUB=ex_esdb_pub_sub
 </span><span class="">
 </span></code></pre><h2 id="usage" class="section-heading">
@@ -136,21 +136,21 @@ ex_esdb
   </a>
   <span class="text">Usage</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">MyApp.Application</span><span class="w"> </span><span class="k" data-group-id="7835313379-1">do</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">MyApp.Application</span><span class="w"> </span><span class="k" data-group-id="4062337140-1">do</span><span class="w">
   </span><span class="kn">use</span><span class="w"> </span><span class="nc">Application</span><span class="w">
 
   </span><span class="na">@impl</span><span class="w"> </span><span class="no">true</span><span class="w">
-  </span><span class="kd">def</span><span class="w"> </span><span class="nf">start</span><span class="p" data-group-id="7835313379-2">(</span><span class="c">_type</span><span class="p">,</span><span class="w"> </span><span class="c">_args</span><span class="p" data-group-id="7835313379-2">)</span><span class="w"> </span><span class="k" data-group-id="7835313379-3">do</span><span class="w">
-    </span><span class="n">opts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">ExESDB.Options</span><span class="o">.</span><span class="n">app_env</span><span class="p" data-group-id="7835313379-4">(</span><span class="p" data-group-id="7835313379-4">)</span><span class="w">
-    </span><span class="n">children</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="7835313379-5">[</span><span class="w">
-      </span><span class="p" data-group-id="7835313379-6">{</span><span class="nc">ExESDB</span><span class="p">,</span><span class="nc">System</span><span class="p">,</span><span class="w"> </span><span class="n">opts</span><span class="p" data-group-id="7835313379-6">}</span><span class="p">,</span><span class="w">
-    </span><span class="p" data-group-id="7835313379-5">]</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">start</span><span class="p" data-group-id="4062337140-2">(</span><span class="c">_type</span><span class="p">,</span><span class="w"> </span><span class="c">_args</span><span class="p" data-group-id="4062337140-2">)</span><span class="w"> </span><span class="k" data-group-id="4062337140-3">do</span><span class="w">
+    </span><span class="n">opts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">ExESDB.Options</span><span class="o">.</span><span class="n">app_env</span><span class="p" data-group-id="4062337140-4">(</span><span class="p" data-group-id="4062337140-4">)</span><span class="w">
+    </span><span class="n">children</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="4062337140-5">[</span><span class="w">
+      </span><span class="p" data-group-id="4062337140-6">{</span><span class="nc">ExESDB</span><span class="p">,</span><span class="nc">System</span><span class="p">,</span><span class="w"> </span><span class="n">opts</span><span class="p" data-group-id="4062337140-6">}</span><span class="p">,</span><span class="w">
+    </span><span class="p" data-group-id="4062337140-5">]</span><span class="w">
 
-    </span><span class="n">opts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="7835313379-7">[</span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:one_for_one</span><span class="p">,</span><span class="w"> </span><span class="ss">name</span><span class="p">:</span><span class="w"> </span><span class="nc">MyApp.Supervisor</span><span class="p" data-group-id="7835313379-7">]</span><span class="w">
-    </span><span class="nc">Supervisor</span><span class="o">.</span><span class="n">start_link</span><span class="p" data-group-id="7835313379-8">(</span><span class="n">children</span><span class="p">,</span><span class="w"> </span><span class="n">opts</span><span class="p" data-group-id="7835313379-8">)</span><span class="w">
-  </span><span class="k" data-group-id="7835313379-3">end</span><span class="w">
+    </span><span class="n">opts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="4062337140-7">[</span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:one_for_one</span><span class="p">,</span><span class="w"> </span><span class="ss">name</span><span class="p">:</span><span class="w"> </span><span class="nc">MyApp.Supervisor</span><span class="p" data-group-id="4062337140-7">]</span><span class="w">
+    </span><span class="nc">Supervisor</span><span class="o">.</span><span class="n">start_link</span><span class="p" data-group-id="4062337140-8">(</span><span class="n">children</span><span class="p">,</span><span class="w"> </span><span class="n">opts</span><span class="p" data-group-id="4062337140-8">)</span><span class="w">
+  </span><span class="k" data-group-id="4062337140-3">end</span><span class="w">
 
-</span><span class="k" data-group-id="7835313379-1">end</span></code></pre>
+</span><span class="k" data-group-id="4062337140-1">end</span></code></pre>
 </div>
 
 <div class="bottom-actions" id="bottom-actions">
@@ -183,11 +183,11 @@ Testing
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/ex_esdb/0.0.3-alpha" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/ex_esdb/0.0.6-alpha" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/ex_esdb/0.0.3-alpha">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/ex_esdb/0.0.6-alpha">Hex Preview</a>
 
-              (<a href="https://preview.hex.pm/preview/ex_esdb/0.0.3-alpha/show/guides/Getting Started.md">current file</a>)
+              (<a href="https://preview.hex.pm/preview/ex_esdb/0.0.6-alpha/show/guides/getting_started.md">current file</a>)
 
           </span>
 
