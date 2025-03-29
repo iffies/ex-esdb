@@ -74,7 +74,7 @@ defmodule MyApp.Application do
   def start(_type, _args) do
     opts = ExESDB.Options.app_env()
     children = [
-      {ExESDB,System, opts},
+      {ExESDB.System, opts},
     ]
 
     opts = [strategy: :one_for_one, name: MyApp.Supervisor]
