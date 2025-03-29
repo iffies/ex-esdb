@@ -4,12 +4,6 @@
 # echo "Clearing all data"
 # sudo rm -rf /volume
 
-## CACHES
-echo "Creating caches folder"
-sudo mkdir -p /volume/caches
-# SCARAB
-echo "creating scarab data folders"
-sudo mkdir -p /volume/scarab/data0 /volume/scarab/data1 /volume/scarab/data2
 ## EXCALIDRAW
 echo "Creating excalidraw folder"
 sudo mkdir -p /volume/excalidraw/data

@@ -9,9 +9,9 @@ defmodule ExESDB.SystemTest do
   alias ExESDB.Options, as: Opttions
 
   @tag :skip
-  test "that the Scarab System starts the EventStore in single node mode" do
-    opts = Options.esdb_khepri()
-    res = ScarabSystem.start(opts)
+  test "that the ExESDB System starts the EventStore" do
+    opts = Options.app_env()
+    res = ESDBSystem.start(opts)
     Logger.debug("System pid: #{inspect(res, pretty: true)}")
   end
 end

@@ -1,6 +1,6 @@
 defmodule ExESDB.App do
   @moduledoc """
-  This module is used to start the Scarab system.
+  This module is used to start the ExESDB system.
   """
   use Application,
     otp_app: :ex_esdb
@@ -15,7 +15,6 @@ defmodule ExESDB.App do
     opts = Options.app_env()
 
     children = [
-      {Phoenix.PubSub, name: :ex_esdb_pubsub},
       {ExESDB.System, opts},
     ]
 
@@ -35,8 +34,8 @@ defmodule ExESDB.App do
   end
 
   def handle_info(:sigterm, _state) do
-    Logger.info("SIGTERM received. Stopping Scarab")
-    Application.stop(:scarab_es)
+    Logger.info("SIGTERM received. Stopping ExESDB")
+    Application.stop(:ex_esdb)
   end
 
   @impl true

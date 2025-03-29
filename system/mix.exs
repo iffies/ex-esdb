@@ -35,7 +35,6 @@ defmodule ExESDB.MixProject do
   defp releases,
     do: [
       ex_esdb: [
-        #        cookie: String.to_atom(System.get_env("SCARAB_COOKIE") || "T0pS3cr3t")
         include_executables_for: [:unix],
         steps: [:assemble, :tar],
         applications: [

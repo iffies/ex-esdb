@@ -1,5 +1,4 @@
 #!/bin/bash
-# check-scarab-es.sh
 
 epmd -names | grep -q ex_esdb &&
   erl -noshell \

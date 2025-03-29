@@ -1,12 +1,55 @@
 defmodule Flags do
-  @moduledoc false
+  @moduledoc """
+    This module is used to manipulate bitwise flags.
+
+    Inspired by: [Flags in C#](https://stackoverflow.com/questions/8447/what-does-the-flags-enum-attribute-mean-in-c)
+    
+    Event souurced systems often rely on flags to indicate the state of the aggregate at any given time.
+    In this module, we define a set of functions that can be used to manipulate these flags.
+  """
   import Bitwise
 
-  # def set(target, flag), do: bor(target, flag)
-  def set(target, flag), do: target ||| flag
-  # def unset(target, flag), do: bxor(target, flag)
-  def unset(target, flag), do: target &&& bnot(flag)
+  @doc """
+    Returns the bitwise OR of two flags.
+    In other words, it sets the bit that corresopnds to the flag
+    GIVEN: original_state is `0b00100100` (integer: 36) 
+    WHEN the flag to be set is `0b01000000` (integer: 64)
+    THEN the result is `0b01100100` (integer: 100)
 
+    Example:
+    iex> Flags.set(36, 64)
+    100  
+  """
+  def set(target, flag) 
+    when is_integer(target) 
+      and is_integer(flag), 
+    do: target ||| flag
+  @doc """
+    Returns the bitwise AND of two flags.
+    In other words, it unsets the bit that corresopnds to the flag
+    GIVEN: original_state is `0b01100100` (integer: 100)
+    WHEN the flag to be unset is `0b01000000` (integer: 64)
+    THEN the result is `0b00100100` (integer: 36)
+
+    Example:
+    iex> Flags.unset(100, 64)
+    36
+  """ 
+  def unset(target, flag) 
+    when is_integer(target) 
+      and is_integer(flag), 
+    do: target &&& bnot(flag)
+  @doc """
+    Returns the bitwise OR of multiple flags against a given state.
+    In other words, it sets the bits that corresopnds to the flags
+    GIVEN: original_state is `0b00100100` (integer: 36)
+    WHEN the flags to be set are `[0b01000000, 0b10000000]` (integers: 64, 128)
+    THEN the result is `0b11100100` (integer: 228)
+
+    Example:
+    iex> Flags.set_all(36, [64, 128])
+    228
+  """
   def set_all(target, flags) do
     Enum.reduce(flags, target, fn flag, acc ->
       acc ||| flag

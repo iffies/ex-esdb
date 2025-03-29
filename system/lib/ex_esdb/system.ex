@@ -17,6 +17,7 @@ defmodule ExESDB.System do
     Logger.info("Starting ExESDB.System with config: #{inspect(config, pretty: true)}")
 
     children = [
+      {Phoenix.PubSub, name: config[:pub_sub]},
       {ExESDB.EventStore, config},
       {ExESDB.Cluster, config},
     ]

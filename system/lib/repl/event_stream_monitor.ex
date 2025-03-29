@@ -6,7 +6,7 @@ defmodule ExESDB.Repl.EventStreamMonitor do
   alias Phoenix.PubSub, as: PubSub
 
   defp subscribe(store) do
-    :scarab_pubsub 
+    :ex_esdb_pubsub 
       |> PubSub.subscribe("#{store}")
     end
  

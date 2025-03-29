@@ -1,5 +1,7 @@
 #! /bin/bash
 
+rm -rf ./doc
+
 mix hex.build
 
 mix docs

@@ -1,7 +1,5 @@
 defmodule Colors do
-  @moduledoc """
-  Colors is the module that contains the colors for the Swai System
-  """
+  @moduledoc false
 
   def reset, do: "\e[0m"
   def red_on_black, do: "\e[31;40m"

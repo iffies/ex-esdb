@@ -7,8 +7,8 @@
 ## CACHES
 echo "Creating caches folder"
 sudo mkdir -p /volume/caches
-# SCARAB
-echo "creating Scarabes data folders"
+# ExESDB
+echo "creating ExESDB data folders"
 sudo mkdir -p \
   /volume/ex-esdb/data0 \
   /volume/ex-esdb/data1 \
