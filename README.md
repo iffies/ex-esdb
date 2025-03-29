@@ -12,4 +12,4 @@ This project is attempt at addressing this point, by building further upon the w
 
 ## Contents
 
-- [Getting Started](sysstem/guides/getting_started.md)
+- [Getting Started](system/guides/getting_started.md)
