@@ -1,13 +1,31 @@
-# Getting Started with ExESDB, a BEAM-native Event Store
+# Getting Started with ExESDB
+
+## Introduction
+
+Event Sourcing with CQRS is a technique for building applications that are based on an immutable log of events, which makes it ideal for building concurrent, distributed systems.
+
+Though it is gaining popularity, the number of options for storing these events is limited and require specialized services like Kurrent (aka Greg's EventStore) or AxonIQ.
+
+One of the strong-points of the BEAM is, that it comes 'batteries included': there are BEAM-native libraries for many common tasks, like: storage, pub/sub, caching, logging, telemetry, etc.
+
+`ExESDB` is an attempt to create a BEAM-native Event Store written in Elixir, building further upon the [Khepri](https://github.com/rabbitmq/khepri) library, which in turn builds upon the [Ra](https://github.com/rabbitmq/ra) library.
+
+## Status
+
+**This is a work in progress**
+
+The project is in an early stage of development, and is not ready for production use.
+
+Source code is available on [GitHub](https://github.com/beam-campus/ex-esdb).
 
 ## Installation
 
-in your `mix.exs` file:
+In your `mix.exs` file:
 
 ```elixir
 def deps do
   [
-    {:ex_esdb, "~> 0.0.2-alpha"}
+    {:ex_esdb, "~> 0.0.3-alpha"}
   ]
 end
 ```
@@ -37,12 +55,12 @@ config :ex_esdb, :khepri,
 
 ```bash
 
-export EX_ESDB_DATA_DIR=/ex_esdb/data
-export EX_ESDB_STORE_ID=ex_esdb_store
-export EX_ESDB_DB_TYPE=single
-export EX_ESDB_TIMEOUT=10000
-export EX_ESDB_SEED_NODES=
-export EX_ESDB_PUB_SUB=ex_esdb_pub_sub
+EX_ESDB_DATA_DIR=/ex_esdb/data
+EX_ESDB_STORE_ID=ex_esdb_store
+EX_ESDB_DB_TYPE=single
+EX_ESDB_TIMEOUT=10000
+EX_ESDB_SEED_NODES=
+EX_ESDB_PUB_SUB=ex_esdb_pub_sub
 
 ```
 

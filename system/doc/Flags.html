@@ -8,11 +8,11 @@
     <meta name="project" content="ex_esdb v0.0.2-alfa">
 
 
-    <title>ExESDB.Repl — ex_esdb v0.0.2-alfa</title>
+    <title>Flags — ex_esdb v0.0.2-alfa</title>
 
     <link rel="stylesheet" href="dist/html-elixir-6X3L5KMG.css" />
 
-      <link rel="canonical" href="https://hexdocs.pm/ex_esdb/ExESDB.Repl.html" />
+      <link rel="canonical" href="https://hexdocs.pm/ex_esdb/Flags.html" />
 
     <script defer src="dist/sidebar_items-48954FE6.js"></script>
     <script defer src="docs_config.js"></script>
@@ -77,7 +77,7 @@ ex_esdb
 <div id="top-content">
   <div class="heading-with-actions top-heading">
     <h1>
-      <span translate="no">ExESDB.Repl</span> 
+      <span translate="no">Flags</span> 
       <small class="app-vsn" translate="no">(ex_esdb v0.0.2-alfa)</small>
 
     </h1>
@@ -86,7 +86,8 @@ ex_esdb
 
 
     <section id="moduledoc">
-<p>This module is used to start a REPL with the ExESDB.system running.</p>
+<p>  This module is used to manipulate bitwise flags.</p><p>  Inspired by: <a href="https://stackoverflow.com/questions/8447/what-does-the-flags-enum-attribute-mean-in-c">Flags in C#</a></p><p>  Event souurced systems often rely on flags to indicate the state of the aggregate at any given time.
+  In this module, we define a set of functions that can be used to manipulate these flags.</p>
     </section>
 
 </div>
@@ -105,7 +106,7 @@ ex_esdb
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#all/1" data-no-tooltip="" translate="no">all(stream)</a>
+        <a href="#decompose/1" data-no-tooltip="" translate="no">decompose(target)</a>
 
       </div>
 
@@ -113,7 +114,7 @@ ex_esdb
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#append/2" data-no-tooltip="" translate="no">append(stream, nbr_of_events)</a>
+        <a href="#has?/2" data-no-tooltip="" translate="no">has?(target, flag)</a>
 
       </div>
 
@@ -121,7 +122,7 @@ ex_esdb
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get_config/0" data-no-tooltip="" translate="no">get_config()</a>
+        <a href="#has_all?/2" data-no-tooltip="" translate="no">has_all?(status, flags)</a>
 
       </div>
 
@@ -129,7 +130,7 @@ ex_esdb
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get_streams/0" data-no-tooltip="" translate="no">get_streams()</a>
+        <a href="#has_any?/2" data-no-tooltip="" translate="no">has_any?(status, flags)</a>
 
       </div>
 
@@ -137,7 +138,7 @@ ex_esdb
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#initialize/1" data-no-tooltip="" translate="no">initialize(stream)</a>
+        <a href="#has_not?/2" data-no-tooltip="" translate="no">has_not?(target, flag)</a>
 
       </div>
 
@@ -145,7 +146,7 @@ ex_esdb
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#start_monitor/1" data-no-tooltip="" translate="no">start_monitor(store)</a>
+        <a href="#highest/2" data-no-tooltip="" translate="no">highest(n, flag_map)</a>
 
       </div>
 
@@ -153,7 +154,7 @@ ex_esdb
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#store/0" data-no-tooltip="" translate="no">store()</a>
+        <a href="#lowest/2" data-no-tooltip="" translate="no">lowest(n, flag_map)</a>
 
       </div>
 
@@ -161,7 +162,35 @@ ex_esdb
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#stream1/0" data-no-tooltip="" translate="no">stream1()</a>
+        <a href="#set/2" data-no-tooltip="" translate="no">set(target, flag)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>  Returns the bitwise OR of two flags.
+  In other words, it sets the bit that corresopnds to the flag
+  GIVEN: original_state is <code class="inline">0b00100100</code> (integer: 36) 
+  WHEN the flag to be set is <code class="inline">0b01000000</code> (integer: 64)
+  THEN the result is <code class="inline">0b01100100</code> (integer: 100)</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#set_all/2" data-no-tooltip="" translate="no">set_all(target, flags)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>  Returns the bitwise OR of multiple flags against a given state.
+  In other words, it sets the bits that corresopnds to the flags
+  GIVEN: original_state is <code class="inline">0b00100100</code> (integer: 36)
+  WHEN the flags to be set are <code class="inline">[0b01000000, 0b10000000]</code> (integers: 64, 128)
+  THEN the result is <code class="inline">0b11100100</code> (integer: 228)</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#to_list/2" data-no-tooltip="" translate="no">to_list(n, flag_map)</a>
 
       </div>
 
@@ -169,7 +198,7 @@ ex_esdb
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#stream2/0" data-no-tooltip="" translate="no">stream2()</a>
+        <a href="#to_string/2" data-no-tooltip="" translate="no">to_string(n, flag_map)</a>
 
       </div>
 
@@ -177,23 +206,21 @@ ex_esdb
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#stream3/0" data-no-tooltip="" translate="no">stream3()</a>
+        <a href="#unset/2" data-no-tooltip="" translate="no">unset(target, flag)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>  Returns the bitwise AND of two flags.
+  In other words, it unsets the bit that corresopnds to the flag
+  GIVEN: original_state is <code class="inline">0b01100100</code> (integer: 100)
+  WHEN the flag to be unset is <code class="inline">0b01000000</code> (integer: 64)
+  THEN the result is <code class="inline">0b00100100</code> (integer: 36)</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#stream4/0" data-no-tooltip="" translate="no">stream4()</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#stream5/0" data-no-tooltip="" translate="no">stream5()</a>
+        <a href="#unset_all/2" data-no-tooltip="" translate="no">unset_all(target, flags)</a>
 
       </div>
 
@@ -212,14 +239,14 @@ ex_esdb
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="all/1">
+<section class="detail" id="decompose/1">
 
   <div class="detail-header">
-    <a href="#all/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#decompose/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">all(stream)</h1>
+      <h1 class="signature" translate="no">decompose(target)</h1>
 
 
     </div>
@@ -230,14 +257,14 @@ ex_esdb
 
   </section>
 </section>
-<section class="detail" id="append/2">
+<section class="detail" id="has?/2">
 
   <div class="detail-header">
-    <a href="#append/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#has?/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">append(stream, nbr_of_events)</h1>
+      <h1 class="signature" translate="no">has?(target, flag)</h1>
 
 
     </div>
@@ -248,14 +275,14 @@ ex_esdb
 
   </section>
 </section>
-<section class="detail" id="get_config/0">
+<section class="detail" id="has_all?/2">
 
   <div class="detail-header">
-    <a href="#get_config/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#has_all?/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">get_config()</h1>
+      <h1 class="signature" translate="no">has_all?(status, flags)</h1>
 
 
     </div>
@@ -266,14 +293,14 @@ ex_esdb
 
   </section>
 </section>
-<section class="detail" id="get_streams/0">
+<section class="detail" id="has_any?/2">
 
   <div class="detail-header">
-    <a href="#get_streams/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#has_any?/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">get_streams()</h1>
+      <h1 class="signature" translate="no">has_any?(status, flags)</h1>
 
 
     </div>
@@ -284,14 +311,14 @@ ex_esdb
 
   </section>
 </section>
-<section class="detail" id="initialize/1">
+<section class="detail" id="has_not?/2">
 
   <div class="detail-header">
-    <a href="#initialize/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#has_not?/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">initialize(stream)</h1>
+      <h1 class="signature" translate="no">has_not?(target, flag)</h1>
 
 
     </div>
@@ -302,14 +329,14 @@ ex_esdb
 
   </section>
 </section>
-<section class="detail" id="start_monitor/1">
+<section class="detail" id="highest/2">
 
   <div class="detail-header">
-    <a href="#start_monitor/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#highest/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">start_monitor(store)</h1>
+      <h1 class="signature" translate="no">highest(n, flag_map)</h1>
 
 
     </div>
@@ -320,14 +347,14 @@ ex_esdb
 
   </section>
 </section>
-<section class="detail" id="store/0">
+<section class="detail" id="lowest/2">
 
   <div class="detail-header">
-    <a href="#store/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#lowest/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">store()</h1>
+      <h1 class="signature" translate="no">lowest(n, flag_map)</h1>
 
 
     </div>
@@ -338,14 +365,62 @@ ex_esdb
 
   </section>
 </section>
-<section class="detail" id="stream1/0">
+<section class="detail" id="set/2">
 
   <div class="detail-header">
-    <a href="#stream1/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#set/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">stream1()</h1>
+      <h1 class="signature" translate="no">set(target, flag)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>  Returns the bitwise OR of two flags.
+  In other words, it sets the bit that corresopnds to the flag
+  GIVEN: original_state is <code class="inline">0b00100100</code> (integer: 36) 
+  WHEN the flag to be set is <code class="inline">0b01000000</code> (integer: 64)
+  THEN the result is <code class="inline">0b01100100</code> (integer: 100)</p><p>  Example:
+  iex&gt; Flags.set(36, 64)
+  100  </p>
+  </section>
+</section>
+<section class="detail" id="set_all/2">
+
+  <div class="detail-header">
+    <a href="#set_all/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">set_all(target, flags)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>  Returns the bitwise OR of multiple flags against a given state.
+  In other words, it sets the bits that corresopnds to the flags
+  GIVEN: original_state is <code class="inline">0b00100100</code> (integer: 36)
+  WHEN the flags to be set are <code class="inline">[0b01000000, 0b10000000]</code> (integers: 64, 128)
+  THEN the result is <code class="inline">0b11100100</code> (integer: 228)</p><p>  Example:
+  iex&gt; Flags.set_all(36, [64, 128])
+  228</p>
+  </section>
+</section>
+<section class="detail" id="to_list/2">
+
+  <div class="detail-header">
+    <a href="#to_list/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">to_list(n, flag_map)</h1>
 
 
     </div>
@@ -356,14 +431,14 @@ ex_esdb
 
   </section>
 </section>
-<section class="detail" id="stream2/0">
+<section class="detail" id="to_string/2">
 
   <div class="detail-header">
-    <a href="#stream2/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#to_string/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">stream2()</h1>
+      <h1 class="signature" translate="no">to_string(n, flag_map)</h1>
 
 
     </div>
@@ -374,14 +449,14 @@ ex_esdb
 
   </section>
 </section>
-<section class="detail" id="stream3/0">
+<section class="detail" id="unset/2">
 
   <div class="detail-header">
-    <a href="#stream3/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#unset/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">stream3()</h1>
+      <h1 class="signature" translate="no">unset(target, flag)</h1>
 
 
     </div>
@@ -389,35 +464,23 @@ ex_esdb
 
   <section class="docstring">
 
-
+<p>  Returns the bitwise AND of two flags.
+  In other words, it unsets the bit that corresopnds to the flag
+  GIVEN: original_state is <code class="inline">0b01100100</code> (integer: 100)
+  WHEN the flag to be unset is <code class="inline">0b01000000</code> (integer: 64)
+  THEN the result is <code class="inline">0b00100100</code> (integer: 36)</p><p>  Example:
+  iex&gt; Flags.unset(100, 64)
+  36</p>
   </section>
 </section>
-<section class="detail" id="stream4/0">
+<section class="detail" id="unset_all/2">
 
   <div class="detail-header">
-    <a href="#stream4/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#unset_all/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">stream4()</h1>
-
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="stream5/0">
-
-  <div class="detail-header">
-    <a href="#stream5/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">stream5()</h1>
+      <h1 class="signature" translate="no">unset_all(target, flags)</h1>
 
 
     </div>

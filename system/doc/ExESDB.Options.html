@@ -8,11 +8,11 @@
     <meta name="project" content="ex_esdb v0.0.2-alfa">
 
 
-    <title>ExESDB.EnVars — ex_esdb v0.0.2-alfa</title>
+    <title>ExESDB.Options — ex_esdb v0.0.2-alfa</title>
 
     <link rel="stylesheet" href="dist/html-elixir-6X3L5KMG.css" />
 
-      <link rel="canonical" href="https://hexdocs.pm/ex_esdb/ExESDB.EnVars.html" />
+      <link rel="canonical" href="https://hexdocs.pm/ex_esdb/ExESDB.Options.html" />
 
     <script defer src="dist/sidebar_items-48954FE6.js"></script>
     <script defer src="docs_config.js"></script>
@@ -77,7 +77,7 @@ ex_esdb
 <div id="top-content">
   <div class="heading-with-actions top-heading">
     <h1>
-      <span translate="no">ExESDB.EnVars</span> 
+      <span translate="no">ExESDB.Options</span> 
       <small class="app-vsn" translate="no">(ex_esdb v0.0.2-alfa)</small>
 
     </h1>
@@ -86,7 +86,7 @@ ex_esdb
 
 
     <section id="moduledoc">
-<p>  This module contains the environment variables that are used by ExESDB</p>
+<p>  This module contains the options helper functions for ExESDB</p>
     </section>
 
 </div>
@@ -105,11 +105,25 @@ ex_esdb
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#data_dir/0" data-no-tooltip="" translate="no">data_dir()</a>
+        <a href="#app_env/0" data-no-tooltip="" translate="no">app_env()</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>  Returns the data directory. default: <code class="inline">/data</code></p></div>
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#app_env/1" data-no-tooltip="" translate="no">app_env(key)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#data_dir/0" data-no-tooltip="" translate="no">data_dir()</a>
+
+      </div>
 
     </div>
 
@@ -119,8 +133,6 @@ ex_esdb
 
       </div>
 
-        <div class="summary-synopsis"><p>  Returns the db type. <code class="inline">single</code> or <code class="inline">cluster</code>. default: <code class="inline">single</code></p></div>
-
     </div>
 
     <div class="summary-row">
@@ -128,8 +140,6 @@ ex_esdb
         <a href="#pub_sub/0" data-no-tooltip="" translate="no">pub_sub()</a>
 
       </div>
-
-        <div class="summary-synopsis"><p>  Returns the name of the pub/sub. default: <code class="inline">ex_esdb_pub_sub</code></p></div>
 
     </div>
 
@@ -139,8 +149,6 @@ ex_esdb
 
       </div>
 
-        <div class="summary-synopsis"><p>  Returns the seed nodes. default: <code class="inline">nil</code></p></div>
-
     </div>
 
     <div class="summary-row">
@@ -149,7 +157,13 @@ ex_esdb
 
       </div>
 
-        <div class="summary-synopsis"><p>  Returns the khepri store id. default: <code class="inline">ex_esdb_store</code></p></div>
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#sys_env/1" data-no-tooltip="" translate="no">sys_env(key)</a>
+
+      </div>
 
     </div>
 
@@ -158,8 +172,6 @@ ex_esdb
         <a href="#timeout/0" data-no-tooltip="" translate="no">timeout()</a>
 
       </div>
-
-        <div class="summary-synopsis"><p>  Returns the timeout in milliseconds. default: <code class="inline">10_000</code></p></div>
 
     </div>
 
@@ -176,6 +188,42 @@ ex_esdb
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
+<section class="detail" id="app_env/0">
+
+  <div class="detail-header">
+    <a href="#app_env/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">app_env()</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="app_env/1">
+
+  <div class="detail-header">
+    <a href="#app_env/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">app_env(key)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
 <section class="detail" id="data_dir/0">
 
   <div class="detail-header">
@@ -191,7 +239,7 @@ ex_esdb
 
   <section class="docstring">
 
-<p>  Returns the data directory. default: <code class="inline">/data</code></p>
+
   </section>
 </section>
 <section class="detail" id="db_type/0">
@@ -209,7 +257,7 @@ ex_esdb
 
   <section class="docstring">
 
-<p>  Returns the db type. <code class="inline">single</code> or <code class="inline">cluster</code>. default: <code class="inline">single</code></p>
+
   </section>
 </section>
 <section class="detail" id="pub_sub/0">
@@ -227,7 +275,7 @@ ex_esdb
 
   <section class="docstring">
 
-<p>  Returns the name of the pub/sub. default: <code class="inline">ex_esdb_pub_sub</code></p>
+
   </section>
 </section>
 <section class="detail" id="seed_nodes/0">
@@ -245,7 +293,7 @@ ex_esdb
 
   <section class="docstring">
 
-<p>  Returns the seed nodes. default: <code class="inline">nil</code></p>
+
   </section>
 </section>
 <section class="detail" id="store_id/0">
@@ -263,7 +311,25 @@ ex_esdb
 
   <section class="docstring">
 
-<p>  Returns the khepri store id. default: <code class="inline">ex_esdb_store</code></p>
+
+  </section>
+</section>
+<section class="detail" id="sys_env/1">
+
+  <div class="detail-header">
+    <a href="#sys_env/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">sys_env(key)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
   </section>
 </section>
 <section class="detail" id="timeout/0">
@@ -281,7 +347,7 @@ ex_esdb
 
   <section class="docstring">
 
-<p>  Returns the timeout in milliseconds. default: <code class="inline">10_000</code></p>
+
   </section>
 </section>
 
