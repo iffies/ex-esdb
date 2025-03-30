@@ -66,4 +66,7 @@ defmodule Colors do
   def cluster_theme(pid),
     do: "#{yellow_on_red()}#{inspect(pid)}#{reset()}"
 
+  def projector_theme(pid),
+    do: "#{yellow_on_blue()}#{inspect(pid)}#{reset()}"
+
 end

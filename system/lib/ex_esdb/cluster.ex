@@ -85,7 +85,7 @@ defmodule ExESDB.Cluster do
     Logger.info("#{Colors.cluster_theme(self())} => Starting Cluster with config: #{inspect(config, pretty: true)}")
     Process.flag(:trap_exit, true)
     Process.send_after(self(), :join, timeout)
-    Process.send_after(self(), :members, 6 * timeout)
+    Process.send_after(self(), :members, 2 * timeout)
     {:ok, config}
   end
 

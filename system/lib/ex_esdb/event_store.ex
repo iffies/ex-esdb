@@ -118,9 +118,9 @@ defmodule ExESDB.EventStore do
   end
 
   @impl true
-  def handle_info(:register_emitter, [config: _, store: store] = state) do
+  def handle_info(:register_emitter, [config: opts, store: store] = state) do
     store
-    |> ESEmitter.register_erl_emitter()
+    |> ESEmitter.register_erl_emitter(opts[:pub_sub])
     {:noreply, state}
   end
 

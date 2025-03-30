@@ -61,6 +61,14 @@ RUN MIX_ENV="prod" mix do compile, release ex_esdb
 
 FROM ${RUNNER_IMAGE} AS ex_esdb
 
+ENV HOME=/system
+ENV MIX_ENV="prod"
+ENV PATH="${PATH}"
+
+ARG EX_ESDB_COOKIE
+ARG EX_ESDB_DATA_DIR
+ARG EX_ESDB_STORE_ID
+
 ARG ERTS_VERSION=erts-15.2.3
 
 RUN echo "!!!!!!!! Building runner image...!!!!!!!" && sleep 2
@@ -100,25 +108,10 @@ VOLUME /data
 
 EXPOSE 4369 9000-9100
 
+RUN echo $EX_ESDB_COOKIE > ~/.erlang.cookie
+RUN chmod 400 ~/.erlang.cookie
 
-# USER nobody
-
-#VOLUME /data
-
-ENV HOME=/system
-ENV MIX_ENV="prod"
-ENV PATH="${PATH}"
-
-ARG EX_ESDB_COOKIE
-ARG EX_ESDB_DATA_DIR
-ARG EX_ESDB_STORE_ID
-
-# RUN ls -lha && sleep 10
-
-# RUN epmd -names
-#
-
-HEALTHCHECK --interval=10s --timeout=3s \
-  CMD ["./check-ex-esdb.sh"]
+# HEALTHCHECK --interval=10s --timeout=3s \
+#   CMD ["./check-ex-esdb.sh"]
 
 CMD ["./run-ex-esdb.sh"]

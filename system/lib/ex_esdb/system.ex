@@ -20,6 +20,7 @@ defmodule ExESDB.System do
       {Phoenix.PubSub, name: config[:pub_sub]},
       {ExESDB.EventStore, config},
       {ExESDB.Cluster, config},
+      {ExESDB.EventProjector, config}
     ]
 
     Supervisor.init(

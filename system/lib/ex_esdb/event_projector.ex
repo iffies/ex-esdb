@@ -5,6 +5,7 @@ defmodule ExESDB.EventProjector do
   use GenServer
 
   alias Phoenix.PubSub, as: PubSub
+  import Colors
 
   @impl true
   def handle_info({:event, event}, state) do
@@ -28,9 +29,9 @@ defmodule ExESDB.EventProjector do
   ##### PLUMBING #####
   @impl true
   def init(opts) do
-    IO.puts("Event Projector init")
+    IO.puts("#{projector_theme(self())} Event Projector is UP with config: #{inspect(opts, pretty: true)}")
     opts[:pub_sub]
-    |> PubSub.subscribe(opts[:store_id])
+    |> PubSub.subscribe(to_string(opts[:store_id]))
     {:ok, opts}
   end
 
