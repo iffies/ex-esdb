@@ -7,7 +7,7 @@
 .elixir-tools/
 .obsidian/
 tmp/
-
+doc/
 
 ## Elixir
 /_build
@@ -17,6 +17,7 @@ tmp/
 /.fetch
 /tmp
 /system/tmp
+
 erl_crash.dump
 *.ez
 *.beam
