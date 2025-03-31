@@ -1,7 +1,7 @@
 defmodule ExESDB.EventStreamWriter do
   @moduledoc false
 
-  alias ExESDB.EventStreamReader, as: ESReader
+  alias ExESDB.EventStoreInfo, as: ESInfo
 
   #  @retry_attempts 3
   # @retry_delay 500
@@ -14,7 +14,7 @@ defmodule ExESDB.EventStreamWriter do
     |> :khepri.transaction(fn ->
       actual_version =
         store
-        |> ESReader.get_current_version!(stream_id)
+        |> ESInfo.get_version!(stream_id)
 
       store
       |> append_events(stream_id, events, actual_version)

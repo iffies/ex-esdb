@@ -4,47 +4,45 @@ defmodule ExESDB.EventProjector do
   """
   use GenServer
 
+  alias ExESDB.Themes, as: Themes
   alias Phoenix.PubSub, as: PubSub
-  import Colors
+
+  require Logger
 
   @impl true
   def handle_info({:event, event}, state) do
-    IO.puts("Event Projector handle :event #{inspect(event, pretty: true)}")
+    Logger.info("#{Themes.projector(self())} => Received event: #{inspect(event, pretty: true)}")
     {:noreply, state}
   end
 
   @impl true
   def handle_info({:DOWN, _ref, :process, _pid, _reason}, state) do
-    IO.puts("Event Projector handle :DOWN")
+    Logger.info("#{Themes.projector(self())} => Projector DOWN")
     {:noreply, state}
   end
 
   @impl true
   def handle_info(msg, state) do
-    IO.puts("Event Projector handle random message: #{inspect(msg, pretty: true)}")
+    Logger.info("#{Themes.projector(self())} => Unknown message: #{inspect(msg, pretty: true)}")
     {:noreply, state}
   end
-
 
   ##### PLUMBING #####
   @impl true
   def init(opts) do
-    IO.puts("#{projector_theme(self())} Event Projector is UP with config: #{inspect(opts, pretty: true)}")
+    Logger.info("#{Themes.projector(self())} is UP.")
     opts[:pub_sub]
     |> PubSub.subscribe(to_string(opts[:store_id]))
     {:ok, opts}
   end
 
-
   def start_link(opts) do
     GenServer.start_link(
-      __MODULE__, 
-      opts, 
+      __MODULE__,
+      opts,
       name: __MODULE__
     )
   end
-
-
 
   def child_spec(opts) do
     %{

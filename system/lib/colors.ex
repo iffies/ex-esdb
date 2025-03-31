@@ -59,14 +59,6 @@ defmodule Colors do
   def white_on_green, do: "\e[37;42m"
   def white_on_blue, do: "\e[37;44m"
 
-
-  def store_theme(pid),
-    do: "#{yellow_on_black()}#{inspect(pid)}#{reset()}"
-
-  def cluster_theme(pid),
-    do: "#{yellow_on_red()}#{inspect(pid)}#{reset()}"
-
-  def projector_theme(pid),
-    do: "#{yellow_on_blue()}#{inspect(pid)}#{reset()}"
-
 end
+
+

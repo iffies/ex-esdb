@@ -2,7 +2,6 @@ defmodule ExESDB.Options do
   @moduledoc """
     This module contains the options helper functions for ExESDB
   """
-  
   alias ExESDB.EnVars, as: EnVars
 
   @data_dir EnVars.data_dir()
@@ -11,7 +10,6 @@ defmodule ExESDB.Options do
   @db_type EnVars.db_type()
   @seed_nodes EnVars.seed_nodes()
   @pub_sub EnVars.pub_sub()
-
 
   def sys_env(key), do: System.get_env(key)
   def app_env, do: Application.get_env(:ex_esdb, :khepri)
@@ -76,8 +74,8 @@ defmodule ExESDB.Options do
     |> String.replace(":", "")
 
   defp to_unique_atom(candidate)  do
-    try do 
-      String.to_existing_atom(candidate) 
+    try do
+      String.to_existing_atom(candidate)
     rescue
       _ -> String.to_atom(candidate)
     end

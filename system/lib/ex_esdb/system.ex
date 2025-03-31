@@ -8,19 +8,20 @@ defmodule ExESDB.System do
   """
   use Supervisor
 
-  require Phoenix.PubSub
+  alias ExESDB.Themes, as: Themes
 
   require Logger
+  require Phoenix.PubSub
 
   @impl true
-  def init(config) do
-    Logger.info("Starting ExESDB.System with config: #{inspect(config, pretty: true)}")
+  def init(opts) do
+    Logger.info("#{Themes.system(self())} is UP.")
 
     children = [
-      {Phoenix.PubSub, name: config[:pub_sub]},
-      {ExESDB.EventStore, config},
-      {ExESDB.Cluster, config},
-      {ExESDB.EventProjector, config}
+      {Phoenix.PubSub, name: opts[:pub_sub]},
+      {ExESDB.EventStore, opts},
+      {ExESDB.Cluster, opts},
+      {ExESDB.EventProjector, opts}
     ]
 
     Supervisor.init(
@@ -30,25 +31,25 @@ defmodule ExESDB.System do
   end
 
   # def handle_info({:EXIT, pid, reason}, state) do
-  #   Logger.warning("ExESDB.trapped EXIT from [#{inspect(pid)}] 
+  #   Logger.warning("ExESDB.trapped EXIT from [#{inspect(pid)}]
   #     with reason [#{inspect(reason, pretty: true)}]")
   #   Supervisor.terminate_child(__MODULE__, pid)
   #   Supervisor.restart_child(__MODULE__, pid)
   #   {:noreply, state}
   # end
 
-  def start_link(config),
+  def start_link(opts),
     do:
       Supervisor.start_link(
         __MODULE__,
-        config,
+        opts,
         name: __MODULE__
       )
 
-  # def start(config) do
+  # def start(opts) do
   #   case Supervisor.start_link(
   #          __MODULE__,
-  #          config,
+  #          opts,
   #          name: __MODULE__
   #        ) do
   #     {:ok, pid} -> pid
@@ -58,15 +59,15 @@ defmodule ExESDB.System do
   # end
 
   #
-  # def start_link(config) do
-  #   Supervisor.start_link(__MODULE__, config, name: __MODULE__)
+  # def start_link(opts) do
+  #   Supervisor.start_link(__MODULE__, opts, name: __MODULE__)
   # end
   #
   #
-  # def child_spec(config) do
+  # def child_spec(opts) do
   #   %{
   #     id: __MODULE__,
-  #     start: {__MODULE__, :start, [config]},
+  #     start: {__MODULE__, :start, [opts]},
   #     type: :supervisor
   #   }
   # end

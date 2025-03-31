@@ -5,6 +5,9 @@ defmodule ExESDB.Cluster do
   require Logger
   require Colors
 
+  alias ExESDB.Themes, as: Themes
+  alias ExESDB.Options, as: Opts
+
   # defp ping?(node) do
   #   case :net_adm.ping(node) do
   #     :pong -> true
@@ -13,39 +16,35 @@ defmodule ExESDB.Cluster do
   # end
 
   defp join(store) do
-      ExESDB.Options.seed_nodes()
+      Opts.seed_nodes()
       |> Enum.map(
-      fn seed -> 
-        Logger.info("Joining node #{inspect(seed)} in cluster #{inspect(store)}")
-        store 
-        |> :khepri_cluster.join(seed) 
+      fn seed ->
+        Logger.debug("#{Themes.cluster(node())} => Joining: #{inspect(seed)}")
+        store
+        |> :khepri_cluster.join(seed)
       end)
   end
 
-  defp leave(store) do 
+  defp leave(store) do
     case store |> :khepri_cluster.reset() do
      :ok ->
-        Logger.info("left cluster")
+        Logger.warning("#{Themes.cluster(node())} => Left cluster")
         :ok
-     {:error, reason} -> 
-        Logger.error("Failed to leave cluster. reason: #{inspect(reason)}")
+     {:error, reason} ->
+        Logger.error("#{Themes.cluster(node())} => Failed to leave cluster. reason: #{inspect(reason)}")
         {:error, reason}
     end
   end
 
-  defp members(store)  do 
+  defp members(store)  do
     case store
       |>:khepri_cluster.members() do
-     {:error, reason} -> 
-        Logger.error("Failed to get store members. reason: #{inspect(reason)}")
-      members -> 
-        Logger.info("
-        Store members: 
-        #{inspect(members, pretty: true)}
-        ")
+     {:error, reason} ->
+        Logger.error("#{Themes.cluster(node())} => Failed to get store members. reason: #{inspect(reason)}")
+      members ->
+        Logger.debug("#{Themes.cluster(node())} => members: #{inspect(members, pretty: true)}")
     end
   end
-
 
   @impl true
   def handle_info(:join, state) do
@@ -64,25 +63,24 @@ defmodule ExESDB.Cluster do
 
   @impl true
   def handle_info({:EXIT, pid, reason}, state) do
-    Logger.warning("Cluster #{Colors.cluster_theme(pid)} exited with reason: #{inspect(reason)}")
-    state[:store_id] 
+    Logger.warning("#{Themes.cluster(pid)} exited with reason: #{inspect(reason)}")
+    state[:store_id]
     |> leave()
     {:noreply, state}
   end
-
 
   ############# PLUMBING #############
   @impl true
   def terminate(reason, state) do
 
-    IO.puts("#{Colors.cluster_theme(self())} terminating with reason: #{inspect(reason)}")
+    Logger.warning("#{Themes.cluster(self())} terminating with reason: #{inspect(reason)}")
     state[:store_id] |> leave()
   end
 
   @impl true
   def init(config) do
     timeout = config[:timeout] || 1000
-    Logger.info("#{Colors.cluster_theme(self())} => Starting Cluster with config: #{inspect(config, pretty: true)}")
+    Logger.debug("#{Themes.cluster(self())} is UP.")
     Process.flag(:trap_exit, true)
     Process.send_after(self(), :join, timeout)
     Process.send_after(self(), :members, 2 * timeout)
@@ -92,8 +90,8 @@ defmodule ExESDB.Cluster do
   def start_link(opts),
     do:
     GenServer.start_link(
-      __MODULE__, 
-      opts, 
+      __MODULE__,
+      opts,
       name: __MODULE__
     )
 

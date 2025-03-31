@@ -10,6 +10,8 @@ defmodule ExESDB.EventStore do
   alias ExESDB.EventEmitter, as: ESEmitter
   alias ExESDB.EventStreamReader, as: ESReader
   alias ExESDB.EventStreamWriter, as: ESWriter
+  alias ExESDB.EventStoreInfo, as: ESInfo
+  alias ExESDB.Themes, as: Themes
 
   # Client API
   @doc """
@@ -48,7 +50,6 @@ defmodule ExESDB.EventStore do
       __MODULE__,
       {:get_state}
     )
-
 
   @doc """
   Append events to a stream.
@@ -91,29 +92,10 @@ defmodule ExESDB.EventStore do
         {:read_stream_forward, store, stream_id, start_version, count}
       )
 
-  @doc """
-  Get the current version of a stream.
-
-  ## Parameters
-
-    - `stream_name`: The name of the stream to check.
-
-  ## Returns
-
-    - `{:ok, version}` if successful.
-    - `{:error, reason}` if unsuccessful.
-  """
-  def stream_version(store, stream_id) do
-    GenServer.call(
-      __MODULE__,
-      {:stream_version, store, stream_id}
-    )
-  end
-
 
   @impl true
   def handle_info(:sigterm, %{store_id: store}) do
-    Logger.info("#{Colors.store_theme(self())} => SIGTERM received. Resetting cluster #{inspect(store, pretty: true)}")
+    Logger.info("#{Themes.store(self())} => SIGTERM received. Leaving cluster")
     {:stop, :normal, nil}
   end
 
@@ -124,13 +106,11 @@ defmodule ExESDB.EventStore do
     {:noreply, state}
   end
 
-
   ## CALLBACKS
   @impl true
   def handle_call({:get_state}, _from, state) do
     {:reply, {:ok, state}, state}
   end
-
 
   @impl true
   def handle_call(
@@ -144,7 +124,6 @@ defmodule ExESDB.EventStore do
 
     {:reply, {:ok, streams}, state}
   end
-
   @impl true
   def handle_call(
         {:append_to_stream, store, stream_id, expected_version, events},
@@ -153,7 +132,7 @@ defmodule ExESDB.EventStore do
       ) do
     current_version =
       store
-      |> ESReader.get_current_version!(stream_id)
+      |> ESInfo.get_version!(stream_id)
 
     if current_version == expected_version do
       new_version =
@@ -187,8 +166,7 @@ defmodule ExESDB.EventStore do
       ) do
     version =
       store
-      |> ESReader.get_current_version!(stream_id)
-
+      |> ESInfo.get_version!(stream_id)
     {:reply, {:ok, version}, state}
   end
 
@@ -198,7 +176,7 @@ defmodule ExESDB.EventStore do
     data_dir = opts[:data_dir]
     case :khepri.start(data_dir, store, timeout) do
       {:ok, store} ->
-        Logger.info("#{Colors.store_theme(self())} => Started store: #{inspect(store, pretty: true)}")
+        Logger.info("#{Themes.store(self())} => Started Khepri store: #{inspect(store, pretty: true)}")
         {:ok, store}
 
       reason ->
@@ -228,16 +206,14 @@ defmodule ExESDB.EventStore do
   # Server Callbacks
   @impl true
   def init(opts) do
-    IO.puts("Starting ExESDB.EventStore with config: #{inspect(opts, pretty: true)}")
+    Logger.info("#{Themes.store(self())} is UP.")
     Process.flag(:trap_exit, true)
     Process.send_after(self(), :register_emitter, 10_000)
-
 
     case start_khepri(opts) do
       {:ok, store} ->
         Logger.debug("Started store: #{inspect(store)}")
         :os.set_signal(:sigterm, :handle)
-        
         {:ok, [config: opts, store: store]}
 
       reason ->

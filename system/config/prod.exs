@@ -1,11 +1,11 @@
 import Config
 
 config :khepri,
-  log_level: :warning,
+  log_level: :information,
   logger: true
 
 config :ra,
-  log_level: :warning,
+  log_level: :information,
   logger: true
 
 config :logger, :console,
@@ -13,7 +13,9 @@ config :logger, :console,
   metadata: [:mfa],
   level: :debug
 
-config :ex_esdb, :logger, level: :debug
+config :ex_esdb,
+  logger: true,
+  log_level: :debug
 
 config :ex_esdb, :khepri,
   data_dir: "/data",

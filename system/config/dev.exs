@@ -3,19 +3,19 @@ import Config
 alias ExESDB.EnVars, as: EnVars
 
 config :khepri,
-  log_level: :warning,
-  logger: false
+  log_level: :info,
+  logger: true
 
 config :ra,
-  log_level: :warning,
-  logger: false
+  log_level: :info,
+  logger: true
 
 config :logger, :console,
   format: "$time ($metadata) [$level] $message\n",
   metadata: [:mfa],
-  level: :debug
+  level: :info
 
-config :ex_esdb, :logger, level: :information
+config :ex_esdb, :logger, level: :debug
 
 config :ex_esdb, :khepri,
   data_dir: "tmp/reg_gh",

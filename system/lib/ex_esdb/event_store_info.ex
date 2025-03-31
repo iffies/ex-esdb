@@ -31,7 +31,22 @@ defmodule ExESDB.EventStoreInfo do
 
       result ->
           result
+    end
   end
 
+  @doc """
+    Returns the version of the stream.
+  """
+  def get_version!(store, stream_id) do
+    case store
+         |>:khepri.count([
+            :streams,
+            stream_id,
+            if_node_exists(exists: true)
+      ]) do
+    {:ok, version} -> version
+    _ -> 0
+    end
   end
+
 end

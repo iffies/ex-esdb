@@ -6,6 +6,7 @@ defmodule ExESDB.App do
     otp_app: :ex_esdb
 
   alias ExESDB.Options, as: Options
+  alias ExESDB.Themes, as: Themes
 
   require Logger
   require Phoenix.PubSub
@@ -20,14 +21,7 @@ defmodule ExESDB.App do
 
     :os.set_signal(:sigterm, :handle)
 
-    Logger.info("
-                 ===================================================
-                 || Starting ExESDB on Node #{inspect(node(), pretty: true)} 
-                 ===================================================
-      
-     Options: #{inspect(opts, pretty: true)}
-
-      ")
+    Logger.warning("#{Themes.app(self())} is UP.")
 
     opts = [strategy: :one_for_one, name: EsESDB.Supervisor]
     Supervisor.start_link(children, opts)
