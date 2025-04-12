@@ -1,4 +1,4 @@
-defmodule ExESDB.Storage do
+defmodule ExESDB.TestSupport.Storage do
   @moduledoc false
 
   alias ExESDB.Options, as: Options
@@ -18,8 +18,8 @@ defmodule ExESDB.Storage do
   end
 
   defp esdb_check do
-    case ExESDB.System.start(Options.get()) do
-      {:ok, state} ->
+    case ExESDB.System.start(Options.app_env()) do
+      {:ok, _} ->
         :timer.sleep(1_000)
         :ok
 
@@ -30,6 +30,6 @@ defmodule ExESDB.Storage do
   end
 
   def store do
-    Options.store()
+    Options.store_id()
   end
 end

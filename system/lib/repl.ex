@@ -4,10 +4,14 @@ defmodule ExESDB.Repl do
     running a store called "reg_gh" (Regulate Greenhouse)
     
   """
-  alias ExESDB.Repl.EventGenerator, as: EventGenerator
-  alias ExESDB.Repl.EventStreamMonitor, as: EventStreamMonitor
+  alias ExESDB.Repl.EventGenerator, as: ESGen
+  alias ExESDB.Repl.EventStreamMonitor, as: ESMonitor
 
-  alias ExESDB.EventStoreInfo, as: ESInfo
+  alias ExESDB.EventStore, as: ESStore
+  alias ExESDB.StoreInfo, as: ESInfo
+  alias ExESDB.System, as: ESSystem
+  alias ExESDB.Options, as: Opts
+
 
   require Logger
 
@@ -30,47 +34,38 @@ defmodule ExESDB.Repl do
 
   def start_monitor do
     opts = get_opts()
-    case EventStreamMonitor.start_link(opts) do
+    case ESMonitor.start_link(opts) do
        {:ok, pid} -> IO.puts "Monitor started with pid #{inspect(pid)}"
        {:error, {:already_started, pid}} -> IO.puts "Monitor already started with pid #{inspect(pid)}"
        {:error, reason} -> raise "Failed to start monitor. Reason: #{inspect(reason)}"
     end
   end
 
-  def initialize(stream) do
-    initialized = EventGenerator.initialize()
-    actual_version =
-      @store
-      |> ESInfo.get_version!(stream)
-    {:ok, new_version} =
-      @store
-      |> ExESDB.EventStore.append_to_stream(stream, actual_version, [initialized])
-    {:ok, result} =
-      @store
-      |> ExESDB.EventStore.read_stream_forward(stream, 1, new_version)
-    {:ok, result, result |> Enum.count()}
+  defp initialize(stream) do
+    initialized = ESGen.initialize()
+    actual_version =  ESInfo.get_version!(@store, stream)
+    @store
+    |> ESStore.append_to_stream(stream, actual_version, [initialized])
   end
 
   def append(stream, nbr_of_events) do
-    case all(stream) do
-      nil ->
-        stream
-        |> initialize()
+
+    case ESInfo.get_version!(@store, stream) do
+      0 ->
+        initialize(stream)
         stream
           |> append(nbr_of_events)
       _ ->
         events =
-        EventGenerator.generate_events(nbr_of_events)
+        ESGen.generate_events(nbr_of_events)
 
-        actual_version =
-          @store
-          |> ESInfo.get_version!(stream)
+        actual_version = ESInfo.get_version!(@store, stream)
         {:ok, new_version} =
           @store
-          |> ExESDB.EventStore.append_to_stream(stream, actual_version, events)
+          |> ESStore.append_to_stream(stream, actual_version, events)
         {:ok, result} =
           @store
-          |> ExESDB.EventStore.read_stream_forward(stream, 1, new_version)
+          |> ESStore.read_stream_forward(stream, 1, new_version)
       {:ok, result, result |> Enum.count()}
     end
   end
@@ -84,14 +79,14 @@ defmodule ExESDB.Repl do
       version ->
          {:ok, events} =
             @store
-            |> ExESDB.EventStore.read_stream_forward(stream, 1, version)
+            |> ESStore.read_stream_forward(stream, 1, version)
         events
     end
   end
 
   def start_system do
     opts = get_opts()
-    case ExESDB.System.start_link(opts) do
+    case ESSystem.start_link(opts) do
       {:ok, pid} ->
         IO.puts "System started with pid #{inspect(pid)}"
         pid

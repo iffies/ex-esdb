@@ -92,9 +92,8 @@ defmodule ExESDB.EventStore do
         {:read_stream_forward, store, stream_id, start_version, count}
       )
 
-
   @impl true
-  def handle_info(:sigterm, %{store_id: store}) do
+  def handle_info(:sigterm, _state) do
     Logger.info("#{Themes.store(self())} => SIGTERM received. Leaving cluster")
     {:stop, :normal, nil}
   end

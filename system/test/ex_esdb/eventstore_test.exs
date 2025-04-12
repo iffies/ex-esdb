@@ -8,12 +8,12 @@ defmodule ExESDB.EventStoreTest do
   require Logger
 
   setup do
-    opts = Options.esdb_khepri()
+    opts = Options.app_env()
 
     start_supervised!({EventStore, opts})
 
     on_exit(fn ->
-      File.rm_rf!(opts.data_dir)
+      File.rm_rf!(opts[:data_dir])
     end)
 
     opts
@@ -22,21 +22,24 @@ defmodule ExESDB.EventStoreTest do
   describe "GIVEN a valid set of options" do
     test "WHEN the EventStore is started
           THEN the EventStore is started and the pid is returned" do
-      opts = Options.esdb_khepri()
-      res = EventStore.start_link(opts)
+      opts = Options.app_env()
+      {:ok, res} = EventStore.start_link(opts)
       Logger.warning("EventStore pid: #{inspect(res, pretty: true)}")
     end
   end
 
   describe "append_to_stream/3" do
     test "appends events to a new stream" do
-      %{store_id: store_id} = Config.fetch_env!(:node_app)
+      opts = Options.app_env()
       stream_name = "test_stream"
       events = [%{type: "TestEvent", data: "test data"}]
 
-      assert {:ok, 1} = EventStore.append_to_stream(store_id, stream_name, 0, events)
+      assert {:ok, 1} =
+        Options.store
+        |> EventStore.append_to_stream(stream_name, 0, events)
 
-      res = :khepri.get(stream_name)
+      res = Options.store
+            |> EventStore.read_stream_forward(stream_name, 0, 1)
       Logger.warning("stream: #{inspect(res, pretty: true)}")
     end
 

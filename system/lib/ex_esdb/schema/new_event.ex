@@ -15,4 +15,5 @@ defmodule ExESDB.NewEvent do
 
   field(:data, 5, required: true, type: :bytes)
   field(:metadata, 6, optional: true, type: :bytes)
+
 end

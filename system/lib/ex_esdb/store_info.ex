@@ -1,4 +1,4 @@
-defmodule ExESDB.EventStoreInfo do
+defmodule ExESDB.StoreInfo do
   @moduledoc """
     This module provides functions to get information about the EXESDB event store.
   """
@@ -25,7 +25,7 @@ defmodule ExESDB.EventStoreInfo do
         streams
         |> Stream.map(
           fn {[:streams, stream_name], %{child_list_length: nbr_of_events}} ->
-            [stream_name, nbr_of_events]
+            {stream_name, nbr_of_events}
           end)
         |> Enum.to_list()
 

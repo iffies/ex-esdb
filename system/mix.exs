@@ -85,15 +85,17 @@ defmodule ExESDB.MixProject do
       {:ex_doc, "~> 0.37", only: [:dev], runtime: false},
       {:mix_test_watch, "~> 1.1", only: [:dev, :test], runtime: false},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
-      {:meck, "~> 0.9.2", only: [:test], runtime: false},
+      {:meck, "~> 0.9", only: [:test], runtime: false},
       {:eunit_formatters, "~> 0.5", only: [:test], runtime: false},
       {:mox, "~> 1.0", only: [:test], runtime: false},
       {:jason, "~> 1.4", optional: true},
       {:phoenix_pubsub, "~> 2.1"},
-      {:elixir_uuid, "~> 1.2"},
-      {:khepri, "~> 0.16"},
+      {:khepri, "~> 0.17"},
       {:protobuf, "~> 0.14"},
-      {:gen_retry, "~> 1.4"}
+      {:gen_retry, "~> 1.4"},
+      {:uuidv7, "~> 1.0"},
+      {:elixir_uuid, "~> 1.2"},
+      {:commanded, "~> 1.4"}
     ]
   end
 

@@ -9,7 +9,7 @@ config :ex_unit,
 
 config :ex_esdb, :khepri,
   data_dir: "tmp/ex_esdb_store",
-  store_id: :ex_esdb_store,
+  store_id: :ex_test_store,
   timeout: 1_000,
   db_type: :single,
   seed_nodes: [],

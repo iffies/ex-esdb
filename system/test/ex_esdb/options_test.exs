@@ -6,7 +6,7 @@ defmodule ExESDB.OptionsTest do
   import ExESDB.Options
   alias ExESDB.EnVars, as: EnVars
 
-  describe "esdb_khepri/1" do
+  describe "opts/1" do
     setup do
       original = Application.get_env(:ex_esdb, :khepri)
       Application.put_env(:ex_esdb, :khepri, %{test_key: "test_value"})
@@ -14,7 +14,7 @@ defmodule ExESDB.OptionsTest do
     end
 
     test "returns config value for given key" do
-      assert esdb_khepri(:test_key) == "test_value"
+      assert app_env(:test_key) == "test_value"
     end
   end
 

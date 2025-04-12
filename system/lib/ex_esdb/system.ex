@@ -46,29 +46,19 @@ defmodule ExESDB.System do
         name: __MODULE__
       )
 
-  # def start(opts) do
-  #   case Supervisor.start_link(
-  #          __MODULE__,
-  #          opts,
-  #          name: __MODULE__
-  #        ) do
-  #     {:ok, pid} -> pid
-  #     {:error, {:already_started, pid}} -> pid
-  #     {:error, reason} -> raise "failed to start eventstores supervisor: #{inspect(reason)}"
-  #   end
-  # end
+  def start(opts) do
+    case start_link(opts) do
+      {:ok, pid} ->  pid
+      {:error, {:already_started, pid}} -> pid
+      {:error, reason} -> raise "failed to start eventstores supervisor: #{inspect(reason)}"
+    end
+  end
 
-  #
-  # def start_link(opts) do
-  #   Supervisor.start_link(__MODULE__, opts, name: __MODULE__)
-  # end
-  #
-  #
-  # def child_spec(opts) do
-  #   %{
-  #     id: __MODULE__,
-  #     start: {__MODULE__, :start, [opts]},
-  #     type: :supervisor
-  #   }
-  # end
+  def child_spec(opts) do
+    %{
+      id: __MODULE__,
+      start: {__MODULE__, :start_link, [opts]},
+      type: :supervisor
+    }
+  end
 end

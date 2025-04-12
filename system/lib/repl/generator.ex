@@ -1,6 +1,7 @@
 defmodule ExESDB.Repl.EventGenerator do
   @moduledoc false
 
+  require UUIDv7
   require UUID
 
   @initialized_v1 "initialized:v1"
@@ -60,7 +61,7 @@ defmodule ExESDB.Repl.EventGenerator do
   defp random_light, do:  :rand.uniform(100)
   defp random_intensity, do:  :rand.uniform(100)
 
-  def initialize(),
+  defp initialized,
     do:
     %ExESDB.NewEvent{
       event_id: generate_uuid(),
@@ -73,6 +74,15 @@ defmodule ExESDB.Repl.EventGenerator do
        light: random_light()
        }
     }
+
+  def generate_events(start_from, count) when is_integer(count) and count > 0  do
+    case start_from do
+      0 ->
+        [initialized() | generate_events(count - 1)]
+      _ ->
+          generate_events(count)
+    end
+  end
 
   def generate_events(count)
       when is_integer(count) and count > 0,
@@ -94,7 +104,7 @@ defmodule ExESDB.Repl.EventGenerator do
     }
   end
 
-  defp generate_uuid, do: UUID.uuid4()
+  defp generate_uuid, do: UUIDv7.generate()
   defp random_payload(@temperature_measured_v1),
     do: %{
       temperature: random_temperature(),
