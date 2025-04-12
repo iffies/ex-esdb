@@ -6,11 +6,12 @@ defmodule ExESDB.Commanded.Adapter do
   @behaviour Commanded.EventStore.Adapter
 
   require Logger
-  alias ExESDB.Options, as: Options
   alias ExESDB.EventStore, as: Store
+  alias ExESDB.Options, as: Options
   alias ExESDB.Streams, as: Streams
   alias ExESDB.Subscriptions, as: Subscriptions
 
+  @type error() :: String.t()
 
   #  @spec ack_event(
   #  adapter_meta(),

@@ -3,11 +3,11 @@ defmodule BitFlags do
     This module is used to manipulate bitwise flags.
 
     Inspired by: [Flags in C#](https://stackoverflow.com/questions/8447/what-does-the-flags-enum-attribute-mean-in-c)
- 
+
     Event sourced systems often rely on flags to indicate the state of the aggregate at any given time.
     In essence, an event sourced aggregate is a finite state machine and this state is 
     often represented as a set of flags, to be used as a shorthand for the state of the aggregate.
- 
+
     In this module, we define a set of functions that can be used to manipulate these flags.
   """
   import Bitwise
@@ -24,9 +24,10 @@ defmodule BitFlags do
     100
   """
   def set(target, flag)
-    when is_integer(target)
-      and is_integer(flag),
-    do: target ||| flag
+      when is_integer(target) and
+             is_integer(flag),
+      do: target ||| flag
+
   @doc """
     Returns the bitwise AND of two flags.
     In other words, it unsets the bit that corresopnds to the flag
@@ -39,9 +40,10 @@ defmodule BitFlags do
     36
   """
   def unset(target, flag)
-    when is_integer(target)
-      and is_integer(flag),
-    do: target &&& bnot(flag)
+      when is_integer(target) and
+             is_integer(flag),
+      do: target &&& bnot(flag)
+
   @doc """
     Returns the bitwise OR of multiple flags against a given state.
     In other words, it sets the bits that corresopnds to the flags
@@ -65,7 +67,7 @@ defmodule BitFlags do
     GIVEN: original_state is `0b11100100` (integer: 228)
     WHEN the flags to be unset are `[0b01000000, 0b10000000]` (integers: 64, 128)
     THEN the result is `0b00100100` (integer: 36)
- 
+
     Example:
     iex> BitFlags.unset_all(228, [64, 128])
     36
@@ -140,45 +142,46 @@ defmodule BitFlags do
     flags |> Enum.any?(fn flag -> has?(status, flag) end)
   end
 
-
   @doc """
     Returns a list of flag descriptions that are set in the target state.
     GIVEN: original_state is `0b01100100` (integer: 100)
     AND the flag_map is:
-        %{
-           0 => "None",
-           1 => "Ready",
-           2 => "In Progress",
-           4 => "Completed",
-           8 => "Cancelled",
-           16 => "Failed",
-           32 => "Archived",
-           64 => "Ready to Archive",
-           128 => "Ready to Publish",
-           256 => "Published",
-           512 => "Unpublished",
-        }
+       %{
+          0 => "None",
+          1 => "Ready",
+          2 => "In Progress",
+          4 => "Completed",
+          8 => "Cancelled",
+          16 => "Failed",
+          32 => "Archived",
+          64 => "Ready to Archive",
+          128 => "Ready to Publish",
+          256 => "Published",
+          512 => "Unpublished",
+       }
     WHEN the target state is `0b01100100` (integer: 100)
     THEN the result is `["Completed", "Archived", "Ready to Archive"]`
- 
+
     Example: 
-    iex> descriptions = %{
-           0 => "None",
-           1 => "Ready",
-           2 => "In Progress",
-           4 => "Completed",
-           8 => "Cancelled",
-           16 => "Failed",
-           32 => "Archived",
-           64 => "Ready to Archive",
-           128 => "Ready to Publish",
-           256 => "Published",
-           512 => "Unpublished"
-         }
+    iex> descriptions = 
+    ...>  %{
+    ...>       0 => "None",
+    ...>       1 => "Ready",
+    ...>       2 => "In Progress",
+    ...>       4 => "Completed",
+    ...>       8 => "Cancelled",
+    ...>       16 => "Failed",
+    ...>       32 => "Archived",
+    ...>       64 => "Ready to Archive",
+    ...>       128 => "Ready to Publish",
+    ...>       256 => "Published",
+    ...>       512 => "Unpublished",
+    ...>  }
     iex> BitFlags.to_list(100, descriptions)
     ["Completed", "Archived", "Ready to Archive"]
-   """
+  """
   def to_list(0, flag_map), do: [flag_map[0]]
+
   def to_list(n, flag_map) when n > 0 do
     # Extract keys (powers of 2) from the map and sort them
     keys = Map.keys(flag_map) |> Enum.sort()
@@ -191,6 +194,7 @@ defmodule BitFlags do
           acc
         end
       end)
+
     # Since we collected the flags in reverse order, reverse the list before returning
     Enum.reverse(flags)
   end
@@ -214,17 +218,28 @@ defmodule BitFlags do
 
     Example:
     iex> descriptions = 
-         %{
-           0 => "None",
-           1 => "Ready",
-           2 => "In Progress",
-           4 => "Completed",
-           8 => "Cancelled",
-           16 => "Failed",
-           32 => "Archived",
-           64 => "Ready to Archive",
-           128 => "Ready to Publish",
-        }
+    ...>  %{
+    ...>       0 => "None",
+    ...>       1 => "Ready",
+    ...>       2 => "In Progress",
+    ...>       4 => "Completed",
+    ...>       8 => "Cancelled",
+    ...>       16 => "Failed",
+    ...>       32 => "Archived",
+    ...>       64 => "Ready to Archive",
+    ...>       128 => "Ready to Publish",
+    ...>  }
+    %{
+       0 => "None",
+       1 => "Ready",
+       2 => "In Progress",
+       4 => "Completed",
+       8 => "Cancelled",
+       16 => "Failed",
+       32 => "Archived",
+       64 => "Ready to Archive",
+       128 => "Ready to Publish",
+    }
     iex> BitFlags.highest(100, descriptions)
     "Ready to Archive"
   """
@@ -232,6 +247,7 @@ defmodule BitFlags do
     [head | _] =
       to_list(n, flag_map)
       |> Enum.reverse()
+
     head
   end
 
@@ -254,25 +270,38 @@ defmodule BitFlags do
 
     Example:
     iex> descriptions = 
-        %{
-           0 => "None",
-           1 => "Ready",
-           2 => "In Progress",
-           4 => "Completed",
-           8 => "Cancelled",
-           16 => "Failed",
-           32 => "Archived",
-           64 => "Ready to Archive",
-           128 => "Ready to Publish",
-        }
+    ...>  %{
+    ...>       0 => "None",
+    ...>       1 => "Ready",
+    ...>       2 => "In Progress",
+    ...>       4 => "Completed",
+    ...>       8 => "Cancelled",
+    ...>       16 => "Failed",
+    ...>       32 => "Archived",
+    ...>       64 => "Ready to Archive",
+    ...>       128 => "Ready to Publish",
+    ...>  }
+    %{
+       0 => "None",
+       1 => "Ready",
+       2 => "In Progress",
+       4 => "Completed",
+       8 => "Cancelled",
+       16 => "Failed",
+       32 => "Archived",
+       64 => "Ready to Archive",
+       128 => "Ready to Publish",
+    }
     iex> BitFlags.lowest(100, descriptions)
     "Ready" 
   """
   def lowest(n, flag_map) do
     [head | _] =
       to_list(n, flag_map)
+
     head
   end
+
   @doc """
     Returns a string representation of the bit flags.
     GIVEN: target_state is `0b01100100` (integer: 100)
@@ -292,17 +321,17 @@ defmodule BitFlags do
 
     Example:
     iex> descriptions =
-        %{
-           0 => "None",
-           1 => "Ready",
-           2 => "In Progress",
-           4 => "Completed",
-           8 => "Cancelled",
-           16 => "Failed",
-           32 => "Archived",
-           64 => "Ready to Archive",
-           128 => "Ready to Publish",
-        }
+    ...>  %{
+    ...>       0 => "None",
+    ...>       1 => "Ready",
+    ...>       2 => "In Progress",
+    ...>       4 => "Completed",
+    ...>       8 => "Cancelled",
+    ...>       16 => "Failed",
+    ...>       32 => "Archived",
+    ...>       64 => "Ready to Archive",
+    ...>       128 => "Ready to Publish",
+    ...>  }
     iex> BitFlags.to_string(100, descriptions)
     "Completed, Archived, Ready to Archive"
   """
@@ -312,6 +341,7 @@ defmodule BitFlags do
   end
 
   defp decompose(0, _, acc), do: Enum.reverse(acc)
+
   defp decompose(target, power, acc) do
     if Bitwise.band(target, power) != 0 do
       decompose(target - power, power <<< 1, [power | acc])
@@ -319,8 +349,18 @@ defmodule BitFlags do
       decompose(target, power <<< 1, acc)
     end
   end
+
   def decompose(target) when target > 0 do
     decompose(target, 1, [])
   end
 
+  def toggle(target, flag) when is_integer(target) and is_integer(flag) do
+    Bitwise.bxor(target, flag)
+  end
+
+  def toggle_all(target, flags) do
+    Enum.reduce(flags, target, fn flag, acc ->
+      toggle(acc, flag)
+    end)
+  end
 end
