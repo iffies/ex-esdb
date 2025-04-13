@@ -60,24 +60,18 @@ defmodule BeamCampus.ColorFuncs do
   end
 
   # Generate all color combinations
-  for {fg_name, fg_code} <- @colors, {bg_name, bg_code} <- @colors do
-    fg_code_str = Integer.to_string(fg_code)
-    # Background color codes start at 40
-    bg_code_str = Integer.to_string(bg_code + 40)
-    color_func_name = :"#{fg_name}_on_#{bg_name}"
-    color_func_body = "\e[38;5;#{fg_code_str};48;5;#{bg_code_str}m"
 
-    IO.puts("Defining function: #{color_func_name}")
+  contents =
+    for {fg_name, fg_code} <- @colors, {bg_name, bg_code} <- @colors do
+      f_name = String.to_atom("#{fg_name}_on_#{bg_name}")
+      f_body = "\e[38;5;#{fg_code};48;5;#{bg_code}m"
 
-    color_func =
-      quote bind_quoted: [f_name: color_func_name, f_body: color_func_body] do
-        def unquote(f_name) do
-          unquote(f_body)
-        end
+      IO.puts("#{f_body}Defining function: #{f_name}")
+
+      quote bind_quoted: [f_name: f_name, f_body: f_body] do
+        def unquote(f_name)(), do: unquote(f_body)
       end
-
-    quote do
-      unquote(color_func)
     end
-  end
+
+  Module.eval_quoted(__MODULE__, contents)
 end
