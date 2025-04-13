@@ -110,15 +110,35 @@ defmodule ExESDB.Commanded.Adapter do
     {:error, :not_implemented}
   end
 
+  @doc """
+    Streams events from the given stream, in the order in which they were
+    originally written.
+  """
+  @spec stream_forward(
+          adapter_meta :: adapter_meta,
+          stream_uuid :: stream_uuid,
+          start_version :: non_neg_integer,
+          read_batch_size :: non_neg_integer
+        ) ::
+          Enumerable.t()
+          | {:error, :stream_not_found}
+          | {:error, error}
   @impl true
   def stream_forward(adapter_meta, stream_uuid, start_version, read_batch_size) do
-    Logger.warning(
-      "stream_forward/5 is not implemented for #{inspect(adapter_meta)}, #{inspect(stream_uuid)}, #{inspect(start_version)}, #{inspect(read_batch_size)}"
-    )
+    store = Map.get(adapter_meta, :store_id)
 
-    {:error, :not_implemented}
-    # {:ok, stream} = Adapter.open_stream(stream_uuid, opts)
-    # ExESDB.stream_forward(stream, start_version, read_batch_size)
+    case store
+         |> Streams.stream_forward(stream_uuid, start_version, read_batch_size) do
+      {:ok, stream} ->
+        stream
+        |> Stream.map(&Mapper.to_event_data/1)
+
+      {:error, :stream_not_found} ->
+        {:error, :stream_not_found}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
   end
 
   @impl true
