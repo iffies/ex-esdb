@@ -1,4 +1,4 @@
-defmodule BitFlags do
+defmodule BeamCampus.BitFlags do
   @moduledoc """
     This module is used to manipulate bitwise flags.
 

@@ -1,22 +1,25 @@
 defmodule ExESDB.Themes do
   @moduledoc false
-  alias Colors, as: C
+  alias BeamCampus.ColorFuncs, as: CF
 
   def app(pid),
-    do: "APP [#{C.black_on_blue()}#{inspect(pid)}#{C.reset()}]"
+    do: "ESDB_APP [#{CF.tui(:black, :blue)}#{inspect(pid)}#{CF.reset()}]"
 
   def system(pid),
-    do: "SYSTEM [#{C.yellow_on_black()}#{inspect(pid)}#{C.reset()}]"
+    do: "ESDB_SYSTEM [#{CF.tui(:black, :magenta)}#{inspect(pid)}#{CF.reset()}]"
 
   def store(pid),
-    do: "STORE [#{C.black_on_green()}#{inspect(pid)}#{C.reset()}]"
+    do: "ESDB_STORE [#{CF.tui(:black, :green)}#{inspect(pid)}#{CF.reset()}]"
 
   def cluster(pid),
-    do: "CLUSTER [#{C.yellow_on_red()}#{inspect(pid)}#{C.reset()}]"
+    do: "ESDB_CLUSTER [#{CF.tui(:yellow, :red)}#{inspect(pid)}#{CF.reset()}]"
 
   def projector(pid),
-    do: "PROJECTOR [#{C.black_on_white()}#{inspect(pid)}#{C.reset()}]"
+    do: "ESDB_PROJECTOR [#{CF.tui(:black, :white)}#{inspect(pid)}#{CF.reset()}]"
 
   def monitor(pid),
-    do: "MONITOR [#{C.yellow_on_magenta()}#{inspect(pid)}#{C.reset()}]"
+    do: "ESDB_MONITOR [#{CF.tui(:yellow, :magenta)}#{inspect(pid)}#{CF.reset()}]"
+
+  def emitter(pid),
+    do: "ESDB_EMITTER [#{CF.tui(:black, :yellow)}#{inspect(pid)}#{CF.reset()}]"
 end
