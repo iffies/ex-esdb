@@ -8,6 +8,8 @@ defmodule ExESDB.Commanded.Adapter do
   require Logger
   alias ExESDB.EventStore, as: Store
   alias ExESDB.Options, as: Options
+
+  alias ExESDB.Snapshots, as: Snapshots
   alias ExESDB.Streams, as: Streams
   alias ExESDB.Subscriptions, as: Subscriptions
 
@@ -47,12 +49,10 @@ defmodule ExESDB.Commanded.Adapter do
           expected_version :: integer(),
           events :: list(Commanded.EventStore.EventData.t()),
           opts :: Keyword.t()
-        ) :: :ok | {:error, :wrong_expected_version} | {:error, error()}
+        ) ::
+          :ok | {:error, :wrong_expected_version} | {:error, error()}
   @impl Commanded.EventStore.Adapter
-  def append_to_stream(adapter_meta, stream_uuid, expected_version, events, _opts) do
-    store =
-      Map.get(adapter_meta, :store_id)
-
+  def append_to_stream(%{store_id: store}, stream_uuid, expected_version, events, _opts) do
     new_events =
       events
       |> Enum.map(&Mapper.to_new_event/1)
@@ -79,25 +79,39 @@ defmodule ExESDB.Commanded.Adapter do
     {:ok, [ExESDB.System.child_spec(opts)], meta}
   end
 
-  @impl true
-  def delete_snapshot(adapter_meta, source_uuid) do
-    Logger.warning(
-      "delete_snapshot/4 is not implemented for #{inspect(adapter_meta)}, #{inspect(source_uuid)}"
-    )
-
-    {:error, :not_implemented}
+  @doc """
+    Delete a snapshot of the current state of the event store.
+  """
+  @spec delete_snapshot(
+          adapter_meta :: adapter_meta,
+          source_uuid :: source_uuid
+        ) :: :ok | {:error, error}
+  @impl Commanded.EventStore.Adapter
+  def delete_snapshot(%{store_id: store}, source_uuid) do
+    case store
+         |> Snapshots.delete_snapshot(source_uuid) do
+      {:ok, _} -> :ok
+      {:error, reason} -> {:error, reason}
+    end
   end
 
-  @impl true
-  def delete_subscription(adapter_meta, arg2, subscription_name) do
-    Logger.warning(
-      "delete_subscription/4 is not implemented for #{inspect(adapter_meta)}, #{inspect(arg2)}, #{inspect(subscription_name)}"
-    )
-
-    {:error, :not_implemented}
+  @doc """
+    Delete a subscription.
+  """
+  @spec delete_subscription(
+          adapter_meta :: adapter_meta,
+          subscription_name :: subscription_name
+        ) :: :ok | {:error, error}
+  @impl Commanded.EventStore.Adapter
+  def delete_subscription(%{store_id: store}, subscription_name) do
+    case store
+         |> Subscriptions.delete_subscription(subscription_name) do
+      {:ok, _} -> :ok
+      {:error, reason} -> {:error, reason}
+    end
   end
 
-  @impl true
+  @impl Commanded.EventStore.Adapter
   def read_snapshot(%{store_id: store}, source_uuid) do
     case store
          |> Snapshots.read_snapshot(source_uuid) do

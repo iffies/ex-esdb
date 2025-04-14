@@ -7,7 +7,7 @@ defmodule ExESDB.EventStore do
 
   require Logger
 
-  alias ExESDB.EventEmitter, as: ESEmitter
+  alias ExESDB.Emitter, as: ESEmitter
   alias ExESDB.EventStreamReader, as: ESReader
   alias ExESDB.EventStreamWriter, as: ESWriter
   alias ExESDB.EventStoreInfo, as: ESInfo
@@ -100,9 +100,31 @@ defmodule ExESDB.EventStore do
 
   @impl true
   def handle_info(:register_emitter, [config: opts, store: store] = state) do
-    store
-    |> ESEmitter.register_erl_emitter(opts[:pub_sub])
+    string_store = inspect(store, pretty: true)
+    Logger.warning("
+      #{Themes.store(self())} => Registering PG emitter 
+        for store #{inspect(store, pretty: true)}
+        and pub_sub #{inspect(opts[:pub_sub], pretty: true)}
+      ")
 
+    case store
+         |> ESEmitter.register_pg_emitter(opts[:pub_sub]) do
+      :ok ->
+        Logger.warning("Registered PG emitter for store #{store}")
+
+      {:error, reason} ->
+        Logger.error("Failed to register PG emitter. Reason: #{inspect(reason)}")
+
+      msg ->
+        Logger.error("Failed to register PG emitter: #{inspect(msg)}")
+    end
+
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_info(_, state) do
+    Logger.warning("#{Themes.store(self())} => Unhandled message")
     {:noreply, state}
   end
 

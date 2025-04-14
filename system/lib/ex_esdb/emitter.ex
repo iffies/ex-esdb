@@ -15,8 +15,8 @@ defmodule ExESDB.Emitter do
       pub_sub
       |> PubSub.broadcast!("#{store}", %{event: event})
 
-  def register_emitter(store, pub_sub),
+  def register_pg_emitter(store, pub_sub),
     do:
-      pub_sub
-      |> :func_registrations.register_emitter(store)
+      store
+      |> :func_registrations.register_pg_emitter(pub_sub)
 end
