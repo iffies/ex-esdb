@@ -29,7 +29,7 @@ defmodule ExESDB.Commanded.Adapter do
   #  adapter_meta(),
   #  pid(),
   #  Commanded.EventStore.EventData.t()) :: :ok | {:error, error()})
-  @impl true
+  @impl Commanded.EventStore.Adapter
   def ack_event(meta, pid, event) do
     Logger.warning(
       "ack_event/3 is not implemented for #{inspect(meta)}, #{inspect(pid)}, #{inspect(event)}"
@@ -48,7 +48,7 @@ defmodule ExESDB.Commanded.Adapter do
           events :: list(Commanded.EventStore.EventData.t()),
           opts :: Keyword.t()
         ) :: :ok | {:error, :wrong_expected_version} | {:error, error()}
-  @impl true
+  @impl Commanded.EventStore.Adapter
   def append_to_stream(adapter_meta, stream_uuid, expected_version, events, _opts) do
     store =
       Map.get(adapter_meta, :store_id)
@@ -62,8 +62,13 @@ defmodule ExESDB.Commanded.Adapter do
   end
 
   @doc """
-  Return a child spec defining all processes required by the event store.
+    Return a child spec defining all processes required by the event store.
   """
+  @spec child_spec(
+          application(),
+          Keyword.t()
+        ) ::
+          {:ok, [:supervisor.child_spec() | {Module.t(), term} | Module.t()], adapter_meta}
   @impl Commanded.EventStore.Adapter
   def child_spec(application, opts) do
     meta =
@@ -93,21 +98,30 @@ defmodule ExESDB.Commanded.Adapter do
   end
 
   @impl true
-  def read_snapshot(adapter_meta, stream_uuid) do
-    Logger.warning(
-      "read_snapshot/5 is not implemented for #{inspect(adapter_meta)}, #{inspect(stream_uuid)}"
-    )
+  def read_snapshot(%{store_id: store}, source_uuid) do
+    case store
+         |> Snapshots.read_snapshot(source_uuid) do
+      {:ok, snapshot_record} ->
+        {:ok, Mapper.to_snapshot_data(snapshot_record)}
 
-    {:error, :not_implemented}
+      {:error, reason} ->
+        {:error, reason}
+    end
   end
 
-  @impl true
-  def record_snapshot(adapter_meta, snapshot_data) do
-    Logger.warning(
-      "record_snapshot/3 is not implemented for #{inspect(adapter_meta)}, #{inspect(snapshot_data)}"
-    )
+  @doc """
+    Record a snapshot of the current state of the event store.
+  """
+  @spec record_snapshot(
+          adapter_meta :: adapter_meta,
+          snapshot_data :: any
+        ) :: :ok | {:error, error}
+  @impl Commanded.EventStore.Adapter
+  def record_snapshot(%{store_id: store}, snapshot_data) do
+    record = Mapper.to_snapshot_record(snapshot_data)
 
-    {:error, :not_implemented}
+    store
+    |> Snapshots.record_snapshot(record)
   end
 
   @doc """

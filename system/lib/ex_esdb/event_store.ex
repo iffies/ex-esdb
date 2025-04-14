@@ -1,7 +1,7 @@
 defmodule ExESDB.EventStore do
   @moduledoc """
-  A GenServer wrapper around :khepri to act as an event store.
-  Inspired by EventStoreDB's API.
+    A GenServer wrapper around :khepri to act as a distributed event store.
+    Inspired by EventStoreDB's API.
   """
   use GenServer
 
@@ -37,9 +37,9 @@ defmodule ExESDB.EventStore do
   ## Parameters
 
     - `store`: The store to get the state of.
- 
+
   ## Returns
- 
+
       - `{:ok, state}`  if successful.
       - `{:error, reason}` if unsuccessful.
 
@@ -47,9 +47,9 @@ defmodule ExESDB.EventStore do
   def get_state(_store),
     do:
       GenServer.call(
-      __MODULE__,
-      {:get_state}
-    )
+        __MODULE__,
+        {:get_state}
+      )
 
   @doc """
   Append events to a stream.
@@ -102,6 +102,7 @@ defmodule ExESDB.EventStore do
   def handle_info(:register_emitter, [config: opts, store: store] = state) do
     store
     |> ESEmitter.register_erl_emitter(opts[:pub_sub])
+
     {:noreply, state}
   end
 
@@ -123,6 +124,7 @@ defmodule ExESDB.EventStore do
 
     {:reply, {:ok, streams}, state}
   end
+
   @impl true
   def handle_call(
         {:append_to_stream, store, stream_id, expected_version, events},
@@ -166,6 +168,7 @@ defmodule ExESDB.EventStore do
     version =
       store
       |> ESInfo.get_version!(stream_id)
+
     {:reply, {:ok, version}, state}
   end
 
@@ -173,9 +176,13 @@ defmodule ExESDB.EventStore do
     store = opts[:store_id]
     timeout = opts[:timeout]
     data_dir = opts[:data_dir]
+
     case :khepri.start(data_dir, store, timeout) do
       {:ok, store} ->
-        Logger.info("#{Themes.store(self())} => Started Khepri store: #{inspect(store, pretty: true)}")
+        Logger.info(
+          "#{Themes.store(self())} => Started Khepri store: #{inspect(store, pretty: true)}"
+        )
+
         {:ok, store}
 
       reason ->

@@ -7,13 +7,11 @@
 .elixir-tools/
 .obsidian/
 tmp/
-doc/
 
 ## Elixir
 /_build
 /cover
 /deps
-/doc
 /.fetch
 /tmp
 /system/tmp

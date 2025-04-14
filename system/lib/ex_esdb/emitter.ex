@@ -1,4 +1,4 @@
-defmodule ExESDB.EventEmitter do
+defmodule ExESDB.Emitter do
   @moduledoc false
 
   alias Phoenix.PubSub, as: PubSub
@@ -15,7 +15,7 @@ defmodule ExESDB.EventEmitter do
       pub_sub
       |> PubSub.broadcast!("#{store}", %{event: event})
 
-  def register_erl_emitter(store, pub_sub),
+  def register_emitter(store, pub_sub),
     do:
       pub_sub
       |> :func_registrations.register_emitter(store)
