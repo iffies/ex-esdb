@@ -13,13 +13,25 @@ defmodule BeamCampus.BitFlags do
   import Bitwise
 
   @doc """
+  ### Description
+
     Returns the bitwise OR of two flags.
     In other words, it sets the bit that corresopnds to the flag
-    GIVEN: original_state is `0b00100100` (integer: 36) 
-    WHEN the flag to be set is `0b01000000` (integer: 64)
-    THEN the result is `0b01100100` (integer: 100)
 
-    Example:
+    - GIVEN: original_state is `0b00100100` (integer: 36) 
+    - WHEN the flag to be set is `0b01000000` (integer: 64)
+    - THEN the result is `0b01100100` (integer: 100)
+
+  ### Parameters
+
+    - target: the integer to be set
+    - flag: the integer to be set
+  ### Output
+    
+    The integer representation of the state after setting the flag
+
+  ### Examples
+
     iex> BitFlags.set(36, 64)
     100
   """
@@ -29,15 +41,28 @@ defmodule BeamCampus.BitFlags do
       do: target ||| flag
 
   @doc """
+  ### Description
+
     Returns the bitwise AND of two flags.
     In other words, it unsets the bit that corresopnds to the flag
-    GIVEN: original_state is `0b01100100` (integer: 100)
-    WHEN the flag to be unset is `0b01000000` (integer: 64)
-    THEN the result is `0b00100100` (integer: 36)
 
-    Example:
-    iex> BitFlags.unset(100, 64)
-    36
+    - GIVEN: original_state is `0b01100100` (integer: 100)
+    - WHEN the flag to be unset is `0b01000000` (integer: 64)
+    - THEN the result is `0b00100100` (integer: 36)
+    
+  ### Parameters
+
+      - `target`: the integer representation of the state
+      - `flag`  : the integer representation of the flag
+
+  ### Output
+
+    The integer representation of the state after unsetting the flag
+
+  ### Examples    
+
+      iex> BitFlags.unset(100, 64)
+      36
   """
   def unset(target, flag)
       when is_integer(target) and
