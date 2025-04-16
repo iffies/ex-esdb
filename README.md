@@ -13,3 +13,9 @@ This project is attempt at addressing this point, by building further upon the w
 ## Contents
 
 - [Getting Started](system/guides/getting_started.md)
+- [Code documentation](system/doc/index.html)
+
+## Releases
+
+- [On Hex](https://hex.pm/packages/ex_esdb)
+- [Release Documentation](https://hexdocs.pm/ex_esdb/index.html)
