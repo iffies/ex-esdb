@@ -7,10 +7,7 @@ defmodule ExESDB.EventStore do
 
   require Logger
 
-  alias ExESDB.Emitter, as: ESEmitter
-  alias ExESDB.EventStreamReader, as: ESReader
-  alias ExESDB.EventStreamWriter, as: ESWriter
-  alias ExESDB.EventStoreInfo, as: ESInfo
+  alias ExESDB.StoreInfo, as: ESInfo
   alias ExESDB.Themes, as: Themes
 
   # Client API
@@ -99,30 +96,6 @@ defmodule ExESDB.EventStore do
   end
 
   @impl true
-  def handle_info(:register_emitter, [config: opts, store: store] = state) do
-    string_store = inspect(store, pretty: true)
-    Logger.warning("
-      #{Themes.store(self())} => Registering PG emitter 
-        for store #{inspect(store, pretty: true)}
-        and pub_sub #{inspect(opts[:pub_sub], pretty: true)}
-      ")
-
-    case store
-         |> ESEmitter.register_pg_emitter(opts[:pub_sub]) do
-      :ok ->
-        Logger.warning("Registered PG emitter for store #{store}")
-
-      {:error, reason} ->
-        Logger.error("Failed to register PG emitter. Reason: #{inspect(reason)}")
-
-      msg ->
-        Logger.error("Failed to register PG emitter: #{inspect(msg)}")
-    end
-
-    {:noreply, state}
-  end
-
-  @impl true
   def handle_info(_, state) do
     Logger.warning("#{Themes.store(self())} => Unhandled message")
     {:noreply, state}
@@ -198,18 +171,7 @@ defmodule ExESDB.EventStore do
     store = opts[:store_id]
     timeout = opts[:timeout]
     data_dir = opts[:data_dir]
-
-    case :khepri.start(data_dir, store, timeout) do
-      {:ok, store} ->
-        Logger.info(
-          "#{Themes.store(self())} => Started Khepri store: #{inspect(store, pretty: true)}"
-        )
-
-        {:ok, store}
-
-      reason ->
-        Logger.error("Failed to start khepri. reason: #{inspect(reason)}")
-    end
+    :khepri.start(data_dir, store, timeout)
   end
 
   #### PLUMBING
@@ -234,9 +196,8 @@ defmodule ExESDB.EventStore do
   # Server Callbacks
   @impl true
   def init(opts) do
-    Logger.info("#{Themes.store(self())} is UP.")
+    Logger.warning("#{Themes.store(self())} is UP.")
     Process.flag(:trap_exit, true)
-    Process.send_after(self(), :register_emitter, 10_000)
 
     case start_khepri(opts) do
       {:ok, store} ->

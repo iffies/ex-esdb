@@ -1,5 +1,10 @@
 defmodule ExESDB.Emitter do
-  @moduledoc false
+  @moduledoc """
+    As part of the ExESDB.System, 
+    the Emitter is responsible for managing the communication 
+    between the Event Store and the PubSub mechanism.
+  """
+  use GenServer
 
   alias Phoenix.PubSub, as: PubSub
 
@@ -15,8 +20,26 @@ defmodule ExESDB.Emitter do
       pub_sub
       |> PubSub.broadcast!("#{store}", %{event: event})
 
-  def register_pg_emitter(store, pub_sub),
+  @impl GenServer
+  def init(opts) do
+    Logger.warning("#{Themes.emitter(self())} is UP")
+    {:ok, opts}
+  end
+
+  def start_link(opts),
     do:
-      store
-      |> :func_registrations.register_pg_emitter(pub_sub)
+      GenServer.start_link(
+        __MODULE__,
+        opts,
+        name: __MODULE__
+      )
+
+  def child_spec(opts),
+    do: %{
+      id: __MODULE__,
+      start: {__MODULE__, :start_link, [opts]},
+      restart: :permanent,
+      shutdown: 10_000,
+      type: :worker
+    }
 end

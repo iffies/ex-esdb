@@ -1,5 +1,11 @@
 # Architecture Decision Records
 
+## 2025.04.16
+
+### Subscriptions will be managed via a registry.
+
+`subscribe_to` and `unsubscribe` will interact with the :subscriptions branch of the store, but instead of storing the pid of the subscriber, the subscriber will be stored in a registry.
+
 ## 2025.04.13
 
 ### Each Store will contain separate branches for Streams, Subscriptions, and Projections

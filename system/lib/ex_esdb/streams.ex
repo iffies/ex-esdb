@@ -2,19 +2,24 @@ defmodule ExESDB.Streams do
   @moduledoc """
     Provides functions for working with streams
   """
+  alias ExESDB.StoreInfo, as: ESInfo
+
   defp handle_transaction_result({:ok, {:commit, result}}), do: {:ok, result}
   defp handle_transaction_result({:ok, {:abort, reason}}), do: {:error, reason}
   defp handle_transaction_result({:error, reason}), do: {:error, reason}
 
   def read_events(store, stream_id, start_version, count) do
-    start_version..(start_version + count - 1)
-    |> Enum.map(fn version ->
-      padded_version = ExESDB.VersionFormatter.pad_version(version, 6)
+    events =
+      start_version..(start_version + count - 1)
+      |> Enum.map(fn version ->
+        padded_version = ExESDB.VersionFormatter.pad_version(version, 6)
 
-      store
-      |> :khepri.get!([:streams, stream_id, padded_version])
-    end)
-    |> Enum.reject(&is_nil/1)
+        store
+        |> :khepri.get!([:streams, stream_id, padded_version])
+      end)
+      |> Enum.reject(&is_nil/1)
+
+    {:ok, events}
   end
 
   def get_streams(store) do
@@ -28,6 +33,15 @@ defmodule ExESDB.Streams do
     |> :khepri.exists([:streams, stream_id])
   end
 
+  @doc """
+    Read events from a stream.
+  """
+  @spec stream_forward(
+          store :: atom(),
+          stream_id :: any(),
+          start_version :: integer(),
+          count :: integer()
+        ) :: {:ok, list()} | {:error, term()}
   def stream_forward(store, stream_id, start_version, count) do
     try do
       case store
@@ -44,51 +58,77 @@ defmodule ExESDB.Streams do
     end
   end
 
+  @doc """
+    Append events to a stream using a transaction.
+  """
+  @spec append_events_tx(
+          store :: atom(),
+          stream_id :: any(),
+          events :: list()
+        ) :: {:ok, integer()} | {:error, term()}
   def append_events_tx(store, stream_id, events) do
-    store
-    |> :khepri.transaction(fn ->
-      actual_version =
-        store
-        |> ESInfo.get_version!(stream_id)
+    case store
+         |> :khepri.transaction(fn ->
+           actual_version =
+             store
+             |> ESInfo.get_version!(stream_id)
 
-      store
-      |> append_events(stream_id, events, actual_version)
-    end)
-    |> handle_transaction_result()
+           store
+           |> append_events(stream_id, actual_version, events)
+         end)
+         |> handle_transaction_result() do
+      {:ok, new_version} ->
+        {:ok, new_version}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
   end
 
-  def append_events(store, stream_id, events, current_version) do
-    events
-    |> Enum.reduce(
-      current_version,
-      fn event, version ->
-        new_version = version + 1
-        padded_version = ExESDB.VersionFormatter.pad_version(new_version, 6)
+  @doc """
+    Append events to a stream.
+  """
+  @spec append_events(
+          store :: atom(),
+          stream_id :: any(),
+          current_version :: integer(),
+          events :: list()
+        ) :: {:ok, integer()} | {:error, term()}
+  def append_events(store, stream_id, current_version, events) do
+    next_version =
+      events
+      |> Enum.reduce(
+        current_version,
+        fn event, version ->
+          new_version = version + 1
+          padded_version = ExESDB.VersionFormatter.pad_version(new_version, 6)
 
-        now =
-          DateTime.utc_now()
+          now =
+            DateTime.utc_now()
 
-        created = now
+          created = now
 
-        created_epoch =
-          now
-          |> DateTime.to_unix(:microsecond)
+          created_epoch =
+            now
+            |> DateTime.to_unix(:microsecond)
 
-        recorded_event =
-          event
-          |> to_event_record(
-            stream_id,
-            new_version,
-            created,
-            created_epoch
-          )
+          recorded_event =
+            event
+            |> to_event_record(
+              stream_id,
+              new_version,
+              created,
+              created_epoch
+            )
 
-        store
-        |> :khepri.put!([:streams, stream_id, padded_version], recorded_event)
+          store
+          |> :khepri.put!([:streams, stream_id, padded_version], recorded_event)
 
-        new_version
-      end
-    )
+          new_version
+        end
+      )
+
+    {:ok, next_version}
   end
 
   defp to_event_record(

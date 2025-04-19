@@ -2,9 +2,9 @@ defmodule ExESDB.System do
   @moduledoc """
     This module is the top level supervisor for the ExESDB system.
     It is responsible for supervising:
-    - the event store
-    - the cluster
-    - the Event Enitter (pub/sub)
+    - The PubSub mechanism
+    - the Event Store
+    - the Cluster
   """
   use Supervisor
 
@@ -15,13 +15,12 @@ defmodule ExESDB.System do
 
   @impl true
   def init(opts) do
-    Logger.info("#{Themes.system(self())} is UP.")
+    Logger.warning("#{Themes.system(self())} is UP")
 
     children = [
       {Phoenix.PubSub, name: opts[:pub_sub]},
       {ExESDB.EventStore, opts},
-      {ExESDB.Cluster, opts},
-      {ExESDB.EventProjector, opts}
+      {ExESDB.Cluster, opts}
     ]
 
     Supervisor.init(
@@ -29,14 +28,6 @@ defmodule ExESDB.System do
       strategy: :one_for_one
     )
   end
-
-  # def handle_info({:EXIT, pid, reason}, state) do
-  #   Logger.warning("ExESDB.trapped EXIT from [#{inspect(pid)}]
-  #     with reason [#{inspect(reason, pretty: true)}]")
-  #   Supervisor.terminate_child(__MODULE__, pid)
-  #   Supervisor.restart_child(__MODULE__, pid)
-  #   {:noreply, state}
-  # end
 
   def start_link(opts),
     do:
@@ -48,7 +39,7 @@ defmodule ExESDB.System do
 
   def start(opts) do
     case start_link(opts) do
-      {:ok, pid} ->  pid
+      {:ok, pid} -> pid
       {:error, {:already_started, pid}} -> pid
       {:error, reason} -> raise "failed to start eventstores supervisor: #{inspect(reason)}"
     end

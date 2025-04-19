@@ -7,11 +7,9 @@ defmodule ExESDB.Repl do
   alias ExESDB.Repl.EventGenerator, as: ESGen
   alias ExESDB.Repl.EventStreamMonitor, as: ESMonitor
 
-  alias ExESDB.EventStore, as: ESStore
   alias ExESDB.StoreInfo, as: ESInfo
+  alias ExESDB.Streams, as: ESStreams
   alias ExESDB.System, as: ESSystem
-  alias ExESDB.Options, as: Opts
-
 
   require Logger
 
@@ -34,39 +32,42 @@ defmodule ExESDB.Repl do
 
   def start_monitor do
     opts = get_opts()
+
     case ESMonitor.start_link(opts) do
-       {:ok, pid} -> IO.puts "Monitor started with pid #{inspect(pid)}"
-       {:error, {:already_started, pid}} -> IO.puts "Monitor already started with pid #{inspect(pid)}"
-       {:error, reason} -> raise "Failed to start monitor. Reason: #{inspect(reason)}"
+      {:ok, pid} ->
+        IO.puts("Monitor started with pid #{inspect(pid)}")
+
+      {:error, {:already_started, pid}} ->
+        IO.puts("Monitor already started with pid #{inspect(pid)}")
+
+      {:error, reason} ->
+        raise "Failed to start monitor. Reason: #{inspect(reason)}"
     end
   end
 
-  defp initialize(stream) do
-    initialized = ESGen.initialize()
-    actual_version =  ESInfo.get_version!(@store, stream)
-    @store
-    |> ESStore.append_to_stream(stream, actual_version, [initialized])
-  end
-
+  @doc """
+    Append events to a stream.
+  """
+  @spec append(
+          stream :: atom(),
+          nbr_of_events :: integer()
+        ) :: {:ok, list(), integer()} | {:error, term()}
   def append(stream, nbr_of_events) do
+    version = ESInfo.get_version!(@store, stream)
 
-    case ESInfo.get_version!(@store, stream) do
-      0 ->
-        initialize(stream)
-        stream
-          |> append(nbr_of_events)
-      _ ->
-        events =
-        ESGen.generate_events(nbr_of_events)
+    events = ESGen.generate_events(version, nbr_of_events)
 
-        actual_version = ESInfo.get_version!(@store, stream)
-        {:ok, new_version} =
-          @store
-          |> ESStore.append_to_stream(stream, actual_version, events)
+    case @store
+         |> ESStreams.append_events(stream, version, events) do
+      {:ok, new_version} ->
         {:ok, result} =
           @store
-          |> ESStore.read_stream_forward(stream, 1, new_version)
-      {:ok, result, result |> Enum.count()}
+          |> ESStreams.stream_forward(stream, 1, new_version)
+
+        {:ok, result, result |> Enum.count()}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
@@ -77,25 +78,28 @@ defmodule ExESDB.Repl do
         nil
 
       version ->
-         {:ok, events} =
-            @store
-            |> ESStore.read_stream_forward(stream, 1, version)
+        {:ok, events} =
+          @store
+          |> ESStreams.stream_forward(stream, 1, version)
+
         events
     end
   end
 
   def start_system do
     opts = get_opts()
+
     case ESSystem.start_link(opts) do
       {:ok, pid} ->
-        IO.puts "System started with pid #{inspect(pid)}"
+        IO.puts("System started with pid #{inspect(pid)}")
         pid
+
       {:error, {:already_started, pid}} ->
-        IO.puts "System already started with pid #{inspect(pid)}"
+        IO.puts("System already started with pid #{inspect(pid)}")
         pid
+
       {:error, reason} ->
         raise "Failed to start system. Reason: #{inspect(reason)}"
     end
   end
-
 end

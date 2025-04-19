@@ -6,6 +6,7 @@ defmodule ExESDB.Cluster do
   require BeamCampus.Colors
 
   alias ExESDB.Themes, as: Themes
+
   alias ExESDB.Options, as: Opts
 
   # defp ping?(node) do
@@ -90,7 +91,7 @@ defmodule ExESDB.Cluster do
   @impl true
   def init(config) do
     timeout = config[:timeout] || 1000
-    Logger.debug("#{Themes.cluster(self())} is UP.")
+    Logger.warning("#{Themes.cluster(self())} is UP")
     Process.flag(:trap_exit, true)
     Process.send_after(self(), :join, timeout)
     Process.send_after(self(), :members, 2 * timeout)

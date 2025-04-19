@@ -89,6 +89,7 @@ defmodule ExESDB.MixProject do
       {:eunit_formatters, "~> 0.5", only: [:test], runtime: false},
       {:mox, "~> 1.0", only: [:test], runtime: false},
       {:jason, "~> 1.4", optional: true},
+      {:horde, "~> 0.9"},
       {:phoenix_pubsub, "~> 2.1"},
       {:khepri, "~> 0.17"},
       {:protobuf, "~> 0.14"},
