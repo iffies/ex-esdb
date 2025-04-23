@@ -4,12 +4,13 @@
 
 -include_lib("../deps/khepri/include/khepri.hrl").
 
+-spec get_event(Store :: khepri:store(), Path :: khepri_path:path()) ->
+                 {ok, khepri:props()} | {error, term()}.
 get_event(Store, Path) ->
   khepri:get(Store, Path).
 
 -spec put_on_create_func(PubSub :: atom(), Store :: khepri:store()) -> ok.
 put_on_create_func(PubSub, Store) when is_atom(PubSub), is_atom(Store) ->
-  Topic = atom_to_binary(Store, utf8),
   case khepri:put(Store,
                   [procs, on_new_event],
                   fun(Props) ->
@@ -18,8 +19,10 @@ put_on_create_func(PubSub, Store) when is_atom(PubSub), is_atom(Store) ->
                        undefined -> ok;
                        Path ->
                          case get_event(Store, Path) of
+                           {ok, undefined} -> ok;
                            {ok, Event} ->
                              io:format("Broadcasting event ~p~n~n to topic ~p~n", [Event, Topic]),
+                             broadcast_pg(PubSub, Topic, Event),
                              ok;
                            {error, Reason} ->
                              io:format("Broadcasting failed for path ~p to topic ~p~n Reason: ~p~n",
@@ -76,9 +79,15 @@ register_emitter(Store, PubSub, StreamUuid) ->
       {error, Reason}
   end.
 
--spec broadcast_pg(PubSub :: atom(), Topic :: binary(), Props :: khepri:props()) -> ok.
-broadcast_pg(PubSub, Topic, Props) ->
-  logger:debug("Broadcasting event ~p to topic ~p~n", [Props, Topic]),
-  Members = pg:get_members(PubSub, Topic),
-  lists:foreach(fun(Member) -> Member ! {event_emitted, Props} end, Members),
-  ok.
+-spec broadcast_pg(PubSub :: atom(), Topic :: binary(), Event :: khepri:payload()) -> ok.
+broadcast_pg(PubSub, Topic, Event) ->
+  case pg:get_members(PubSub, Topic) of
+    [] ->
+      io:format("!!!!! No members for topic ~p !!!!~n", [Topic]),
+      ok;
+    Members ->
+      io:format("!!!!! Broadcasting event ~p to topic ~p to ~p members !!!!~n",
+                [Event, Topic, length(Members)]),
+      lists:foreach(fun(Member) -> Member ! {event_emitted, Event} end, Members),
+      ok
+  end.
