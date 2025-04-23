@@ -9,16 +9,21 @@ defmodule ExESDB.Subscriptions do
 
   use GenServer
 
+  require ExESDB.Themes, as: Themes
+  require Logger
+
   @spec register_emitter(
-          store :: :khepri.store(),
+          store_id :: store(),
           stream_uuid :: stream_uuid | :all,
           pub_sub :: atom()
-        ) :: :ok | {:error :: error}
-  defp(register_emitter(store, stream_uuid, pub_sub),
-    do:
-      store
-      |> :func_registrations.register_emitter(pub_sub, stream_uuid)
-  )
+        ) :: :ok | {:error, msg :: String.t()}
+  defp register_emitter(store_id, stream_uuid, pub_sub) do
+    msg =
+      "ATTEMPT registering emitter for store #{inspect(store_id)}, stream #{inspect(stream_uuid)} and pub_sub #{inspect(pub_sub)}"
+
+    Logger.warning("#{Themes.subscriptions(msg)}")
+    :func_registrations.register_emitter(store_id, pub_sub, stream_uuid)
+  end
 
   @doc """
     Subscribe to a all events in a store, or a specific stream.
@@ -49,7 +54,9 @@ defmodule ExESDB.Subscriptions do
            }
          ) do
       :ok ->
-        register_emitter(store, stream_uuid, subscriber)
+        store
+        |> register_emitter(stream_uuid, subscriber)
+
         :ok
 
       {:error, reason} ->

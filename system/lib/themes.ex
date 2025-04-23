@@ -22,4 +22,10 @@ defmodule ExESDB.Themes do
 
   def emitter(pid),
     do: "ESDB_EMITTER [#{CF.black_on_yellow()}#{inspect(pid)}#{CF.reset()}]"
+
+  def cluster_pubsub(pid),
+    do: "ESDB_CLUSTER_PUBSUB [#{CF.black_on_cyan()}#{inspect(pid)}#{CF.reset()}]"
+
+  def subscriptions(msg),
+    do: "ESDB_SUBSCRIPTIONS [#{CF.black_on_white()}#{msg}#{CF.reset()}]"
 end

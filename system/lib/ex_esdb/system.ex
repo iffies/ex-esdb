@@ -20,7 +20,9 @@ defmodule ExESDB.System do
     children = [
       {Phoenix.PubSub, name: opts[:pub_sub]},
       {ExESDB.EventStore, opts},
-      {ExESDB.Cluster, opts}
+      {ExESDB.Cluster, opts},
+      {ExESDB.ClusterPubSub, opts},
+      {ExESDB.Emitter, opts}
     ]
 
     Supervisor.init(

@@ -142,11 +142,6 @@ defmodule ExESDB.Repl.EventGenerator do
       intensity: random_intensity()
     }
 
-  defp generate_random_bytes(length) do
-    :crypto.strong_rand_bytes(length)
-    |> Base.encode64()
-  end
-
   defp generate_optional_metadata do
     # 70% chance of metadata
     %{

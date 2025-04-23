@@ -9,6 +9,7 @@ defmodule ExESDB.Repl do
 
   alias ExESDB.StoreInfo, as: ESInfo
   alias ExESDB.Streams, as: ESStreams
+  alias ExESDB.Subscriptions, as: ESSubscriptions
   alias ExESDB.System, as: ESSystem
 
   require Logger
@@ -28,7 +29,11 @@ defmodule ExESDB.Repl do
   def stream5, do: @greenhouse5
 
   def get_opts, do: ExESDB.Options.app_env()
-  def get_streams, do: ESInfo.get_streams_raw(@store)
+
+  def get_streams,
+    do: ESInfo.get_streams_raw(@store)
+
+  def get_subscriptions, do: ESSubscriptions.all(@store)
 
   def start_monitor do
     opts = get_opts()
