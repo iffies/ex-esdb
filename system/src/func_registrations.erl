@@ -2,17 +2,33 @@
 
 -export([register_emitter/3, build_filter/1, put_on_create_func/2]).
 
+-include_lib("../deps/khepri/include/khepri.hrl").
+
+get_event(Store, Path) ->
+  khepri:get(Store, Path).
+
 -spec put_on_create_func(PubSub :: atom(), Store :: khepri:store()) -> ok.
 put_on_create_func(PubSub, Store) when is_atom(PubSub), is_atom(Store) ->
   Topic = atom_to_binary(Store, utf8),
   case khepri:put(Store,
                   [procs, on_new_event],
                   fun(Props) ->
-                     io:format("Broadcasting ~n Event: ~p~n to Topic: ~p~n on Bus: ~p~n",
-                               [Props, Topic, PubSub])
+                     Topic = atom_to_binary(Store, utf8),
+                     case maps:get(path, Props, undefined) of
+                       undefined -> ok;
+                       Path ->
+                         case get_event(Store, Path) of
+                           {ok, Event} ->
+                             io:format("Broadcasting event ~p~n~n to topic ~p~n", [Event, Topic]),
+                             ok;
+                           {error, Reason} ->
+                             io:format("Broadcasting failed for path ~p to topic ~p~n Reason: ~p~n",
+                                       [Path, Topic, Reason]),
+                             ok
+                         end
+                     end
                   end)
   of
-    %                     ,                     broadcast_pg(PubSub, Topic, Props)
     ok ->
       logger:warning("PUT broadcast_pg function in store ~p~n", [Store]),
       ok;
@@ -25,7 +41,7 @@ put_on_create_func(PubSub, Store) when is_atom(PubSub), is_atom(Store) ->
 build_filter(StreamUuid) ->
   case StreamUuid of
     all ->
-      khepri_evf:tree([streams], #{on_actions => [create]});
+      khepri_evf:tree([streams, #if_path_matches{regex = any}], #{on_actions => [create]});
     _ ->
       khepri_evf:tree([streams, StreamUuid], #{on_actions => [create]})
   end.
@@ -34,7 +50,8 @@ build_filter(StreamUuid) ->
 register_on_new_event(Store, Filter) ->
   PropOpts =
     #{expect_specific_node => false,
-      props_to_return => [payload, payload_version],
+      props_to_return =>
+        [payload, payload_version, child_list_version, child_list_length, child_names],
       include_root_props => true},
   case khepri:register_trigger(Store, on_new_event, Filter, [procs, on_new_event], PropOpts)
   of
@@ -65,4 +82,3 @@ broadcast_pg(PubSub, Topic, Props) ->
   Members = pg:get_members(PubSub, Topic),
   lists:foreach(fun(Member) -> Member ! {event_emitted, Props} end, Members),
   ok.
-
