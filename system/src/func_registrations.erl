@@ -1,6 +1,6 @@
 -module(func_registrations).
 
--export([register_emitter/3, build_filter/1, put_on_create_func/2]).
+-export([register_emitter/4, build_filter/1, put_on_create_func/3, broadcast/3]).
 
 -include_lib("../deps/khepri/include/khepri.hrl").
 
@@ -9,8 +9,12 @@
 get_event(Store, Path) ->
   khepri:get(Store, Path).
 
--spec put_on_create_func(PubSub :: atom(), Store :: khepri:store()) -> ok.
-put_on_create_func(PubSub, Store) when is_atom(PubSub), is_atom(Store) ->
+-spec put_on_create_func(PubSub :: atom(),
+                         Store :: khepri:store(),
+                         Dispatcher :: atom()) ->
+                          ok.
+put_on_create_func(PubSub, Store, Dispatcher)
+  when is_atom(PubSub), is_atom(Store), is_atom(Dispatcher) ->
   case khepri:put(Store,
                   [procs, on_new_event],
                   fun(Props) ->
@@ -22,7 +26,8 @@ put_on_create_func(PubSub, Store) when is_atom(PubSub), is_atom(Store) ->
                            {ok, undefined} -> ok;
                            {ok, Event} ->
                              io:format("Broadcasting event ~p~n~n to topic ~p~n", [Event, Topic]),
-                             broadcast_pg(PubSub, Topic, Event),
+                             'Elixir.Phoenix.PubSub':broadcast(PubSub, Topic, Event),
+                             % broadcast(PubSub, Topic, Event, Dispatcher),
                              ok;
                            {error, Reason} ->
                              io:format("Broadcasting failed for path ~p to topic ~p~n Reason: ~p~n",
@@ -56,22 +61,15 @@ register_on_new_event(Store, Filter) ->
       props_to_return =>
         [payload, payload_version, child_list_version, child_list_length, child_names],
       include_root_props => true},
-  case khepri:register_trigger(Store, on_new_event, Filter, [procs, on_new_event], PropOpts)
-  of
-    ok ->
-      logger:warning("Registered on_new_event trigger in store ~p~n", [Store]),
-      ok;
-    {error, Reason} ->
-      logger:error("Registered on_new_event trigger in store ~p failed: ~p~n", [Store, Reason]),
-      {error, Reason}
-  end.
+  khepri:register_trigger(Store, on_new_event, Filter, [procs, on_new_event], PropOpts).
 
 -spec register_emitter(Store :: khepri:store(),
                        PubSub :: atom(),
-                       StreamUuid :: khepri:tree()) ->
+                       StreamUuid :: khepri:tree(),
+                       Dispatcher :: atom()) ->
                         ok | {error, term()}.
-register_emitter(Store, PubSub, StreamUuid) ->
-  case put_on_create_func(PubSub, Store) of
+register_emitter(Store, PubSub, StreamUuid, Dispatcher) ->
+  case put_on_create_func(PubSub, Store, Dispatcher) of
     ok ->
       NewEventFilter = build_filter(StreamUuid),
       register_on_new_event(Store, NewEventFilter);
@@ -79,15 +77,16 @@ register_emitter(Store, PubSub, StreamUuid) ->
       {error, Reason}
   end.
 
--spec broadcast_pg(PubSub :: atom(), Topic :: binary(), Event :: khepri:payload()) -> ok.
-broadcast_pg(PubSub, Topic, Event) ->
-  case pg:get_members(PubSub, Topic) of
-    [] ->
-      io:format("!!!!! No members for topic ~p !!!!~n", [Topic]),
-      ok;
-    Members ->
-      io:format("!!!!! Broadcasting event ~p to topic ~p to ~p members !!!!~n",
-                [Event, Topic, length(Members)]),
-      lists:foreach(fun(Member) -> Member ! {event_emitted, Event} end, Members),
-      ok
-  end.
+% broadcast(PubSub, Topic, Event, Dispatcher) ->
+%   {ok, {Adapter, Name}} = 'Elixir.Registry':meta(PubSub, pubsub),
+%
+%   case Adapter:broadcast(Name, Topic, Event, Dispatcher) of
+%     ok ->
+%       dispatch(PubSub, none, Topic, Event, Dispatcher),
+%       ok;
+%     _ ->
+%       ok
+%   end.
+
+broadcast(PubSub, Topic, Event) when is_atom(PubSub), is_binary(Topic), is_map(Event) ->
+  'Elixir.Phoenix.PubSub':broadcast(PubSub, Topic, Event).

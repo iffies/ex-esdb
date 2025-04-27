@@ -15,14 +15,15 @@ defmodule ExESDB.Subscriptions do
   @spec register_emitter(
           store_id :: store(),
           stream_uuid :: stream_uuid | :all,
-          pub_sub :: atom()
+          pub_sub :: atom(),
+          dispatcher :: atom()
         ) :: :ok | {:error, msg :: String.t()}
-  defp register_emitter(store_id, stream_uuid, pub_sub) do
+  defp register_emitter(store_id, stream_uuid, pub_sub, dispatcher \\ __MODULE__) do
     msg =
       "ATTEMPT registering emitter for store #{inspect(store_id)}, stream #{inspect(stream_uuid)} and pub_sub #{inspect(pub_sub)}"
 
     Logger.warning("#{Themes.subscriptions(msg)}")
-    :func_registrations.register_emitter(store_id, pub_sub, stream_uuid)
+    :func_registrations.register_emitter(store_id, pub_sub, stream_uuid, dispatcher)
   end
 
   @doc """

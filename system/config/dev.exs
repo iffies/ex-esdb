@@ -23,4 +23,4 @@ config :ex_esdb, :khepri,
   timeout: 10_000,
   db_type: :single,
   seed_nodes: [],
-  pub_sub: :ex_esdb_pub_sub
+  pub_sub: :ex_esdb_pubsub

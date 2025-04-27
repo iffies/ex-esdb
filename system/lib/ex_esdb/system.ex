@@ -13,15 +13,29 @@ defmodule ExESDB.System do
   require Logger
   require Phoenix.PubSub
 
+  defp add_pub_sub(opts) do
+    pub_sub = Keyword.get(opts, :pub_sub)
+
+    case pub_sub do
+      nil ->
+        add_pub_sub([pub_sub: :native] ++ opts)
+
+      :native ->
+        {ExESDB.PubSub, opts}
+
+      _ ->
+        {Phoenix.PubSub, name: pub_sub}
+    end
+  end
+
   @impl true
   def init(opts) do
     Logger.warning("#{Themes.system(self())} is UP")
 
     children = [
-      {Phoenix.PubSub, name: opts[:pub_sub]},
+      add_pub_sub(opts),
       {ExESDB.EventStore, opts},
       {ExESDB.Cluster, opts},
-      {ExESDB.ClusterPubSub, opts},
       {ExESDB.Emitter, opts}
     ]
 

@@ -47,10 +47,11 @@ defmodule ExESDB.Repl.EventStreamMonitor do
   end
 
   defp subscribe(opts) do
-    topic = :erlang.atom_to_binary(opts[:store_id])
     store = opts[:store_id]
+    topic = :erlang.atom_to_binary(store, :utf8)
+    pub_sub = opts[:pub_sub]
 
-    case opts[:pub_sub]
+    case pub_sub
          |> PubSub.subscribe(topic) do
       :ok ->
         subscribe_all(store, opts)

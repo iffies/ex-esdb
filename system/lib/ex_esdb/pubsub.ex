@@ -1,4 +1,4 @@
-defmodule ExESDB.ClusterPubSub do
+defmodule ExESDB.PubSub do
   @moduledoc """
     Provides functions for working with event store pub/sub.
   """
@@ -16,7 +16,7 @@ defmodule ExESDB.ClusterPubSub do
 
   @impl true
   def init(init_arg) do
-    Logger.warning("#{Themes.cluster_pubsub(self())} is UP")
+    Logger.warning("#{Themes.pubsub(self())} is UP")
 
     [members: members()]
     |> Keyword.merge(init_arg)
@@ -26,5 +26,9 @@ defmodule ExESDB.ClusterPubSub do
   defp members do
     [Node.self() | Node.list()]
     |> Enum.map(fn node -> {__MODULE__, node} end)
+  end
+
+  def register(name, value) do
+    Horde.Registry.register(__MODULE__, name, value)
   end
 end

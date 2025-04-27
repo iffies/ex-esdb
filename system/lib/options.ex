@@ -13,7 +13,7 @@ defmodule ExESDB.Options do
 
   def sys_env(key), do: System.get_env(key)
   def app_env, do: Application.get_env(:ex_esdb, :khepri)
-  def app_env(key), do: app_env()[key]
+  def app_env(key), do: Keyword.get(app_env(), key)
 
   def data_dir do
     case sys_env(@data_dir) do
@@ -52,7 +52,7 @@ defmodule ExESDB.Options do
 
   def pub_sub do
     case sys_env(@pub_sub) do
-      nil -> app_env(:pub_sub) || :ex_esdb_pub_sub
+      nil -> app_env(:pub_sub) || :native
       pub_sub -> to_unique_atom(pub_sub)
     end
   end
@@ -66,19 +66,18 @@ defmodule ExESDB.Options do
 
   defp clean_node(node),
     do:
-    String.trim(node)
-    |> String.downcase()
-    |> String.replace(" ", "")
-    |> String.replace(",", "")
-    |> String.replace(".", "")
-    |> String.replace(":", "")
+      String.trim(node)
+      |> String.downcase()
+      |> String.replace(" ", "")
+      |> String.replace(",", "")
+      |> String.replace(".", "")
+      |> String.replace(":", "")
 
-  defp to_unique_atom(candidate)  do
+  defp to_unique_atom(candidate) do
     try do
       String.to_existing_atom(candidate)
     rescue
       _ -> String.to_atom(candidate)
     end
   end
-
 end
