@@ -23,6 +23,9 @@ defmodule ExESDB.Themes do
   def emitter(pid),
     do: "ESDB_EMITTER [#{CF.black_on_yellow()}#{inspect(pid)}#{CF.reset()}]"
 
+  def emitter_worker(pid),
+    do: "ESDB_EMITTER_WORKER [#{CF.yellow_on_black()}#{inspect(pid)}#{CF.reset()}]"
+
   def pubsub(pid),
     do: "ESDB_PUBSUB [#{CF.black_on_cyan()}#{inspect(pid)}#{CF.reset()}]"
 

@@ -1,6 +1,7 @@
 -module(func_registrations).
 
--export([register_emitter/4, build_filter/1, put_on_create_func/3, broadcast/3]).
+-export([register_emitter/2, build_filter/1, put_on_create_func/1, broadcast/2, group/1,
+         pg_members/1]).
 
 -include_lib("../deps/khepri/include/khepri.hrl").
 
@@ -9,12 +10,8 @@
 get_event(Store, Path) ->
   khepri:get(Store, Path).
 
--spec put_on_create_func(PubSub :: atom(),
-                         Store :: khepri:store(),
-                         Dispatcher :: atom()) ->
-                          ok.
-put_on_create_func(PubSub, Store, Dispatcher)
-  when is_atom(PubSub), is_atom(Store), is_atom(Dispatcher) ->
+-spec put_on_create_func(Store :: khepri:store()) -> ok.
+put_on_create_func(Store) when is_atom(Store) ->
   case khepri:put(Store,
                   [procs, on_new_event],
                   fun(Props) ->
@@ -26,8 +23,7 @@ put_on_create_func(PubSub, Store, Dispatcher)
                            {ok, undefined} -> ok;
                            {ok, Event} ->
                              io:format("Broadcasting event ~p~n~n to topic ~p~n", [Event, Topic]),
-                             'Elixir.Phoenix.PubSub':broadcast(PubSub, Topic, Event),
-                             % broadcast(PubSub, Topic, Event, Dispatcher),
+                             broadcast(Topic, Event),
                              ok;
                            {error, Reason} ->
                              io:format("Broadcasting failed for path ~p to topic ~p~n Reason: ~p~n",
@@ -63,13 +59,10 @@ register_on_new_event(Store, Filter) ->
       include_root_props => true},
   khepri:register_trigger(Store, on_new_event, Filter, [procs, on_new_event], PropOpts).
 
--spec register_emitter(Store :: khepri:store(),
-                       PubSub :: atom(),
-                       StreamUuid :: khepri:tree(),
-                       Dispatcher :: atom()) ->
+-spec register_emitter(Store :: khepri:store(), StreamUuid :: khepri:tree()) ->
                         ok | {error, term()}.
-register_emitter(Store, PubSub, StreamUuid, Dispatcher) ->
-  case put_on_create_func(PubSub, Store, Dispatcher) of
+register_emitter(Store, StreamUuid) ->
+  case put_on_create_func(Store) of
     ok ->
       NewEventFilter = build_filter(StreamUuid),
       register_on_new_event(Store, NewEventFilter);
@@ -77,16 +70,29 @@ register_emitter(Store, PubSub, StreamUuid, Dispatcher) ->
       {error, Reason}
   end.
 
-% broadcast(PubSub, Topic, Event, Dispatcher) ->
-%   {ok, {Adapter, Name}} = 'Elixir.Registry':meta(PubSub, pubsub),
-%
-%   case Adapter:broadcast(Name, Topic, Event, Dispatcher) of
-%     ok ->
-%       dispatch(PubSub, none, Topic, Event, Dispatcher),
-%       ok;
-%     _ ->
-%       ok
-%   end.
+broadcast(Topic, Event) ->
+  case pg_members(group(Topic)) of
+    {error, {no_such_group, _}} ->
+      {error, no_such_group};
+    Members ->
+      Message = forward_to_local(Topic, Event),
+      lists:foreach(fun(Pid) ->
+                       if node(Pid) =/= node() -> Pid ! Message;
+                          true -> ok
+                       end
+                    end,
+                    Members)
+  end.
 
-broadcast(PubSub, Topic, Event) when is_atom(PubSub), is_binary(Topic), is_map(Event) ->
-  'Elixir.Phoenix.PubSub':broadcast(PubSub, Topic, Event).
+group(Store) ->
+  Key =
+    lists:flatten(
+      io_lib:format("~p_ex_esdb_emitters", [Store])),
+  Groups = persistent_term:get(Key, groups),
+  erlang:element(Groups, erlang:phash2(self(), tuple_size(Groups))).
+
+pg_members(Group) ->
+  pg:get_members('Phoenix.PubSub', Group).
+
+forward_to_local(Topic, Event) ->
+  {forward_to_local, Topic, Event}.
