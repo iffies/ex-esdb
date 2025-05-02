@@ -1,5 +1,11 @@
 # Architecture Decision Records
 
+## 2025.05.02
+
+### Triggers will obtain Emitter Pids from :pg (Process Groups)
+
+Experimentation with :khepri's trigger model has shown that it is advised to use as few dependencies as possible, when defining the trigger functions. This is because :khepri uses :horus to decompile such functions and build a separate module. For this reason, we limit the dependencies for these trigger functions to :pg (Process Groups), which is an :erlang native module that allows for inter-process communication.
+
 ## 2025.04.16
 
 ### Subscriptions will be managed via a registry.

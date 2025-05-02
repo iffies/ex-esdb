@@ -86,7 +86,10 @@ defmodule ExESDB.EmitterWorker do
     pubsub
     |> PubSub.broadcast(topic, {:event_emitted, event})
 
-    Logger.warning("#{Themes.emitter(self())} received event #{inspect(event)}")
+    Logger.warning(
+      "#{Themes.emitter(self())} BROADCAST #{inspect(event, pretty: true)} => #{inspect(topic, pretty: true)}"
+    )
+
     {:noreply, pubsub}
   end
 
@@ -94,6 +97,10 @@ defmodule ExESDB.EmitterWorker do
   def handle_info({:forward_to_local, topic, event}, pubsub) do
     pubsub
     |> Phoenix.PubSub.local_broadcast(topic, event)
+
+    Logger.warning(
+      "#{Themes.emitter(self())} FORWARD_TO_LOCAL #{inspect(event, pretty: true)} => #{inspect(topic, pretty: true)}"
+    )
 
     {:noreply, pubsub}
   end
@@ -105,7 +112,7 @@ defmodule ExESDB.EmitterWorker do
 
   if Code.ensure_loaded?(:pg) do
     defp pg_join(group) do
-      :ok = :pg.join(Phoenix.PubSub, group, self())
+      :ok = :pg.join(Elixir.Phoenix.PubSub, group, self())
     end
   else
     defp pg_join(group) do

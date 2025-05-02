@@ -1,7 +1,7 @@
 -module(func_registrations).
 
 -export([register_emitter/2, build_filter/1, put_on_create_func/1, broadcast/2, group/1,
-         pg_members/1]).
+         pg_members/1, get_term_key/1, forward_to_local_msg/2, broadcast_msg/2]).
 
 -include_lib("../deps/khepri/include/khepri.hrl").
 
@@ -22,7 +22,6 @@ put_on_create_func(Store) when is_atom(Store) ->
                          case get_event(Store, Path) of
                            {ok, undefined} -> ok;
                            {ok, Event} ->
-                             io:format("Broadcasting event ~p~n~n to topic ~p~n", [Event, Topic]),
                              broadcast(Topic, Event),
                              ok;
                            {error, Reason} ->
@@ -71,28 +70,40 @@ register_emitter(Store, StreamUuid) ->
   end.
 
 broadcast(Topic, Event) ->
-  case pg_members(group(Topic)) of
+  %% TODO: group(Topic)
+  %% We must refine this messaging mechanism for instance by refining the topic
+  %% to a format Store:all and Store:StreamUuid
+  %% THIS IS A TEMPORARY SOLUTION
+  case pg_members(get_term_key(Topic)) of
     {error, {no_such_group, _}} ->
+      io:format("NO_GROUP ~p~n", [Topic]),
       {error, no_such_group};
     Members ->
-      Message = forward_to_local(Topic, Event),
+      Message = broadcast_msg(Topic, Event),
       lists:foreach(fun(Pid) ->
-                       if node(Pid) =/= node() -> Pid ! Message;
-                          true -> ok
-                       end
+                       io:format("SENDING Message ~p to ~p~n", [Message, Pid]),
+                       Pid ! Message
                     end,
                     Members)
   end.
 
+get_term_key(Store) when is_atom(Store) ->
+  iolist_to_binary(io_lib:format("~s_ex_esdb_emitters", [atom_to_list(Store)]));
+get_term_key(Store) when is_binary(Store) ->
+  iolist_to_binary(io_lib:format("~s_ex_esdb_emitters", [binary_to_list(Store)])).
+
 group(Store) ->
-  Key =
-    lists:flatten(
-      io_lib:format("~p_ex_esdb_emitters", [Store])),
+  Key = get_term_key(Store),
   Groups = persistent_term:get(Key, groups),
-  erlang:element(Groups, erlang:phash2(self(), tuple_size(Groups))).
+  Size = tuple_size(Groups),
+  Random = rand:uniform(Size),
+  erlang:element(Random, Groups).
 
 pg_members(Group) ->
-  pg:get_members('Phoenix.PubSub', Group).
+  pg:get_members('Elixir.Phoenix.PubSub', Group).
 
-forward_to_local(Topic, Event) ->
+forward_to_local_msg(Topic, Event) ->
   {forward_to_local, Topic, Event}.
+
+broadcast_msg(Topic, Event) ->
+  {broadcast, Topic, Event}.
