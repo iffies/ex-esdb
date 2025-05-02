@@ -54,13 +54,10 @@ defmodule BeamCampus.ColorFuncs do
       effects
       |> Enum.map_join(";", &Map.get(@effects_map, &1))
 
-    #    "\e[38;5;#{fg_code};48;5;#{bg_code + 40};#{effect_codes}m"
-
     "\e[38;5;#{fg_code};48;5;#{bg_code};#{effect_codes}m"
   end
 
   # Generate all color combinations
-
   contents =
     for {fg_name, fg_code} <- @colors, {bg_name, bg_code} <- @colors do
       f_name = String.to_atom("#{fg_name}_on_#{bg_name}")

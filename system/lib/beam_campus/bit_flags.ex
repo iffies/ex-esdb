@@ -378,14 +378,4 @@ defmodule BeamCampus.BitFlags do
   def decompose(target) when target > 0 do
     decompose(target, 1, [])
   end
-
-  def toggle(target, flag) when is_integer(target) and is_integer(flag) do
-    Bitwise.bxor(target, flag)
-  end
-
-  def toggle_all(target, flags) do
-    Enum.reduce(flags, target, fn flag, acc ->
-      toggle(acc, flag)
-    end)
-  end
 end
