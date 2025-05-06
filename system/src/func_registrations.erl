@@ -1,6 +1,6 @@
 -module(func_registrations).
 
--export([register_emitter/2, build_filter/1, put_on_create_func/1, broadcast/2, group/1,
+-export([register_emitter/2, build_filter/1, put_on_create_func/2, broadcast/3, group/1,
          pg_members/1, get_term_key/1, forward_to_local_msg/2, broadcast_msg/2]).
 
 -include_lib("../deps/khepri/include/khepri.hrl").
@@ -10,23 +10,24 @@
 get_event(Store, Path) ->
   khepri:get(Store, Path).
 
--spec put_on_create_func(Store :: khepri:store()) -> ok.
-put_on_create_func(Store) when is_atom(Store) ->
+-spec put_on_create_func(Store :: khepri:store(), Stream :: string() | all) ->
+                          ok | {error, term()}.
+put_on_create_func(Store, Stream) when is_atom(Store) ->
   case khepri:put(Store,
-                  [procs, on_new_event],
+                  [procs, on_new_event, Stream],
                   fun(Props) ->
-                     Topic = atom_to_binary(Store, utf8),
                      case maps:get(path, Props, undefined) of
                        undefined -> ok;
                        Path ->
                          case get_event(Store, Path) of
                            {ok, undefined} -> ok;
                            {ok, Event} ->
-                             broadcast(Topic, Event),
+                             broadcast(Store, Stream, Event),
                              ok;
                            {error, Reason} ->
-                             io:format("Broadcasting failed for path ~p to topic ~p~n Reason: ~p~n",
-                                       [Path, Topic, Reason]),
+                             io:format("Broadcasting failed for path ~p to Store:Stream ~p:~p ~n Reason: "
+                                       "~p~n",
+                                       [Path, Store, Stream, Reason]),
                              ok
                          end
                      end
@@ -40,40 +41,45 @@ put_on_create_func(Store) when is_atom(Store) ->
       {error, Reason}
   end.
 
--spec build_filter(StreamUuid :: khepri:tree()) -> eventFilter.
-build_filter(StreamUuid) ->
-  case StreamUuid of
-    all ->
-      khepri_evf:tree([streams, #if_path_matches{regex = any}], #{on_actions => [create]});
-    _ ->
-      khepri_evf:tree([streams, StreamUuid], #{on_actions => [create]})
+-spec build_filter(Stream :: string() | all) -> khepri:eventFilter() | {error, term()}.
+build_filter(all) ->
+  khepri_evf:tree([streams, #if_path_matches{regex = any}], #{on_actions => [create]});
+build_filter(Stream) ->
+  List = binary_to_list(Stream),
+  case string:chr(List, $$) of
+    0 ->
+      {error, invalid_stream};
+    DollarPos ->
+      StreamUuid = string:substr(List, DollarPos + 1),
+      khepri_evf:tree([streams, list_to_binary(StreamUuid)], #{on_actions => [create]})
   end.
 
--spec register_on_new_event(Store :: khepri:store(), Filter :: eventFilter) -> ok.
-register_on_new_event(Store, Filter) ->
+-spec register_on_new_event(Store :: khepri:store(), Stream :: string() | all) -> ok.
+register_on_new_event(Store, Stream) ->
   PropOpts =
     #{expect_specific_node => false,
       props_to_return =>
         [payload, payload_version, child_list_version, child_list_length, child_names],
       include_root_props => true},
-  khepri:register_trigger(Store, on_new_event, Filter, [procs, on_new_event], PropOpts).
+  Filter = build_filter(Stream),
+  khepri:register_trigger(Store, Stream, Filter, [procs, on_new_event], PropOpts).
 
--spec register_emitter(Store :: khepri:store(), StreamUuid :: khepri:tree()) ->
+-spec register_emitter(Store :: khepri:store(), Stream :: string() | all) ->
                         ok | {error, term()}.
-register_emitter(Store, StreamUuid) ->
-  case put_on_create_func(Store) of
+register_emitter(Store, Stream) ->
+  case put_on_create_func(Store, Stream) of
     ok ->
-      NewEventFilter = build_filter(StreamUuid),
-      register_on_new_event(Store, NewEventFilter);
+      register_on_new_event(Store, Stream);
     {error, Reason} ->
       {error, Reason}
   end.
 
-broadcast(Topic, Event) ->
+broadcast(Store, Stream, Event) ->
   %% TODO: group(Topic)
   %% We must refine this messaging mechanism for instance by refining the topic
   %% to a format Store:all and Store:StreamUuid
   %% THIS IS A TEMPORARY SOLUTION
+  Topic = list_to_binary(io_lib:format("~s:~s", [Store, Stream])),
   case pg_members(get_term_key(Topic)) of
     {error, {no_such_group, _}} ->
       io:format("NO_GROUP ~p~n", [Topic]),
@@ -87,10 +93,10 @@ broadcast(Topic, Event) ->
                     Members)
   end.
 
-get_term_key(Store) when is_atom(Store) ->
-  iolist_to_binary(io_lib:format("~s_ex_esdb_emitters", [atom_to_list(Store)]));
-get_term_key(Store) when is_binary(Store) ->
-  iolist_to_binary(io_lib:format("~s_ex_esdb_emitters", [binary_to_list(Store)])).
+get_term_key(Topic) when is_atom(Topic) ->
+  iolist_to_binary(io_lib:format("~s_ex_esdb_emitters", [atom_to_list(Topic)]));
+get_term_key(Topic) when is_binary(Topic) ->
+  iolist_to_binary(io_lib:format("~s_ex_esdb_emitters", [binary_to_list(Topic)])).
 
 group(Store) ->
   Key = get_term_key(Store),

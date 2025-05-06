@@ -1,4 +1,29 @@
-defmodule ExESDB.Emitter do
+defmodule ExESDB.Emitters do
+  @moduledoc """
+    As part of the ExESDB.System, ExESDB.Emitters is responsible for managing the
+    lifetime of the Emitter processes.
+  """
+
+  # use DynamicSupervisor
+  #
+  # @impl DynamicSupervisor
+  # def init(_) do
+  #   DynamicSupervisor.init(strategy: :one_for_one)
+  # end
+  #
+  # def start_link(opts) do
+  #   DynamicSupervisor.start_link(__MODULE__, opts, name: __MODULE__)
+  # end
+
+  def start_emitter(store, stream, pubsub, pool_size) do
+    DynamicSupervisor.start_child(
+      {:via, PartitionSupervisor, {ExESDB.EmitterPools, self()}},
+      {ExESDB.EmitterPool, {store, stream, pubsub, pool_size}}
+    )
+  end
+end
+
+defmodule ExESDB.EmitterPool do
   @moduledoc """
     As part of the ExESDB.System,
   """
@@ -7,12 +32,12 @@ defmodule ExESDB.Emitter do
   require Logger
   require ExESDB.Themes, as: Themes
 
-  def start_link(opts) do
-    pubsub = Keyword.fetch!(opts, :pub_sub)
-    pool_size = Keyword.get(opts, :pool_size, 3)
-    store = Keyword.fetch!(opts, :store_id)
+  def start_link({store, stream, pubsub, pool_size}) do
+    # pubsub = Keyword.fetch!(opts, :pub_sub)
+    # pool_size = Keyword.get(opts, :pool_size, 3)
+    # store = Keyword.fetch!(opts, :store_id)
 
-    Supervisor.start_link(__MODULE__, {store, pubsub, pool_size},
+    Supervisor.start_link(__MODULE__, {store, stream, pubsub, pool_size},
       name: :"#{store}_ex_esdb_emitter_supervisor"
     )
   end
@@ -22,7 +47,7 @@ defmodule ExESDB.Emitter do
   end
 
   @impl Supervisor
-  def init({store, pubsub, pool_size}) do
+  def init({store, stream, pubsub, pool_size}) do
     Logger.warning("#{Themes.emitter(self())} is UP")
     register_emitter(store, :all)
 
@@ -36,7 +61,7 @@ defmodule ExESDB.Emitter do
 
     children =
       for group <- groups do
-        Supervisor.child_spec({ExESDB.EmitterWorker, {store, pubsub, group}}, id: group)
+        Supervisor.child_spec({ExESDB.EmitterWorker, {store, stream, pubsub, group}}, id: group)
       end
 
     Logger.warning("
@@ -67,17 +92,17 @@ defmodule ExESDB.EmitterWorker do
       |> PubSub.broadcast("#{store}", {:event_emitted, event})
 
   @impl GenServer
-  def init({store, pubsub}) do
+  def init({store, stream, pubsub}) do
     Logger.warning("#{Themes.emitter_worker(self())} is UP")
-    :ok = pg_join("#{store}_ex_esdb_emitters")
+    :ok = pg_join("#{store}:#{stream}_ex_esdb_emitters")
     {:ok, pubsub}
   end
 
-  def start_link({store, pubsub, group}),
+  def start_link({store, stream, pubsub, group}),
     do:
       GenServer.start_link(
         __MODULE__,
-        {store, pubsub},
+        {store, stream, pubsub},
         name: group
       )
 

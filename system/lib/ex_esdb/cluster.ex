@@ -3,7 +3,6 @@ defmodule ExESDB.Cluster do
   use GenServer
 
   require Logger
-  require BeamCampus.Colors
 
   alias ExESDB.Themes, as: Themes
 

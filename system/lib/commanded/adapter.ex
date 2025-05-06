@@ -7,7 +7,6 @@ defmodule ExESDB.Commanded.Adapter do
 
   require Logger
   alias ExESDB.EventStore, as: Store
-  alias ExESDB.Options, as: Options
 
   alias ExESDB.Snapshots, as: Snapshots
   alias ExESDB.Streams, as: Streams
@@ -161,7 +160,7 @@ defmodule ExESDB.Commanded.Adapter do
           Enumerable.t()
           | {:error, :stream_not_found}
           | {:error, error}
-  @impl true
+  @impl Commanded.EventStore.Adapter
   def stream_forward(adapter_meta, stream_uuid, start_version, read_batch_size) do
     store = Map.get(adapter_meta, :store_id)
 
@@ -169,7 +168,7 @@ defmodule ExESDB.Commanded.Adapter do
          |> Streams.stream_forward(stream_uuid, start_version, read_batch_size) do
       {:ok, stream} ->
         stream
-        |> Stream.map(&Mapper.to_event_data/1)
+        |> Stream.map(&Mapper.to_recorded_event/1)
 
       {:error, :stream_not_found} ->
         {:error, :stream_not_found}
@@ -179,25 +178,64 @@ defmodule ExESDB.Commanded.Adapter do
     end
   end
 
-  @impl true
-  def subscribe(adapter_meta, arg2) do
+  @doc """
+    Create a transient subscription to a single event stream.
+
+    The event store will publish any events appended to the given stream to the
+    `subscriber` process as an `{:events, events}` message.
+
+    The subscriber does not need to acknowledge receipt of the events.
+  """
+  @spec subscribe(
+          adapter_meta :: adapter_meta,
+          stream_uuid :: String.t() | :all
+        ) ::
+          :ok | {:error, error}
+
+  @impl Commanded.EventStore.Adapter
+  def subscribe(adapter_meta, stream_uuid) do
     Logger.warning(
-      "subscribe/2 is not implemented for #{inspect(adapter_meta)}, #{inspect(arg2)}"
+      "subscribe/2 is not implemented for #{inspect(adapter_meta)}, #{inspect(stream_uuid)}"
     )
+
+    store = Map.get(adapter_meta, :store_id)
+
+    store
+    |> Subscriptions.subscribe(stream_uuid)
 
     {:error, :not_implemented}
   end
 
-  @impl true
-  def subscribe_to(adapter_meta, arg2, subscription_name, subscriber, start_from, opts) do
+  @doc """
+    Create a persistent subscription to an event stream.
+  """
+  @spec subscribe_to(
+          adapter_meta :: adapter_meta,
+          stream_uuid :: String.t() | :all,
+          subscription_name :: String.t(),
+          subscriber :: pid,
+          start_from :: :origin | :current | non_neg_integer,
+          opts :: Keyword.t()
+        ) ::
+          {:ok, subscription}
+          | {:error, :subscription_already_exists}
+          | {:error, error}
+
+  @impl Commanded.EventStore.Adapter
+  def subscribe_to(adapter_meta, stream_uuid, subscription_name, subscriber, start_from, opts) do
     Logger.warning(
-      "subscribe_to/7 is not implemented for #{inspect(adapter_meta)}, #{inspect(arg2)}, #{inspect(subscription_name)}, #{inspect(subscriber)}, #{inspect(start_from)}, #{inspect(opts)}"
+      "subscribe_to/7 is ROUGHLY implemented for #{inspect(adapter_meta)}, #{inspect(stream_uuid)}, #{inspect(subscription_name)}, #{inspect(subscriber)}, #{inspect(start_from)}, #{inspect(opts)}"
     )
+
+    store = Map.get(adapter_meta, :store_id)
+
+    store
+    |> Subscriptions.subscribe_to(stream_uuid, subscription_name, subscriber, start_from, opts)
 
     {:error, :not_implemented}
   end
 
-  @impl true
+  @impl Commanded.EventStore.Adapter
   def unsubscribe(adapter_meta, subscription_name) do
     Logger.warning(
       "unsubscribe/3 is not implemented for #{inspect(adapter_meta)}, #{inspect(subscription_name)}"

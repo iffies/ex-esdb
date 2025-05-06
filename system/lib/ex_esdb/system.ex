@@ -36,7 +36,7 @@ defmodule ExESDB.System do
       add_pub_sub(opts),
       {ExESDB.EventStore, opts},
       {ExESDB.Cluster, opts},
-      {ExESDB.Emitter, opts}
+      {PartitionSupervisor, child_spec: DynamicSupervisor, name: ExESDB.EmitterPools}
     ]
 
     Supervisor.init(

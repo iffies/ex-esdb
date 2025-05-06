@@ -27,6 +27,36 @@ defmodule ExESDB.Subscriptions do
   end
 
   @doc """
+    Create a transient subscription for a specific stream or for all streams.
+  """
+  @spec subscribe(
+          store :: store,
+          stream_uuid :: stream_uuid | :all
+        ) ::
+          :ok | {:error, error}
+  def subscribe(store, stream_uuid \\ :all) do
+    store
+    |> Emitters.start_emitter(stream_uuid)
+
+    case store
+         |> :khepri.put(
+           [:subscriptions, stream_uuid],
+           %{
+             subscriber: self(),
+             start_from: 0,
+             opts: []
+           }
+         ) do
+      :ok ->
+        register_emitter(store, stream_uuid, self())
+        :ok
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  @doc """
     Subscribe to a all events in a store, or a specific stream.
   """
   @spec subscribe_to(
