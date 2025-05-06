@@ -42,14 +42,10 @@ defmodule ExESDB.EmitterPool do
     )
   end
 
-  def register_emitter(store, stream_uuid) do
-    :func_registrations.register_emitter(store, stream_uuid)
-  end
-
   @impl Supervisor
   def init({store, stream, pubsub, pool_size}) do
     Logger.warning("#{Themes.emitter(self())} is UP")
-    register_emitter(store, :all)
+    :func_registrations.register_emitter(store, stream)
 
     [_ | groups] =
       for number <- 1..pool_size do
