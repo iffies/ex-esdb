@@ -107,4 +107,34 @@ defmodule ExESDB.Repl do
         raise "Failed to start system. Reason: #{inspect(reason)}"
     end
   end
+
+  def test_initialized_v1_emitter(stream) do
+    pubsub =
+      get_opts()
+      |> Keyword.get(:pub_sub)
+
+    pubsub
+    |> Phoenix.PubSub.subscribe("reg_gh:initialized:v1")
+
+    ExESDB.Emitters.start_type_emitter(@store, "initialized:v1")
+
+    append(stream, 2)
+
+    self() |> Process.info(:messages)
+  end
+
+  def test_all_emitter(stream) do
+    pubsub =
+      get_opts()
+      |> Keyword.get(:pub_sub)
+
+    pubsub
+    |> Phoenix.PubSub.subscribe("reg_gh:$all")
+
+    ExESDB.Emitters.start_all_emitter(@store)
+
+    append(stream, 2)
+
+    self() |> Process.info(:messages)
+  end
 end

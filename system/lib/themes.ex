@@ -20,8 +20,8 @@ defmodule ExESDB.Themes do
   def monitor(pid),
     do: "ESDB_MONITOR [#{CF.yellow_on_magenta()}#{inspect(pid)}#{CF.reset()}]"
 
-  def emitter(pid),
-    do: "ESDB_EMITTER [#{CF.black_on_yellow()}#{inspect(pid)}#{CF.reset()}]"
+  def emitter_pool(pid),
+    do: "ESDB_EMITTER_POOL [#{CF.black_on_yellow()}#{inspect(pid)}#{CF.reset()}]"
 
   def emitter_worker(pid),
     do: "ESDB_EMITTER_WORKER [#{CF.yellow_on_black()}#{inspect(pid)}#{CF.reset()}]"

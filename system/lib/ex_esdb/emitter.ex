@@ -4,21 +4,35 @@ defmodule ExESDB.Emitters do
     lifetime of the Emitter processes.
   """
 
+  alias ExESDB.Options
+
   # use DynamicSupervisor
-  #
   # @impl DynamicSupervisor
   # def init(_) do
   #   DynamicSupervisor.init(strategy: :one_for_one)
   # end
   #
-  # def start_link(opts) do
-  #   DynamicSupervisor.start_link(__MODULE__, opts, name: __MODULE__)
-  # end
+  def start_all_emitter(store, pool_size \\ 3) do
+    filter = :ex_esdb_filter.by_stream("$all")
+    start_emitter(store, "$all", pool_size, filter)
+  end
 
-  def start_emitter(store, stream, pubsub, pool_size) do
+  def start_stream_emitter(store, stream, pool_size \\ 3) do
+    filter = :ex_esdb_filter.by_stream(stream)
+    start_emitter(store, stream, pool_size, filter)
+  end
+
+  def start_type_emitter(store, type, pool_size \\ 3) do
+    filter = :ex_esdb_filter.by_event_type(type)
+    start_emitter(store, type, pool_size, filter)
+  end
+
+  defp start_emitter(store, id, pool_size, filter) do
+    pubsub = Options.pub_sub()
+
     DynamicSupervisor.start_child(
       {:via, PartitionSupervisor, {ExESDB.EmitterPools, self()}},
-      {ExESDB.EmitterPool, {store, stream, pubsub, pool_size}}
+      {ExESDB.EmitterPool, {store, id, pubsub, pool_size, filter}}
     )
   end
 end
@@ -32,32 +46,25 @@ defmodule ExESDB.EmitterPool do
   require Logger
   require ExESDB.Themes, as: Themes
 
-  def start_link({store, stream, pubsub, pool_size}) do
-    # pubsub = Keyword.fetch!(opts, :pub_sub)
-    # pool_size = Keyword.get(opts, :pool_size, 3)
-    # store = Keyword.fetch!(opts, :store_id)
-
-    Supervisor.start_link(__MODULE__, {store, stream, pubsub, pool_size},
-      name: :"#{store}_ex_esdb_emitter_supervisor"
+  def start_link({store, id, pubsub, pool_size, filter}) do
+    Supervisor.start_link(__MODULE__, {store, id, pubsub, pool_size, filter},
+      name: :"#{store}:#{id}_emitter_pool"
     )
   end
 
   @impl Supervisor
-  def init({store, stream, pubsub, pool_size}) do
-    Logger.warning("#{Themes.emitter(self())} is UP")
-    :func_registrations.register_emitter(store, stream)
+  def init({store, id, pubsub, pool_size, filter}) do
+    scheduler_id = :erlang.system_info(:scheduler_id)
+    Logger.warning("#{Themes.emitter_pool(self())} is UP on scheduler #{inspect(scheduler_id)}")
 
-    [_ | groups] =
-      for number <- 1..pool_size do
-        :"#{store}_ex_esdb_emitter_#{number}"
-      end
-
-    groups = [:"#{store}_ex_esdb_emitter" | groups]
-    :persistent_term.put("#{store}_ex_esdb_emitters", List.to_tuple(groups))
+    emitters =
+      :func_registrations.put_emitters(store, id, filter, pool_size)
 
     children =
-      for group <- groups do
-        Supervisor.child_spec({ExESDB.EmitterWorker, {store, stream, pubsub, group}}, id: group)
+      for emitter <- emitters do
+        Supervisor.child_spec({ExESDB.EmitterWorker, {store, id, pubsub, emitter}},
+          id: emitter
+        )
       end
 
     Logger.warning("
@@ -71,7 +78,7 @@ end
 defmodule ExESDB.EmitterWorker do
   @moduledoc """
     As part of the ExESDB.System, 
-    the Emitter is responsible for managing the communication 
+    the EmitterWorker is responsible for managing the communication 
     between the Event Store and the PubSub mechanism.
   """
   use GenServer
@@ -82,33 +89,39 @@ defmodule ExESDB.EmitterWorker do
 
   require Logger
 
-  def emit(store, pub_sub, event),
+  defp emit(pub_sub, topic, event),
     do:
       pub_sub
-      |> PubSub.broadcast("#{store}", {:event_emitted, event})
+      |> PubSub.broadcast(topic, {:event_emitted, event})
 
   @impl GenServer
-  def init({store, stream, pubsub}) do
-    Logger.warning("#{Themes.emitter_worker(self())} is UP")
-    :ok = pg_join("#{store}:#{stream}_ex_esdb_emitters")
+  def init({store, id, pubsub}) do
+    scheduler_id = :erlang.system_info(:scheduler_id)
+    topic = :func_registrations.get_topic_emitters_key(store, id)
+
+    Logger.warning(
+      "#{Themes.emitter_worker(self())} for #{inspect(topic, pretty: true)} is UP on scheduler #{inspect(scheduler_id)}"
+    )
+
+    :ok = pg_join(store, id)
     {:ok, pubsub}
   end
 
-  def start_link({store, stream, pubsub, group}),
+  def start_link({store, id, pubsub, emitter}),
     do:
       GenServer.start_link(
         __MODULE__,
-        {store, stream, pubsub},
-        name: group
+        {store, id, pubsub},
+        name: emitter
       )
 
   @impl true
   def handle_info({:broadcast, topic, event}, pubsub) do
     pubsub
-    |> PubSub.broadcast(topic, {:event_emitted, event})
+    |> emit(topic, event)
 
     Logger.warning(
-      "#{Themes.emitter(self())} BROADCAST #{inspect(event, pretty: true)} => #{inspect(topic, pretty: true)}"
+      "#{Themes.emitter_worker(self())} BROADCAST #{inspect(event, pretty: true)} => #{inspect(topic, pretty: true)}"
     )
 
     {:noreply, pubsub}
@@ -117,10 +130,10 @@ defmodule ExESDB.EmitterWorker do
   @impl true
   def handle_info({:forward_to_local, topic, event}, pubsub) do
     pubsub
-    |> Phoenix.PubSub.local_broadcast(topic, event)
+    |> emit(topic, event)
 
     Logger.warning(
-      "#{Themes.emitter(self())} FORWARD_TO_LOCAL #{inspect(event, pretty: true)} => #{inspect(topic, pretty: true)}"
+      "#{Themes.emitter_worker(self())} FORWARD_TO_LOCAL #{inspect(event, pretty: true)} => #{inspect(topic, pretty: true)}"
     )
 
     {:noreply, pubsub}
@@ -132,12 +145,17 @@ defmodule ExESDB.EmitterWorker do
   end
 
   if Code.ensure_loaded?(:pg) do
-    defp pg_join(group) do
-      :ok = :pg.join(Elixir.Phoenix.PubSub, group, self())
+    defp pg_join(store, id) do
+      emitters = :func_registrations.get_topic_emitters_key(store, id)
+      Logger.warning("JOINING #{inspect(emitters, pretty: true)}")
+      :ok = :pg.join(Elixir.Phoenix.PubSub, emitters, self())
+      :ok
     end
   else
-    defp pg_join(group) do
-      namespace = {:phx, group}
+    defp pg_join(store, id) do
+      emitters = :func_registrations.get_topic_emitters_key(store, id)
+      namespace = {:phx, emitters}
+      Logger.warning("JOINING #{inspect(namespace, pretty: true)}")
       :ok = :pg2.create(namespace)
       :ok = :pg2.join(namespace, self())
       :ok
