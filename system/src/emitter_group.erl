@@ -5,7 +5,6 @@
 
 -spec join(Store :: atom(), Id :: string(), PidOrPids :: pid() | [pid()]) -> ok.
 join(Store, Id, PidOrPids) when is_atom(Store) ->
-  %% :pg module is available
   Group = group_key(Store, Id),
   logger:warning("JOINING ~p", [Group]),
   ok = pg:join('Elixir.Phoenix.PubSub', Group, PidOrPids),
@@ -24,7 +23,6 @@ emitter(Emitters) ->
 -spec broadcast(Store :: atom(), Id :: string(), Event :: map()) -> ok | {error, term()}.
 broadcast(Store, Id, Event) when is_atom(Store) ->
   Topic = topic(Store, Id),
-  logger:warning("Broadcasting ~n Event: ~p~n~n to Topic: [~s]~n", [Event, Topic]),
   case emitter(members(Store, Id)) of
     {error, {no_such_group, _}} ->
       logger:error("NO_GROUP [~p]~n", [Topic]),
@@ -32,12 +30,8 @@ broadcast(Store, Id, Event) when is_atom(Store) ->
     Members ->
       lists:foreach(fun(Pid) ->
                        Message =
-                         if node(Pid) =:= node() ->
-                              io:format("LOCAL FORWARD to ~p~n", [Pid]),
-                              forward_to_local_msg(Topic, Event);
-                            true ->
-                              io:format("BROADCAST to ~p~n", [Pid]),
-                              broadcast_msg(Topic, Event)
+                         if node(Pid) =:= node() -> forward_to_local_msg(Topic, Event);
+                            true -> broadcast_msg(Topic, Event)
                          end,
                        Pid ! Message
                     end,
