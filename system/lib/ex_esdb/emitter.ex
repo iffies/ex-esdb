@@ -27,6 +27,11 @@ defmodule ExESDB.Emitters do
     start_emitter(store, type, pool_size, filter)
   end
 
+  def start_custom_emitter(store, id, pattern, pool_size \\ 3) do
+    filter = :ex_esdb_filter.by_event_pattern(pattern)
+    start_emitter(store, id, pool_size, filter)
+  end
+
   defp start_emitter(store, id, pool_size, filter) do
     pubsub = Options.pub_sub()
 
@@ -55,10 +60,9 @@ defmodule ExESDB.EmitterPool do
   @impl Supervisor
   def init({store, id, pubsub, pool_size, filter}) do
     scheduler_id = :erlang.system_info(:scheduler_id)
-    Logger.warning("#{Themes.emitter_pool(self())} is UP on scheduler #{inspect(scheduler_id)}")
 
     emitters =
-      :func_registrations.put_emitters(store, id, filter, pool_size)
+      :ex_esdb_triggers.setup_emitters(store, id, filter, pool_size)
 
     children =
       for emitter <- emitters do
@@ -71,6 +75,7 @@ defmodule ExESDB.EmitterPool do
       Starting Children: \n#{inspect(children)}
       ")
 
+    Logger.warning("#{Themes.emitter_pool(self())} is UP on scheduler #{inspect(scheduler_id)}")
     Supervisor.init(children, strategy: :one_for_one)
   end
 end
@@ -97,13 +102,13 @@ defmodule ExESDB.EmitterWorker do
   @impl GenServer
   def init({store, id, pubsub}) do
     scheduler_id = :erlang.system_info(:scheduler_id)
-    topic = :func_registrations.get_topic_emitters_key(store, id)
+    topic = :emitter_group.topic(store, id)
+    :ok = :emitter_group.join(store, id, self())
 
     Logger.warning(
       "#{Themes.emitter_worker(self())} for #{inspect(topic, pretty: true)} is UP on scheduler #{inspect(scheduler_id)}"
     )
 
-    :ok = pg_join(store, id)
     {:ok, pubsub}
   end
 
@@ -142,23 +147,5 @@ defmodule ExESDB.EmitterWorker do
   @impl true
   def handle_info(_, pubsub) do
     {:noreply, pubsub}
-  end
-
-  if Code.ensure_loaded?(:pg) do
-    defp pg_join(store, id) do
-      emitters = :func_registrations.get_topic_emitters_key(store, id)
-      Logger.warning("JOINING #{inspect(emitters, pretty: true)}")
-      :ok = :pg.join(Elixir.Phoenix.PubSub, emitters, self())
-      :ok
-    end
-  else
-    defp pg_join(store, id) do
-      emitters = :func_registrations.get_topic_emitters_key(store, id)
-      namespace = {:phx, emitters}
-      Logger.warning("JOINING #{inspect(namespace, pretty: true)}")
-      :ok = :pg2.create(namespace)
-      :ok = :pg2.join(namespace, self())
-      :ok
-    end
   end
 end
