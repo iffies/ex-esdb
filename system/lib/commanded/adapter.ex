@@ -14,7 +14,7 @@ defmodule ExESDB.Commanded.Adapter do
 
   alias ExESDB.Commanded.Mapper, as: Mapper
 
-  @type adapter_meta :: map
+  @type adapter_meta :: map()
   @type application :: Commanded.Application.t()
   @type config :: Keyword.t()
   @type stream_uuid :: String.t()

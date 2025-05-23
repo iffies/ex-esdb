@@ -12,35 +12,21 @@ defmodule ExESDB.Subscriptions do
   require ExESDB.Themes, as: Themes
   require Logger
 
-  @spec register_emitter(
-          store_id :: store(),
-          stream_uuid :: stream_uuid | :all,
-          pub_sub :: atom(),
-          dispatcher :: atom()
-        ) :: :ok | {:error, msg :: String.t()}
-  defp register_emitter(store_id, stream_uuid, pub_sub, dispatcher \\ __MODULE__) do
-    msg =
-      "ATTEMPT registering emitter for store #{inspect(store_id)}, stream #{inspect(stream_uuid)} and pub_sub #{inspect(pub_sub)}"
-
-    Logger.warning("#{Themes.subscriptions(msg)}")
-    :func_registrations.register_emitter(store_id, pub_sub, stream_uuid, dispatcher)
-  end
-
   @doc """
     Create a transient subscription for a specific stream or for all streams.
   """
   @spec subscribe(
           store :: store,
-          stream_uuid :: stream_uuid | :all
+          stream :: String.t() | "$all"
         ) ::
           :ok | {:error, error}
-  def subscribe(store, stream_uuid \\ :all) do
+  def subscribe(store, stream \\ "$all") do
     store
-    |> Emitters.start_emitter(stream_uuid)
+    |> Emitters.start_stream_emitter(stream)
 
     case store
          |> :khepri.put(
-           [:subscriptions, stream_uuid],
+           [:subscriptions, stream],
            %{
              subscriber: self(),
              start_from: 0,
@@ -48,7 +34,7 @@ defmodule ExESDB.Subscriptions do
            }
          ) do
       :ok ->
-        register_emitter(store, stream_uuid, self())
+        ExESDB.Emitters.start_stream_emitter(store, stream)
         :ok
 
       {:error, reason} ->
@@ -56,9 +42,6 @@ defmodule ExESDB.Subscriptions do
     end
   end
 
-  @doc """
-    Subscribe to a all events in a store, or a specific stream.
-  """
   @spec subscribe_to(
           store :: store,
           stream_uuid :: :all | stream_uuid,
