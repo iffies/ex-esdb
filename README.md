@@ -1,3 +1,21 @@
-# DEPRECATED
+# ExESDB - A BEAM-native Event Store
 
-This repo has moved to [Codeberg](https://codeberg.org/beam-campus/ex-esdb).
+`ExESDB` is a BEAM-native Event Store, built on top of the [khepri](https://github.com/rabbitmq/khepri) and [ra](https://github.com/rabbitmq/ra) subsystems.
+
+## Motivation
+
+One of the arguments for BEAM development is that it comes "batteries included". Be it caching, storage, pub/sub, observability etc... the Erlang ecosystem always has the option to avoid external dependencies.
+
+For Event Sourcing use cases however, the Event Store is often a separate service.
+
+This project is attempt at addressing this point, by building further upon the work of the `rabbitmq/khepri` and `rabbitmq/ra` subsystems.
+
+## Contents
+
+- [Getting Started](system/guides/getting_started.md)
+- [Code documentation](system/doc/index.html)
+
+## Releases
+
+- [On Hex](https://hex.pm/packages/ex_esdb)
+- [Release Documentation](https://hexdocs.pm/ex_esdb/index.html)
