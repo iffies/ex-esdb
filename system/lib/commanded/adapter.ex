@@ -188,22 +188,20 @@ defmodule ExESDB.Commanded.Adapter do
   """
   @spec subscribe(
           adapter_meta :: adapter_meta,
-          stream_uuid :: String.t()
+          stream :: String.t()
         ) ::
           :ok | {:error, error}
 
   @impl Commanded.EventStore.Adapter
-  def subscribe(adapter_meta, stream_uuid) do
+  def subscribe(adapter_meta, stream) do
     Logger.warning(
-      "subscribe/2 is not implemented for #{inspect(adapter_meta)}, #{inspect(stream_uuid)}"
+      "subscribe/2 is not implemented for #{inspect(adapter_meta)}, #{inspect(stream)}"
     )
 
     store = Map.get(adapter_meta, :store_id)
 
     store
-    |> Subscriptions.subscribe(stream_uuid)
-
-    {:error, :not_implemented}
+    |> Subscriptions.subscribe(stream)
   end
 
   @doc """
@@ -211,7 +209,7 @@ defmodule ExESDB.Commanded.Adapter do
   """
   @spec subscribe_to(
           adapter_meta :: adapter_meta,
-          stream_uuid :: String.t(),
+          stream :: String.t(),
           subscription_name :: String.t(),
           subscriber :: pid,
           start_from :: :origin | :current | non_neg_integer,
@@ -222,15 +220,15 @@ defmodule ExESDB.Commanded.Adapter do
           | {:error, error}
 
   @impl Commanded.EventStore.Adapter
-  def subscribe_to(adapter_meta, stream_uuid, subscription_name, subscriber, start_from, opts) do
+  def subscribe_to(adapter_meta, stream, subscription_name, subscriber, start_from, opts) do
     Logger.warning(
-      "subscribe_to/7 is ROUGHLY implemented for #{inspect(adapter_meta)}, #{inspect(stream_uuid)}, #{inspect(subscription_name)}, #{inspect(subscriber)}, #{inspect(start_from)}, #{inspect(opts)}"
+      "subscribe_to/7 is ROUGHLY implemented for #{inspect(adapter_meta)}, #{inspect(stream)}, #{inspect(subscription_name)}, #{inspect(subscriber)}, #{inspect(start_from)}, #{inspect(opts)}"
     )
 
     store = Map.get(adapter_meta, :store_id)
 
     store
-    |> Subscriptions.subscribe_to(stream_uuid, subscription_name, subscriber, start_from, opts)
+    |> Subscriptions.subscribe_to(stream, subscription_name, subscriber, start_from, opts)
 
     {:error, :not_implemented}
   end

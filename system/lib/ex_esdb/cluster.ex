@@ -74,18 +74,26 @@ defmodule ExESDB.Cluster do
   def handle_info(:check_leader, state) do
     timeout = state[:timeout]
 
-    {_store_id, leader_node} =
+    current_leader =
+      state
+      |> Keyword.get(:current_leader)
+
+    {_, leader_node} =
       state[:store_id]
       |> :ra_leaderboard.lookup_leader()
 
-    if node() == leader_node do
-      Logger.warning("I am the leader")
-    else
-      Logger.warning("I am not the leader. #{inspect(leader_node)} is the leader")
-    end
+    new_state =
+      if node() == leader_node && current_leader != leader_node do
+        Logger.alert("I AM THE NEW LEADER, activating triggers on #{inspect(leader_node)}")
+
+        state
+        |> Keyword.put(:current_leader, leader_node)
+      else
+        state
+      end
 
     Process.send_after(self(), :check_leader, 2 * timeout)
-    {:noreply, state}
+    {:noreply, new_state}
   end
 
   @impl true

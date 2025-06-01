@@ -8,18 +8,24 @@ defmodule ExESDB.Streams do
   defp handle_transaction_result({:ok, {:abort, reason}}), do: {:error, reason}
   defp handle_transaction_result({:error, reason}), do: {:error, reason}
 
-  def read_events(store, stream_id, start_version, count) do
-    events =
+  @spec stream_events(
+          store :: atom(),
+          stream_id :: any(),
+          start_version :: integer(),
+          count :: integer()
+        ) :: {:ok, Enumerable.t()} | {:error, term()}
+  def stream_events(store, stream_id, start_version, count) do
+    event_stream =
       start_version..(start_version + count - 1)
-      |> Enum.map(fn version ->
+      |> Stream.map(fn version ->
         padded_version = ExESDB.VersionFormatter.pad_version(version, 6)
 
         store
         |> :khepri.get!([:streams, stream_id, padded_version])
       end)
-      |> Enum.reject(&is_nil/1)
+      |> Stream.reject(&is_nil/1)
 
-    {:ok, events}
+    {:ok, event_stream}
   end
 
   def get_streams(store) do
@@ -34,7 +40,7 @@ defmodule ExESDB.Streams do
   end
 
   @doc """
-    Read events from a stream.
+    Read events from a stream, in a forward direction.
   """
   @spec stream_forward(
           store :: atom(),
@@ -48,7 +54,7 @@ defmodule ExESDB.Streams do
            |> stream_exists?(stream_id) do
         true ->
           store
-          |> read_events(stream_id, start_version, count)
+          |> stream_events(stream_id, start_version, count)
 
         false ->
           {:error, :stream_not_found}

@@ -13,6 +13,28 @@ defmodule ExESDB.System do
   require Logger
   require Phoenix.PubSub
 
+  @impl true
+  def init(opts) do
+    Logger.warning("#{Themes.system(self())} is UP")
+
+    children = [
+      add_pub_sub(opts),
+      {ExESDB.EventStore, opts},
+      {ExESDB.Cluster, opts},
+      {PartitionSupervisor, child_spec: DynamicSupervisor, name: ExESDB.EmitterPools}
+    ]
+
+    :os.set_signal(:sigterm, :handle)
+    :os.set_signal(:sigquit, :handle)
+
+    spawn(fn -> handle_os_signal() end)
+
+    Supervisor.init(
+      children,
+      strategy: :one_for_one
+    )
+  end
+
   defp add_pub_sub(opts) do
     pub_sub = Keyword.get(opts, :pub_sub)
 
@@ -28,25 +50,27 @@ defmodule ExESDB.System do
     end
   end
 
-  def stop(reason) do
-    Process.exit(self(), reason)
+  defp handle_os_signal do
+    receive do
+      {:signal, :sigterm} ->
+        Logger.warning("SIGTERM received. Stopping ExESDB")
+        stop(:sigterm)
+
+      {:signal, :sigquit} ->
+        Logger.warning("SIGQUIT received. Stopping ExESDB")
+        stop(:sigquit)
+
+      msg ->
+        IO.puts("Unknown signal: #{inspect(msg)}")
+        Logger.warning("Received unknown signal: #{inspect(msg)}")
+    end
+
+    handle_os_signal()
   end
 
-  @impl true
-  def init(opts) do
-    Logger.warning("#{Themes.system(self())} is UP")
-
-    children = [
-      add_pub_sub(opts),
-      {ExESDB.EventStore, opts},
-      {ExESDB.Cluster, opts},
-      {PartitionSupervisor, child_spec: DynamicSupervisor, name: ExESDB.EmitterPools}
-    ]
-
-    Supervisor.init(
-      children,
-      strategy: :one_for_one
-    )
+  def stop(_reason \\ :normal) do
+    Process.sleep(2_000)
+    Application.stop(:ex_esdb)
   end
 
   def start_link(opts),

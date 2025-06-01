@@ -19,37 +19,15 @@ defmodule ExESDB.App do
       {ExESDB.System, opts}
     ]
 
-    :os.set_signal(:sigterm, :handle)
-    :os.set_signal(:sigquit, :handle)
-
-    spawn(fn -> handle_os_signal() end)
-
     Logger.warning("#{Themes.app(self())} is UP.")
 
-    opts = [strategy: :one_for_one, name: EsESDB.Supervisor]
+    opts = [strategy: :one_for_one, name: ExESDB.Supervisor]
     Supervisor.start_link(children, opts)
-  end
-
-  def handle_os_signal do
-    receive do
-      {:signal, :sigterm} ->
-        Logger.warning("SIGTERM received. Stopping ExESDB")
-
-        Process.sleep(2_000)
-        ExESDB.System.stop(:sigterm)
-        Application.stop(:ex_esdb)
-        System.halt(0)
-
-      msg ->
-        IO.puts("Unknown signal: #{inspect(msg)}")
-        Logger.warning("Received unknown signal: #{inspect(msg)}")
-    end
-
-    handle_os_signal()
   end
 
   @impl true
   def stop(state) do
+    ExESDB.System.stop(:normal)
     Logger.warning("STOPPING APP #{inspect(state, pretty: true)}")
   end
 end

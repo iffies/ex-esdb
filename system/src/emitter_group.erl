@@ -15,7 +15,8 @@ members(Store, Id) when is_atom(Store) ->
   Group = group_key(Store, Id),
   pg:get_members('Elixir.Phoenix.PubSub', Group).
 
-emitter(Emitters) ->
+-spec random_emitter(Emitters :: [pid()]) -> {error, {no_such_group, term()}} | pid().
+random_emitter(Emitters) ->
   Size = tuple_size(Emitters),
   Random = rand:uniform(Size),
   erlang:element(Random, Emitters).
@@ -23,7 +24,7 @@ emitter(Emitters) ->
 -spec broadcast(Store :: atom(), Id :: string(), Event :: map()) -> ok | {error, term()}.
 broadcast(Store, Id, Event) when is_atom(Store) ->
   Topic = topic(Store, Id),
-  case emitter(members(Store, Id)) of
+  case random_emitter(members(Store, Id)) of
     {error, {no_such_group, _}} ->
       logger:error("NO_GROUP [~p]~n", [Topic]),
       {error, no_such_group};
@@ -73,3 +74,9 @@ persist_emitters(Store, Id, PoolSize) ->
   Key = group_key(Store, Id),
   persistent_term:put(Key, list_to_tuple(Emitters)),
   Emitters.
+
+-spec retrieve_emitters(Store :: atom(), Id :: string()) -> list().
+retrieve_emitters(Store, Id) ->
+  Key = group_key(Store, Id),
+  EmitterTuple = persistent_term:get(Key),
+  tuple_to_list(EmitterTuple).

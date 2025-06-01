@@ -18,8 +18,7 @@ defmodule ExESDB.Subscriptions do
   @spec subscribe(
           store :: store,
           stream :: stream
-        ) ::
-          :ok | {:error, error}
+        ) :: :ok | {:error, error}
   def subscribe(store, stream \\ "$all") do
     store
     |> Emitters.start_stream_emitter(stream)
