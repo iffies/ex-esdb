@@ -49,7 +49,7 @@ defmodule ExESDB.Commanded.Adapter do
           events :: list(Commanded.EventStore.EventData.t()),
           opts :: Keyword.t()
         ) ::
-          :ok | {:error, :wrong_expected_version} | {:error, error()}
+          :ok | {:error, :wrong_expected_version} | {:error, term()}
   @impl Commanded.EventStore.Adapter
   def append_to_stream(%{store_id: store}, stream_uuid, expected_version, events, _opts) do
     new_events =
@@ -57,7 +57,7 @@ defmodule ExESDB.Commanded.Adapter do
       |> Enum.map(&Mapper.to_new_event/1)
 
     store
-    |> Store.append_to_stream(stream_uuid, expected_version, new_events)
+    |> Streams.append_events(stream_uuid, expected_version, new_events)
   end
 
   @doc """

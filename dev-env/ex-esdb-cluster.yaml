@@ -89,10 +89,10 @@ services:
       EX_ESDB_STORE_ID: "reg_gh"
       EX_ESDB_COOKIE: "reg_greenhouse_cookie"
       EX_ESDB_SEED_NODES: "ex_esdb@node0,ex_esdb@node1,ex_esdb@node3,ex_esdb@node4"
-    depends_on:
-      ex-esdb0:
-        condition: service_healthy
     stop_grace_period: 10s
+    depends_on:
+      ex-esdb1:
+        condition: service_healthy
 
   ex-esdb3:
     image: local/ex-esdb
@@ -108,10 +108,10 @@ services:
       EX_ESDB_STORE_ID: "reg_gh"
       EX_ESDB_COOKIE: "reg_greenhouse_cookie"
       EX_ESDB_SEED_NODES: "ex_esdb@node0,ex_esdb@node1,ex_esdb@node2,ex_esdb@node4"
-    depends_on:
-      ex-esdb0:
-        condition: service_healthy
     stop_grace_period: 10s
+    depends_on:
+      ex-esdb2:
+        condition: service_healthy
 
   ex-esdb4:
     image: local/ex-esdb
@@ -129,5 +129,5 @@ services:
       EX_ESDB_SEED_NODES: "ex_esdb@node0,ex_esdb@node1,ex_esdb@node2,ex_esdb@node3"
     stop_grace_period: 10s
     depends_on:
-      ex-esdb0:
+      ex-esdb3:
         condition: service_healthy

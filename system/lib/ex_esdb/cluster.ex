@@ -78,22 +78,33 @@ defmodule ExESDB.Cluster do
       state
       |> Keyword.get(:current_leader)
 
+    IO.puts("ℹ️ℹ️ LEADER: #{inspect(current_leader)}) ℹ️ℹ️")
+
+    store = state[:store_id]
+
     {_, leader_node} =
-      state[:store_id]
-      |> :ra_leaderboard.lookup_leader()
+      :ra_leaderboard.lookup_leader(store)
 
     new_state =
-      if node() == leader_node && current_leader != leader_node do
-        Logger.alert("I AM THE NEW LEADER, activating triggers on #{inspect(leader_node)}")
+      state
+      |> Keyword.put(:current_leader, leader_node)
 
-        state
-        |> Keyword.put(:current_leader, leader_node)
-      else
-        state
-      end
+    if node() == leader_node && current_leader != leader_node do
+      IO.puts("⚠️⚠️ LEADER change: [#{inspect(current_leader)}] => [#{inspect(leader_node)}] ⚠️⚠️")
+    end
+
+    if node() == leader_node do
+      IO.puts("✅✅ I am LEADER! ✅✅")
+    end
 
     Process.send_after(self(), :check_leader, 2 * timeout)
     {:noreply, new_state}
+  end
+
+  @impl true
+  def handle_info({:leader_changed, old_leader, new_leader}, state) do
+    Logger.alert("!! LEADER has changed: [#{inspect(old_leader)}] ~> [#{inspect(new_leader)}] !!")
+    {:noreply, state}
   end
 
   @impl true
@@ -139,7 +150,7 @@ defmodule ExESDB.Cluster do
     Process.flag(:trap_exit, true)
     Process.send_after(self(), :join, timeout)
     Process.send_after(self(), :members, 2 * timeout)
-    Process.send_after(self(), :check_leader, 2 * timeout)
+    Process.send_after(self(), :check_leader, 5 * timeout)
     {:ok, state}
   end
 

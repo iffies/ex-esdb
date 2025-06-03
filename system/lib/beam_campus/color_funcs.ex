@@ -71,4 +71,5 @@ defmodule BeamCampus.ColorFuncs do
     end
 
   Module.eval_quoted(__MODULE__, contents, [])
+  # Code.eval_quoted(contents, [])
 end
