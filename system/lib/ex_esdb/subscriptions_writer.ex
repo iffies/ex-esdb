@@ -5,6 +5,8 @@ defmodule ExESDB.SubscriptionsWriter do
   use GenServer
 
   alias ExESDB.SubscriptionsHelper, as: Helper
+  require Logger
+  alias ExESDB.Themes, as: Themes
 
   # @spec put_subscription(
   #         store :: atom(),
@@ -38,7 +40,7 @@ defmodule ExESDB.SubscriptionsWriter do
   ############ CALLBACKS ############
   @impl true
   def handle_cast({:delete_subscription, store, type, selector, subscription_name}, state) do
-    key = Helper.subscriptions_key(type, selector, subscription_name)
+    key = Helper.subscriptions_key({type, selector, subscription_name})
 
     if store
        |> :khepri.exists!([:subscriptions, key]) do
@@ -56,7 +58,7 @@ defmodule ExESDB.SubscriptionsWriter do
         state
       ) do
     key =
-      Helper.subscriptions_key(type, selector, subscription_name)
+      Helper.subscriptions_key({type, selector, subscription_name})
 
     subscription =
       %{
@@ -67,21 +69,21 @@ defmodule ExESDB.SubscriptionsWriter do
         subscriber: subscriber
       }
 
-    if not store
-       |> :khepri.exists!([:subscriptions, key]) do
-      store
-      |> :khepri.put(
-        [:subscriptions, key],
-        subscription
-      )
-    end
+    store
+    |> :khepri.put(
+      [:subscriptions, key],
+      subscription
+    )
 
-    {:reply, subscription, state}
+    {:reply,
+     store
+     |> :khepri.get([:subscriptions, key]), state}
   end
 
   ######## PLUMBING ############
   @impl true
   def init(opts) do
+    Logger.warning("#{Themes.subscriptions_writer(self())} is UP.")
     {:ok, opts}
   end
 

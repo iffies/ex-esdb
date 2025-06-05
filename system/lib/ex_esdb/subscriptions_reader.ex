@@ -6,6 +6,9 @@ defmodule ExESDB.SubscriptionsReader do
 
   import ExESDB.Khepri.Conditions
 
+  alias ExESDB.Themes, as: Themes
+  require Logger
+
   def get_subscriptions(store),
     do:
       GenServer.call(
@@ -17,7 +20,15 @@ defmodule ExESDB.SubscriptionsReader do
   @impl GenServer
   def handle_call({:get_subscriptions, store}, _from, state) do
     case store
-         |> :khepri.get_many([:subscriptions, if_has_data(has_data: true)]) do
+         |> :khepri.get_many([
+           :subscriptions,
+           if_all(
+             conditions: [
+               if_path_matches(regex: :any),
+               if_has_payload(has_payload: true)
+             ]
+           )
+         ]) do
       {:ok, result} ->
         {:reply, result, state}
 
@@ -37,6 +48,7 @@ defmodule ExESDB.SubscriptionsReader do
 
   @impl true
   def init(opts) do
+    Logger.warning("#{Themes.subscriptions_reader(self())} is UP")
     {:ok, opts}
   end
 

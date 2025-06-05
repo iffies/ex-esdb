@@ -1,14 +1,25 @@
 defmodule ExESDB.Gateway do
   @moduledoc """
-   Provides API functions for working with ExESDB
+    Provides API functions for working with ExESDB
+    ## API
+      - append_events/4
+      - get_events/4
+      - get_streams/1
+
+      - subscribe/4
+      - subscribe_to/5
+      - unsubscribe/2
+      - delete_subscription/4
+
   """
   use GenServer
 
-  alias ExESDB.SubscriptionsWriter, as: Writer
+  alias ExESDB.SubscriptionsReader, as: SubsR
+  alias ExESDB.SubscriptionsWriter, as: SubsW
 
-  alias ExESDB.StreamsHelper, as: StreamsHelper
-  alias ExESDB.StreamsReader, as: StreamsReader
-  alias ExESDB.StreamsWriter, as: StreamsWriter
+  alias ExESDB.StreamsHelper, as: StreamsH
+  alias ExESDB.StreamsReader, as: StreamsR
+  alias ExESDB.StreamsWriter, as: StreamsW
 
   alias ExESDB.Emitters
   require Logger
@@ -20,6 +31,13 @@ defmodule ExESDB.Gateway do
   @type subscription_type :: :by_stream | :by_event_type | :by_event_pattern
   @type selector_type :: String.t() | map()
 
+  def get_subscriptions(store),
+    do:
+      GenServer.call(
+        __MODULE__,
+        {:get_subscriptions, store}
+      )
+
   def append_events(store, stream_id, events),
     do:
       GenServer.cast(
@@ -27,14 +45,23 @@ defmodule ExESDB.Gateway do
         {:append_events, store, stream_id, events}
       )
 
-  def get_events(store, stream_id, start_version, count, direction),
+  def get_events(store, stream_id, start_version, count, direction \\ :forward),
     do:
       GenServer.call(
         __MODULE__,
         {:get_events, store, stream_id, start_version, count, direction}
       )
 
+  @doc """
+    Get all streams from the store.
+    ## Parameters
+      - store: the id of the store
+    ## Returns
+      - a list of all streams in the store
+  """
+  @spec get_streams(store :: atom()) :: {:ok, list()} | {:error, term()}
   def get_streams(store),
+    do:
       GenServer.call(
         __MODULE__,
         {:get_streams, store}
@@ -105,11 +132,10 @@ defmodule ExESDB.Gateway do
       )
 
   ############ HANDLE_CALL ############
-  #
   @impl GenServer
   def handle_call({:get_events, store, stream_id, start_version, count, direction}, _from, state) do
     case store
-         |> StreamsReader.stream_events(stream_id, start_version, count, direction) do
+         |> StreamsR.stream_events(stream_id, start_version, count, direction) do
       {:ok, events} ->
         {:reply, {:ok, events |> Enum.to_list()}, state}
 
@@ -121,7 +147,7 @@ defmodule ExESDB.Gateway do
   @impl GenServer
   def handle_call({:get_streams, store}, _from, state) do
     case store
-         |> StreamsReader.get_streams() do
+         |> StreamsR.get_streams() do
       {:ok, streams} ->
         {:reply, {:ok, streams |> Enum.to_list()}, state}
 
@@ -130,13 +156,22 @@ defmodule ExESDB.Gateway do
     end
   end
 
+  @impl GenServer
+  def handle_call({:get_subscriptions, store}, _from, state) do
+    reply =
+      store
+      |> SubsR.get_subscriptions()
+
+    {:reply, reply, state}
+  end
+
   ################ HANDLE_CAST #############
   @impl GenServer
   def handle_cast({:append_events, store, stream_id, events}, state) do
     current_version =
-      StreamsHelper.get_version!(store, stream_id)
+      StreamsH.get_version!(store, stream_id)
 
-    StreamsWriter.append_events(store, stream_id, current_version, events)
+    StreamsW.append_events(store, stream_id, current_version, events)
     {:noreply, state}
   end
 
@@ -154,7 +189,7 @@ defmodule ExESDB.Gateway do
         state
       ) do
     store
-    |> Writer.delete_subscription(type, selector, subscription_name)
+    |> SubsW.delete_subscription(type, selector, subscription_name)
 
     {:noreply, state}
   end
@@ -164,8 +199,11 @@ defmodule ExESDB.Gateway do
         {:subscribe_to, store, type, selector, subscription_name, subscriber, start_from},
         state
       ) do
-    store
-    |> Writer.put_subscription(type, selector, subscription_name, start_from, subscriber)
+    {:ok, sub} =
+      store
+      |> SubsW.put_subscription(type, selector, subscription_name, start_from, subscriber)
+
+    sub
     |> Emitters.start_emitter()
 
     {:noreply, state}
@@ -173,9 +211,12 @@ defmodule ExESDB.Gateway do
 
   @impl true
   def handle_cast({:subscribe, store, type, selector, subscription_name}, state) do
-    store
-    |> Writer.put_subscription(type, selector, subscription_name)
-    |> ExESDB.Emitters.start_emitter()
+    {:ok, sub} =
+      store
+      |> SubsW.put_subscription(type, selector, subscription_name)
+
+    sub
+    |> Emitters.start_emitter()
 
     {:noreply, state}
   end

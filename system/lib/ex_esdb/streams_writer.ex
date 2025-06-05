@@ -71,7 +71,7 @@ defmodule ExESDB.StreamsWriter do
     do:
       GenServer.call(
         __MODULE__,
-        {:append_events_tx, store, stream_id, expected_version, events}
+        {:append_events, store, stream_id, expected_version, events}
       )
 
   ############ CALLBACKS ############
@@ -90,6 +90,15 @@ defmodule ExESDB.StreamsWriter do
         {:error, reason} ->
           {:error, reason}
       end
+
+    {:reply, result, state}
+  end
+
+  @impl true
+  def handle_call({:append_events, store, stream_id, expected_version, events}, _from, state) do
+    result =
+      store
+      |> try_append_events(stream_id, expected_version, events)
 
     {:reply, result, state}
   end

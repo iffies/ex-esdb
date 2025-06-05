@@ -5,10 +5,12 @@ defmodule ExESDB.Repl do
     
   """
   alias ExESDB.Repl.EventGenerator, as: ESGen
-  alias ExESDB.Repl.EventStreamMonitor, as: ESMonitor
 
   alias ExESDB.System, as: ESSystem
   alias ExESDB.Gateway, as: ESGateway
+  alias ExESDB.StreamsHelper, as: SHelper
+  alias ExESDB.StreamsWriter, as: StrWriter
+  alias ExESDB.SubscriptionsReader, as: SubsReader
 
   require Logger
 
@@ -31,22 +33,7 @@ defmodule ExESDB.Repl do
   def get_streams,
     do: ESGateway.get_streams(@store)
 
-  def get_subscriptions, do: ESGateway.get_subscriptions(@store)
-
-  def start_monitor do
-    opts = get_opts()
-
-    case ESMonitor.start_link(opts) do
-      {:ok, pid} ->
-        IO.puts("Monitor started with pid #{inspect(pid)}")
-
-      {:error, {:already_started, pid}} ->
-        IO.puts("Monitor already started with pid #{inspect(pid)}")
-
-      {:error, reason} ->
-        raise "Failed to start monitor. Reason: #{inspect(reason)}"
-    end
-  end
+  def get_subscriptions, do: SubsReader.get_subscriptions(@store)
 
   @doc """
     Append events to a stream.
@@ -56,36 +43,21 @@ defmodule ExESDB.Repl do
           nbr_of_events :: integer()
         ) :: {:ok, list(), integer()} | {:error, term()}
   def append(stream, nbr_of_events) do
-    version = ESInfo.get_version!(@store, stream)
+    version = SHelper.get_version!(@store, stream)
 
     events = ESGen.generate_events(version, nbr_of_events)
 
     case @store
-         |> ESStreams.append_events(stream, version, events) do
+         |> StrWriter.append_events(stream, version, events) do
       {:ok, new_version} ->
         {:ok, result} =
           @store
-          |> ESStreams.stream_forward(stream, 1, new_version)
+          |> ESGateway.get_events(stream, 1, new_version, :forward)
 
         {:ok, result, result |> Enum.count()}
 
       {:error, reason} ->
         {:error, reason}
-    end
-  end
-
-  def all(stream) do
-    case @store
-         |> ESInfo.get_version!(stream) do
-      0 ->
-        nil
-
-      version ->
-        {:ok, events} =
-          @store
-          |> ESStreams.stream_forward(stream, 1, version)
-
-        events
     end
   end
 

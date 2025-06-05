@@ -3,6 +3,6 @@ defmodule ExESDB.SubscriptionsHelper do
    Provides functions for working with event store subscriptions.
   """
 
-  def subscriptions_key(type, selector, name),
-    do: :erlang.phash2({type, selector, name})
+  def subscriptions_key(term),
+    do: to_string(:erlang.phash2(term))
 end

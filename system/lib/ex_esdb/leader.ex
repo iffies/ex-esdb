@@ -5,7 +5,7 @@ defmodule ExESDB.Leader do
   use GenServer
   require Logger
   alias ExESDB.Themes, as: Themes
-  alias ExESDB.SubscriptionsReader, as: Reader
+  alias ExESDB.SubscriptionsReader, as: SubsR
   alias ExESDB.Emitters
   ############ API ############
   def activate(store),
@@ -22,13 +22,13 @@ defmodule ExESDB.Leader do
 
     subscriptions =
       store
-      |> Reader.get_subscriptions()
+      |> SubsR.get_subscriptions()
 
     if subscriptions |> Enum.empty?(),
       do: IO.puts("😦😦 No subscriptions found. 😦😦")
 
     subscriptions
-    |> Enum.each(fn subscription ->
+    |> Enum.each(fn {_, subscription} ->
       IO.puts("😎😎 Starting emitter for #{inspect(subscription)} 😎😎")
 
       store

@@ -29,9 +29,23 @@ defmodule ExESDB.Themes do
   def pubsub(pid),
     do: "ESDB_PUBSUB [#{CF.black_on_cyan()}#{inspect(pid)}#{CF.reset()}]"
 
+  ######## SUBSCRIPTIONS ############
   def subscriptions(msg),
     do: "ESDB_SUBSCRIPTIONS [#{CF.black_on_white()}#{inspect(msg)}#{CF.reset()}]"
 
+  def subscriptions_reader(msg),
+    do: "ESDB_SUBSCRIPTIONS_READER [#{CF.black_on_white()}#{inspect(msg)}#{CF.reset()}]"
+
+  def subscriptions_writer(msg),
+    do: "ESDB_SUBSCRIPTIONS_WRITER [#{CF.black_on_white()}#{inspect(msg)}#{CF.reset()}]"
+
+  ########## STREAMS ###############
   def streams(msg),
     do: "ESDB_STREAMS [#{CF.bright_yellow_on_blue()}#{inspect(msg)}#{CF.reset()}]"
+
+  def streams_reader(msg),
+    do: "ESDB_STREAMS_READER [#{CF.bright_yellow_on_blue()}#{inspect(msg)}#{CF.reset()}]"
+
+  def streams_writer(msg),
+    do: "ESDB_STREAMS_WRITER [#{CF.bright_yellow_on_blue()}#{inspect(msg)}#{CF.reset()}]"
 end
