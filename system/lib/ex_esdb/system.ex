@@ -3,8 +3,10 @@ defmodule ExESDB.System do
     This module is the top level supervisor for the ExESDB system.
     It is responsible for supervising:
     - The PubSub mechanism
-    - the Event Store
-    - the Cluster
+    - the Event Store (starts and stops khepri)
+    - the Cluster (joins and leaves the cluster)
+    - the Leader (manages Ra leader-specific functionality)
+    - the Subscriptions Supervisor (manages subscriptions)
   """
   use Supervisor
 
@@ -19,9 +21,13 @@ defmodule ExESDB.System do
 
     children = [
       add_pub_sub(opts),
-      {ExESDB.EventStore, opts},
+      {ExESDB.Store, opts},
       {ExESDB.Cluster, opts},
-      {PartitionSupervisor, child_spec: DynamicSupervisor, name: ExESDB.EmitterPools}
+      {ExESDB.Leader, opts},
+      {ExESDB.Streams, opts},
+      {ExESDB.Subscriptions, opts},
+      {PartitionSupervisor, child_spec: DynamicSupervisor, name: ExESDB.EmitterPools},
+      {ExESDB.Gateway, opts}
     ]
 
     :os.set_signal(:sigterm, :handle)

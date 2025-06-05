@@ -11,34 +11,34 @@ defmodule ExESDB.Emitters do
   # def init(_) do
   #   DynamicSupervisor.init(strategy: :one_for_one)
   # end
-  #
 
-  def start_all_emitter(store, pool_size \\ 3) do
-    filter = :ex_esdb_filter.by_stream("$all")
-    start_emitter(store, "$all", pool_size, filter)
-  end
+  defp build_filter(selector, :by_stream), do: :ex_esdb_filter.by_stream(selector)
+  defp build_filter(selector, :by_event_type), do: :ex_esdb_filter.by_event_type(selector)
+  defp build_filter(selector, :by_event_pattern), do: :ex_esdb_filter.by_event_pattern(selector)
 
-  def start_stream_emitter(store, stream, pool_size \\ 3) do
-    filter = :ex_esdb_filter.by_stream(stream)
-    start_emitter(store, stream, pool_size, filter)
-  end
-
-  def start_type_emitter(store, type, pool_size \\ 3) do
-    filter = :ex_esdb_filter.by_event_type(type)
-    start_emitter(store, type, pool_size, filter)
-  end
-
-  def start_custom_emitter(store, id, pattern, pool_size \\ 3) do
-    filter = :ex_esdb_filter.by_event_pattern(pattern)
-    start_emitter(store, id, pool_size, filter)
-  end
-
-  defp start_emitter(store, id, pool_size, filter) do
+  def start_emitter(
+        %{
+          type: type,
+          subscription_name: subscription_name,
+          selector: selector
+        },
+        pool_size \\ 3
+      ) do
     pubsub = Options.pub_sub()
+    store = Options.store_id()
+
+    filter =
+      selector
+      |> build_filter(type)
+
+    sub_topic =
+      if type == :by_event_pattern,
+        do: subscription_name,
+        else: selector
 
     DynamicSupervisor.start_child(
       {:via, PartitionSupervisor, {ExESDB.EmitterPools, self()}},
-      {ExESDB.EmitterPool, {store, id, pubsub, pool_size, filter}}
+      {ExESDB.EmitterPool, {store, sub_topic, pubsub, pool_size, filter}}
     )
   end
 end
@@ -71,10 +71,6 @@ defmodule ExESDB.EmitterPool do
           id: emitter
         )
       end
-
-    Logger.warning("
-      Starting Children: \n#{inspect(children)}
-      ")
 
     Logger.warning("#{Themes.emitter_pool(self())} is UP on scheduler #{inspect(scheduler_id)}")
     Supervisor.init(children, strategy: :one_for_one)

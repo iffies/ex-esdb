@@ -6,11 +6,11 @@ defmodule ExESDB.Commanded.Adapter do
   @behaviour Commanded.EventStore.Adapter
 
   require Logger
-  alias ExESDB.EventStore, as: Store
 
   alias ExESDB.Snapshots, as: Snapshots
-  alias ExESDB.Streams, as: Streams
-  alias ExESDB.Subscriptions, as: Subscriptions
+  alias ExESDB.StreamsWriter, as: StreamsWriter
+  alias ExESDB.StreamsReader, as: StreamsReader
+  alias ExESDB.SubscriptionsWriter, as: SubscriptionsWriter
 
   alias ExESDB.Commanded.Mapper, as: Mapper
 
@@ -57,7 +57,7 @@ defmodule ExESDB.Commanded.Adapter do
       |> Enum.map(&Mapper.to_new_event/1)
 
     store
-    |> Streams.append_events(stream_uuid, expected_version, new_events)
+    |> StreamsWriter.append_events(stream_uuid, expected_version, new_events)
   end
 
   @doc """
@@ -89,8 +89,11 @@ defmodule ExESDB.Commanded.Adapter do
   def delete_snapshot(%{store_id: store}, source_uuid) do
     case store
          |> Snapshots.delete_snapshot(source_uuid) do
-      {:ok, _} -> :ok
-      {:error, reason} -> {:error, reason}
+      {:ok, _} ->
+        :ok
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
@@ -105,7 +108,7 @@ defmodule ExESDB.Commanded.Adapter do
   @impl Commanded.EventStore.Adapter
   def delete_subscription(%{store_id: store}, "$all", subscription_name) do
     case store
-         |> Subscriptions.delete_subscription("$all", subscription_name) do
+         |> SubscriptionsWriter.delete_subscription("$all", subscription_name) do
       {:ok, _} -> :ok
       {:error, reason} -> {:error, reason}
     end
@@ -114,7 +117,7 @@ defmodule ExESDB.Commanded.Adapter do
   @impl Commanded.EventStore.Adapter
   def delete_subscription(%{store_id: store}, stream_uuid, subscription_name) do
     case store
-         |> Subscriptions.delete_subscription(stream_uuid, subscription_name) do
+         |> SubscriptionsWriter.delete_subscription(stream_uuid, subscription_name) do
       {:ok, _} -> :ok
       {:error, reason} -> {:error, reason}
     end
@@ -165,7 +168,7 @@ defmodule ExESDB.Commanded.Adapter do
     store = Map.get(adapter_meta, :store_id)
 
     case store
-         |> Streams.stream_forward(stream_uuid, start_version, read_batch_size) do
+         |> StreamsReader.stream_forward(stream_uuid, start_version, read_batch_size) do
       {:ok, stream} ->
         stream
         |> Stream.map(&Mapper.to_recorded_event/1)
@@ -201,7 +204,7 @@ defmodule ExESDB.Commanded.Adapter do
     store = Map.get(adapter_meta, :store_id)
 
     store
-    |> Subscriptions.subscribe(stream)
+    |> SubscriptionsWriter.subscribe(stream)
   end
 
   @doc """
@@ -228,7 +231,7 @@ defmodule ExESDB.Commanded.Adapter do
     store = Map.get(adapter_meta, :store_id)
 
     store
-    |> Subscriptions.subscribe_to(stream, subscription_name, subscriber, start_from, opts)
+    |> SubscriptionsWriter.subscribe_to(stream, subscription_name, subscriber, start_from, opts)
 
     {:error, :not_implemented}
   end

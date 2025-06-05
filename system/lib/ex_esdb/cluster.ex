@@ -7,28 +7,34 @@ defmodule ExESDB.Cluster do
   alias ExESDB.Themes, as: Themes
 
   alias ExESDB.Options, as: Opts
+  alias ExESDB.Leader, as: Leader
 
-  # defp ping?(node) do
-  #   case :net_adm.ping(node) do
-  #     :pong -> true
-  #     _ -> false
-  #   end
-  # end
+  defp ping?(node) do
+    case :net_adm.ping(node) do
+      :pong -> true
+      _ -> false
+    end
+  end
+
+  defp get_medal(leader, member),
+    do: if(member == leader, do: "🏆", else: "🥈")
 
   defp join(store) do
     Opts.seed_nodes()
     |> Enum.map(fn seed ->
-      Logger.debug("#{Themes.cluster(node())} => Joining: #{inspect(seed)}")
+      if ping?(seed) do
+        Logger.debug("#{Themes.cluster(node())} => Joining: #{inspect(seed)}")
 
-      store
-      |> :khepri_cluster.join(seed)
+        store
+        |> :khepri_cluster.join(seed)
+      end
     end)
   end
 
   defp leave(store) do
     case store |> :khepri_cluster.reset() do
       :ok ->
-        Logger.warning("#{Themes.cluster(node())} => Left cluster")
+        IO.puts("#{Themes.cluster(node())} => Left cluster")
         :ok
 
       {:error, reason} ->
@@ -40,18 +46,10 @@ defmodule ExESDB.Cluster do
     end
   end
 
-  defp members(store) do
-    case store
-         |> :khepri_cluster.members() do
-      {:error, reason} ->
-        Logger.error(
-          "#{Themes.cluster(node())} => Failed to get store members. reason: #{inspect(reason)}"
-        )
-
-      members ->
-        Logger.debug("#{Themes.cluster(node())} => members: #{inspect(members, pretty: true)}")
-    end
-  end
+  defp members(store),
+    do:
+      store
+      |> :khepri_cluster.members()
 
   @impl true
   def handle_info(:join, state) do
@@ -63,8 +61,23 @@ defmodule ExESDB.Cluster do
 
   @impl true
   def handle_info(:members, state) do
-    state[:store_id]
-    |> members()
+    IO.puts("\nMEMBERS")
+
+    leader = Keyword.get(state, :current_leader)
+    store = state[:store_id]
+
+    case store
+         |> members() do
+      {:error, reason} ->
+        IO.puts("⚠️⚠️ Failed to get store members. reason: #{inspect(reason)} ⚠️⚠️")
+
+      {:ok, members} ->
+        members
+        |> Enum.each(fn {_store, member} ->
+          medal = get_medal(leader, member)
+          IO.puts("#{medal} #{inspect(member)}")
+        end)
+    end
 
     Process.send_after(self(), :members, 2 * state[:timeout])
     {:noreply, state}
@@ -78,8 +91,6 @@ defmodule ExESDB.Cluster do
       state
       |> Keyword.get(:current_leader)
 
-    IO.puts("ℹ️ℹ️ LEADER: #{inspect(current_leader)}) ℹ️ℹ️")
-
     store = state[:store_id]
 
     {_, leader_node} =
@@ -90,11 +101,10 @@ defmodule ExESDB.Cluster do
       |> Keyword.put(:current_leader, leader_node)
 
     if node() == leader_node && current_leader != leader_node do
-      IO.puts("⚠️⚠️ LEADER change: [#{inspect(current_leader)}] => [#{inspect(leader_node)}] ⚠️⚠️")
-    end
+      IO.puts("⚠️⚠️ I AM ELECTED LEADER! ⚠️⚠️")
 
-    if node() == leader_node do
-      IO.puts("✅✅ I am LEADER! ✅✅")
+      store
+      |> Leader.activate()
     end
 
     Process.send_after(self(), :check_leader, 2 * timeout)

@@ -30,5 +30,8 @@ defmodule ExESDB.Themes do
     do: "ESDB_PUBSUB [#{CF.black_on_cyan()}#{inspect(pid)}#{CF.reset()}]"
 
   def subscriptions(msg),
-    do: "ESDB_SUBSCRIPTIONS [#{CF.black_on_white()}#{msg}#{CF.reset()}]"
+    do: "ESDB_SUBSCRIPTIONS [#{CF.black_on_white()}#{inspect(msg)}#{CF.reset()}]"
+
+  def streams(msg),
+    do: "ESDB_STREAMS [#{CF.bright_yellow_on_blue()}#{inspect(msg)}#{CF.reset()}]"
 end

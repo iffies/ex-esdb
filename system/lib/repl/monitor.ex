@@ -2,7 +2,7 @@ defmodule ExESDB.Repl.EventStreamMonitor do
   @moduledoc false
   use GenServer
   require Logger
-  require ExESDB.Subscriptions, as: Subscriptions
+  require ExESDB.Gateway, as: ESGateway
 
   alias ExESDB.Themes, as: Themes
   alias Phoenix.PubSub, as: PubSub
@@ -28,8 +28,10 @@ defmodule ExESDB.Repl.EventStreamMonitor do
     topic = :erlang.atom_to_binary(store)
     pub_sub = opts[:pub_sub]
 
+    case(store |> ESGateway.subscribe(store, :by_stream, "$all", pub_sub, 0, opts))
+
     case store
-         |> Subscriptions.subscribe_to("$all", "all_to_pg", pub_sub, 0, opts) do
+         |> SubscriptionsWriter.subscribe_to(:by_stream, "$all", pub_sub, 0, opts) do
       :ok ->
         Logger.info(
           "#{Themes.monitor(self())} => Subscribed to Topic #{inspect(topic, pretty: true)}"
