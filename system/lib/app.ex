@@ -19,7 +19,7 @@ defmodule ExESDB.App do
       {ExESDB.System, opts}
     ]
 
-    Logger.warning("#{Themes.app(self())} is UP.")
+    IO.puts("#{Themes.app(self())} is UP.")
 
     opts = [strategy: :one_for_one, name: ExESDB.Supervisor]
     Supervisor.start_link(children, opts)

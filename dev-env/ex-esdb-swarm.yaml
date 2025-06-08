@@ -39,7 +39,6 @@ services:
   ex-esdb0:
     image: local/ex-esdb
     hostname: node0
-    container_name: ex-esdb0
     volumes:
       - esdb0-data:/data
     networks:
@@ -60,7 +59,6 @@ services:
   ex-esdb1:
     image: local/ex-esdb
     hostname: node1
-    container_name: ex-esdb1
     volumes:
       - esdb1-data:/data
     networks:
@@ -81,7 +79,6 @@ services:
   ex-esdb2:
     image: local/ex-esdb
     hostname: node2
-    container_name: ex-esdb2
     volumes:
       - esdb2-data:/data
     networks:
@@ -102,7 +99,6 @@ services:
   ex-esdb3:
     image: local/ex-esdb
     hostname: node3
-    container_name: ex-esdb3
     volumes:
       - esdb3-data:/data
     networks:
@@ -123,7 +119,6 @@ services:
   ex-esdb4:
     image: local/ex-esdb
     hostname: node4
-    container_name: ex-esdb4
     volumes:
       - esdb4-data:/data
     networks:

@@ -4,6 +4,8 @@
 # echo "Clearing all data"
 # sudo rm -rf /volume
 docker-compose -f ex-esdb-cluster.yaml \
+  --profile cluster \
+  -p cluster \
   down
 
 ## CACHES
@@ -25,6 +27,8 @@ sudo mkdir -p \
 sudo chown "$USER" -R /volume/
 
 docker-compose -f ex-esdb-cluster.yaml \
+  --profile cluster \
+  -p cluster \
   up \
   --remove-orphans \
   --build \

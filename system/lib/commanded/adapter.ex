@@ -26,10 +26,11 @@ defmodule ExESDB.Commanded.Adapter do
   @type source_uuid :: String.t()
   @type error :: term
 
-  #  @spec ack_event(
-  #  adapter_meta(),
-  #  pid(),
-  #  Commanded.EventStore.EventData.t()) :: :ok | {:error, error()})
+  @spec ack_event(
+          adapter_meta(),
+          pid(),
+          Commanded.EventStore.EventData.t()
+        ) :: :ok | {:error, error()}
   @impl Commanded.EventStore.Adapter
   def ack_event(meta, pid, event) do
     Logger.warning(
@@ -102,18 +103,9 @@ defmodule ExESDB.Commanded.Adapter do
   """
   @spec delete_subscription(
           adapter_meta :: adapter_meta,
-          arg2 :: stream_uuid,
+          selector :: stream_uuid,
           subscription_name :: subscription_name
         ) :: :ok | {:error, error}
-  @impl Commanded.EventStore.Adapter
-  def delete_subscription(%{store_id: store}, "$all", subscription_name) do
-    case store
-         |> SubscriptionsWriter.delete_subscription("$all", subscription_name) do
-      {:ok, _} -> :ok
-      {:error, reason} -> {:error, reason}
-    end
-  end
-
   @impl Commanded.EventStore.Adapter
   def delete_subscription(%{store_id: store}, stream_uuid, subscription_name) do
     case store

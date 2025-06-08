@@ -60,7 +60,7 @@ defmodule ExESDB.Store do
   # Server Callbacks
   @impl true
   def init(opts) do
-    Logger.warning("#{Themes.store(self())} is UP.")
+    IO.puts("#{Themes.store(self())} is UP.")
     Process.flag(:trap_exit, true)
 
     case start_khepri(opts) do

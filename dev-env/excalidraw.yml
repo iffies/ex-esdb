@@ -10,6 +10,8 @@ services:
   excalidraw:
     image: excalidraw/excalidraw:latest
     container_name: excalidraw
+    profiles:
+      - tools
     ports:
       - 80:80
     networks:

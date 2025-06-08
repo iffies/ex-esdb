@@ -27,11 +27,12 @@ defmodule ExESDB.Subscriptions do
 
   @impl true
   def init(opts) do
-    Logger.warning("#{Themes.subscriptions(self())} is UP.")
+    IO.puts("#{Themes.subscriptions(self())} is UP.")
 
     children = [
       {ExESDB.SubscriptionsReader, opts},
-      {ExESDB.SubscriptionsWriter, opts}
+      {ExESDB.SubscriptionsWriter, opts},
+      {ExESDB.SubscriptionsTracker, opts}
     ]
 
     Supervisor.init(children, strategy: :one_for_one)

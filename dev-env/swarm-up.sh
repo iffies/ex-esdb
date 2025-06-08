@@ -6,7 +6,7 @@
 
 ## CACHES
 echo "Recreating caches folder"
-rm -rf /volume/caches
+sudo rm -rf /volume/caches
 sudo mkdir -p /volume/caches
 # ExESDB
 echo "Recreating ExESDB data folders"
@@ -31,6 +31,6 @@ docker swarm init
 docker stack rm ex-esdb
 
 docker stack deploy \
-  -c deploy-ex-esdb-clique1.yaml \
+  -c ex-esdb-swarm.yaml \
   -d \
   ex-esdb

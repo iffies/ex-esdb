@@ -17,7 +17,7 @@ defmodule ExESDB.System do
 
   @impl true
   def init(opts) do
-    Logger.warning("#{Themes.system(self())} is UP")
+    IO.puts("#{Themes.system(self())} is UP")
 
     children = [
       add_pub_sub(opts),

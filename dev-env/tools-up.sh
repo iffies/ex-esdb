@@ -13,9 +13,16 @@ sudo chown "$USER" -R /volume/
 docker-compose -f livebook.yml \
   -f excalidraw.yml \
   -f networks.yml \
+  -p tools \
+  --profile tools \
   down
 
 docker-compose -f livebook.yml \
   -f excalidraw.yml \
   -f networks.yml \
-  up --remove-orphans --build -d
+  -p tools \
+  --profile tools \
+  up \
+  --remove-orphans \
+  --build \
+  -d

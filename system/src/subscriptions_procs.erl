@@ -1,0 +1,55 @@
+-module(subscriptions_procs).
+
+-export([put_on_create_func/1, put_on_delete_func/1, on_create_key/0, on_delete_key/0]).
+
+on_create_key() ->
+  [procs, subscriptions, on_create].
+
+on_delete_key() ->
+  [procs, subscriptions, on_delete].
+
+put_on_create_func(Store) ->
+  case khepri:exists(Store, on_create_key()) of
+    true ->
+      ok;
+    false ->
+      ok =
+        khepri:put(Store,
+                   on_create_key(),
+                   fun(Props) ->
+                      case maps:get(path, Props, undefined) of
+                        undefined -> ok;
+                        Path ->
+                          case subscriptions_store:get_subscription(Store, Path) of
+                            nil -> ok;
+                            Subscription ->
+                              tracker_group:notify_created(Store, subscriptions, Subscription),
+                              ok
+                          end
+                      end
+                   end),
+      ok
+  end.
+
+put_on_delete_func(Store) ->
+  case khepri:exists(Store, on_delete_key()) of
+    true ->
+      ok;
+    false ->
+      ok =
+        khepri:put(Store,
+                   on_delete_key(),
+                   fun(Props) ->
+                      case maps:get(path, Props, undefined) of
+                        undefined -> ok;
+                        Path ->
+                          case subscriptions_store:get_subscription(Store, Path) of
+                            nil -> ok;
+                            Subscription ->
+                              tracker_group:notify_deleted(Store, subscriptions, Subscription),
+                              ok
+                          end
+                      end
+                   end),
+      ok
+  end.

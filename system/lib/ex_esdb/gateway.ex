@@ -222,7 +222,6 @@ defmodule ExESDB.Gateway do
   end
 
   ############# PLUMBING #############
-
   def child_spec(opts),
     do: %{
       id: __MODULE__,

@@ -5,6 +5,8 @@ services:
       context: ./backend/livebook
     container_name: livebook
     hostname: livebook
+    profiles:
+      - tools
     networks:
       - dev-net
     ports:

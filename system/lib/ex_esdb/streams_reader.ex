@@ -4,6 +4,7 @@ defmodule ExESDB.StreamsReader do
   """
   use GenServer
   require Logger
+  alias ExESDB.Themes, as: Themes
 
   alias ExESDB.StreamsHelper, as: Helper
 
@@ -81,6 +82,7 @@ defmodule ExESDB.StreamsReader do
 
   @impl true
   def init(opts) do
+    IO.puts("#{Themes.streams_reader(self())} is UP.")
     {:ok, opts}
   end
 

@@ -17,7 +17,7 @@ defmodule ExESDB.Streams do
 
   @impl true
   def init(opts) do
-    Logger.warning("#{Themes.streams(self())} is UP.")
+    IO.puts("#{Themes.streams(self())} is UP.")
 
     children = [
       {ExESDB.StreamsReader, opts},

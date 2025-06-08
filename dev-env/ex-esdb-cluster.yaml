@@ -45,6 +45,8 @@ services:
     build:
       context: ../system
     hostname: node0
+    profiles:
+      - cluster
     container_name: ex-esdb0
     networks:
       - ex-esdb-net
@@ -62,6 +64,8 @@ services:
       context: ../system
     hostname: node1
     container_name: ex-esdb1
+    profiles:
+      - cluster
     networks:
       - ex-esdb-net
     volumes:
@@ -81,6 +85,8 @@ services:
       context: ../system
     hostname: node2
     container_name: ex-esdb2
+    profiles:
+      - cluster
     networks:
       - ex-esdb-net
     volumes:
@@ -100,6 +106,8 @@ services:
       context: ../system
     hostname: node3
     container_name: ex-esdb3
+    profiles:
+      - cluster
     networks:
       - ex-esdb-net
     volumes:
@@ -119,6 +127,8 @@ services:
       context: ../system
     hostname: node4
     container_name: ex-esdb4
+    profiles:
+      - cluster
     networks:
       - ex-esdb-net
     volumes:

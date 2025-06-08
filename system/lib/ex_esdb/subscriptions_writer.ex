@@ -83,7 +83,7 @@ defmodule ExESDB.SubscriptionsWriter do
   ######## PLUMBING ############
   @impl true
   def init(opts) do
-    Logger.warning("#{Themes.subscriptions_writer(self())} is UP.")
+    IO.puts("#{Themes.subscriptions_writer(self())} is UP.")
     {:ok, opts}
   end
 

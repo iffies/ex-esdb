@@ -1,12 +1,21 @@
 -module(emitter_group).
 
 -export([join/3, members/2, broadcast/3, group_key/2, topic/2, emitter_name/2,
-         emitter_name/3, persist_emitters/3]).
+         emitter_name/3, persist_emitters/3, setup_emitters/4]).
+
+-spec setup_emitters(Store :: khepri:store(),
+                     Id :: string(),
+                     Filter :: khepri:filter(),
+                     PoolSize :: integer()) ->
+                      list().
+setup_emitters(Store, Id, Filter, PoolSize) ->
+  ok = streams:setup_when_new_event(Store, Id, Filter),
+  Emitters = persist_emitters(Store, Id, PoolSize),
+  Emitters.
 
 -spec join(Store :: atom(), Id :: string(), PidOrPids :: pid() | [pid()]) -> ok.
 join(Store, Id, PidOrPids) when is_atom(Store) ->
   Group = group_key(Store, Id),
-  logger:warning("JOINING ~p", [Group]),
   ok = pg:join('Elixir.Phoenix.PubSub', Group, PidOrPids),
   ok.
 

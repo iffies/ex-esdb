@@ -48,7 +48,7 @@ defmodule ExESDB.SubscriptionsReader do
 
   @impl true
   def init(opts) do
-    Logger.warning("#{Themes.subscriptions_reader(self())} is UP")
+    IO.puts("#{Themes.subscriptions_reader(self())} is UP")
     {:ok, opts}
   end
 

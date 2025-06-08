@@ -1,11 +1,42 @@
 defmodule ExESDB.Leader do
   @moduledoc """
+    This module supervises the Leader Subsystem.
+  """
+  use Supervisor
+  require Logger
+  alias ExESDB.Themes, as: Themes
+  ############### PlUMBIng ############
+  #
+  def start_link(opts),
+    do:
+      Supervisor.start_link(
+        __MODULE__,
+        opts,
+        name: __MODULE__
+      )
+
+  @impl true
+  def init(config) do
+    IO.puts("#{Themes.leader(self())} is UP!")
+    Process.flag(:trap_exit, true)
+
+    children = [
+      {ExESDB.LeaderWorker, config},
+      {ExESDB.SubscriptionsTracker, config}
+    ]
+
+    Supervisor.init(children, strategy: :one_for_one)
+  end
+end
+
+defmodule ExESDB.LeaderWorker do
+  @moduledoc """
     This module contains the leader's reponsibilities for the cluster.
   """
   use GenServer
   require Logger
-  alias ExESDB.Themes, as: Themes
   alias ExESDB.SubscriptionsReader, as: SubsR
+  alias ExESDB.Themes, as: Themes
   alias ExESDB.Emitters
   ############ API ############
   def activate(store),
@@ -15,8 +46,8 @@ defmodule ExESDB.Leader do
         {:activate, store}
       )
 
+  ########## HANDLE_CAST ##########
   @impl true
-  ########## CALLBACKS ##########
   def handle_cast({:activate, store}, state) do
     IO.puts("🚀🚀 Activating LEADER #{inspect(node())} 🚀🚀")
 
@@ -29,13 +60,31 @@ defmodule ExESDB.Leader do
 
     subscriptions
     |> Enum.each(fn {_, subscription} ->
-      IO.puts("😎😎 Starting emitter for #{inspect(subscription)} 😎😎")
-
       store
       |> Emitters.start_emitter(subscription)
     end)
 
     {:noreply, state}
+  end
+
+  @impl true
+  def handle_cast(msg, state) do
+    Logger.warning("Leader received unexpected CAST: #{inspect(msg)}")
+    {:noreply, state}
+  end
+
+  ################ HANDLE_INFO ############
+  @impl true
+  def handle_info(msg, state) do
+    Logger.warning("Leader received unexpected INFO: #{inspect(msg)}")
+    {:noreply, state}
+  end
+
+  ############# HANDLE_CALL ##########
+  @impl true
+  def handle_call(msg, _from, state) do
+    Logger.warning("Leader received unexpected CALL: #{inspect(msg)}")
+    {:reply, :ok, state}
   end
 
   ############# PLUMBING #############
@@ -56,6 +105,7 @@ defmodule ExESDB.Leader do
 
   @impl true
   def init(config) do
+    IO.puts("#{Themes.leader(self())} is UP!")
     Process.flag(:trap_exit, true)
     {:ok, config}
   end

@@ -6,6 +6,7 @@ defmodule ExESDB.StreamsWriter do
   use GenServer
 
   alias ExESDB.StreamsHelper, as: Helper
+  alias ExESDB.Themes, as: Themes
 
   ############ INTERNALS ############
   defp handle_transaction_result({:ok, {:commit, result}}), do: {:ok, result}
@@ -25,10 +26,7 @@ defmodule ExESDB.StreamsWriter do
           fn event, version ->
             new_version = version + 1
             padded_version = Helper.pad_version(new_version, 6)
-
-            now =
-              DateTime.utc_now()
-
+            now = DateTime.utc_now()
             created = now
 
             created_epoch =
@@ -106,6 +104,7 @@ defmodule ExESDB.StreamsWriter do
   ############ PLUMBING ############
   @impl true
   def init(opts) do
+    IO.puts("#{Themes.streams_writer(self())} is UP.")
     {:ok, opts}
   end
 

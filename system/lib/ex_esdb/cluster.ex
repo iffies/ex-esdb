@@ -4,10 +4,9 @@ defmodule ExESDB.Cluster do
 
   require Logger
 
-  alias ExESDB.Themes, as: Themes
-
-  alias ExESDB.Options, as: Opts
   alias ExESDB.Leader, as: Leader
+  alias ExESDB.Options, as: Opts
+  alias ExESDB.Themes, as: Themes
 
   defp ping?(node) do
     case :net_adm.ping(node) do
@@ -91,7 +90,9 @@ defmodule ExESDB.Cluster do
       state
       |> Keyword.get(:current_leader)
 
-    store = state[:store_id]
+    store =
+      state
+      |> Keyword.get(:store_id)
 
     {_, leader_node} =
       :ra_leaderboard.lookup_leader(store)
@@ -101,7 +102,7 @@ defmodule ExESDB.Cluster do
       |> Keyword.put(:current_leader, leader_node)
 
     if node() == leader_node && current_leader != leader_node do
-      IO.puts("⚠️⚠️ I AM ELECTED LEADER! ⚠️⚠️")
+      IO.puts("⚠️⚠️ FOLLOW THE LEADER! ⚠️⚠️")
 
       store
       |> Leader.activate()
@@ -112,23 +113,17 @@ defmodule ExESDB.Cluster do
   end
 
   @impl true
-  def handle_info({:leader_changed, old_leader, new_leader}, state) do
-    Logger.alert("!! LEADER has changed: [#{inspect(old_leader)}] ~> [#{inspect(new_leader)}] !!")
-    {:noreply, state}
-  end
-
-  @impl true
   def handle_info({:DOWN, _ref, :process, pid, reason}, state) do
     state[:store_id]
     |> leave()
 
-    Logger.warning("#{Themes.cluster(pid)} going down with reason: #{inspect(reason)}")
+    IO.puts("🔻🔻 #{Themes.cluster(pid)} going down with reason: #{inspect(reason)} 🔻🔻")
     {:noreply, state}
   end
 
   @impl true
   def handle_info({:EXIT, pid, reason}, state) do
-    Logger.warning("#{Themes.cluster(pid)} exited with reason: #{inspect(reason)}")
+    IO.puts("#{Themes.cluster(pid)} exited with reason: #{inspect(reason)}")
 
     state[:store_id]
     |> leave()
@@ -156,7 +151,7 @@ defmodule ExESDB.Cluster do
   def init(config) do
     timeout = config[:timeout] || 1000
     state = Keyword.put(config, :timeout, timeout)
-    Logger.warning("#{Themes.cluster(self())} is UP")
+    IO.puts("#{Themes.cluster(self())} is UP")
     Process.flag(:trap_exit, true)
     Process.send_after(self(), :join, timeout)
     Process.send_after(self(), :members, 2 * timeout)
