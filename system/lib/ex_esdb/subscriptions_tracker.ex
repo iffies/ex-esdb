@@ -12,8 +12,9 @@ defmodule ExESDB.SubscriptionsTracker do
   """
   use GenServer
 
-  require ExESDB.Themes, as: Themes
+  alias ExESDB.Cluster, as: Cluster
   alias ExESDB.Emitters, as: Emitters
+  alias ExESDB.Themes, as: Themes
 
   ########### HANDLE_INFO ###########
   @impl GenServer
@@ -21,8 +22,10 @@ defmodule ExESDB.SubscriptionsTracker do
     IO.puts("Subscription #{inspect(data)} registered")
     store = state[:store_id]
 
-    store
-    |> Emitters.start_emitter(data)
+    if Cluster.leader?(store) do
+      store
+      |> Emitters.start_emitter(data)
+    end
 
     {:noreply, state}
   end
@@ -53,11 +56,12 @@ defmodule ExESDB.SubscriptionsTracker do
   @impl GenServer
   def init(opts) do
     Process.flag(:trap_exit, true)
-    store = opts[:store_id]
+    store = Keyword.get(opts, :store_id)
     IO.puts("#{Themes.subscriptions_tracker(self())} is UP.")
 
-    store
-    |> :subscriptions.setup_tracking(self())
+    :ok =
+      store
+      |> :subscriptions.setup_tracking(self())
 
     {:ok, opts}
   end

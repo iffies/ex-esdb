@@ -90,14 +90,14 @@ defmodule ExESDB.MixProject do
       {:eunit_formatters, "~> 0.5", only: [:test], runtime: false},
       {:mox, "~> 1.0", only: [:test], runtime: false},
       {:jason, "~> 1.4", optional: true},
-      {:horde, "~> 0.9"},
       {:phoenix_pubsub, "~> 2.1"},
       {:khepri, "~> 0.17"},
       {:protobuf, "~> 0.14"},
       {:gen_retry, "~> 1.4"},
       {:uuidv7, "~> 1.0"},
       {:elixir_uuid, "~> 1.2"},
-      {:commanded, "~> 1.4"}
+      {:commanded, "~> 1.4"},
+      {:swarm, "~> 3.4"}
     ]
   end
 

@@ -14,15 +14,18 @@ defmodule ExESDB.App do
   @impl true
   def start(_type, _args) do
     opts = Options.app_env()
+    store_id = opts[:store_id]
+    Logger.warning("Attempting to start ExESDB with otions: #{inspect(opts, pretty: true)}")
 
     children = [
       {ExESDB.System, opts}
     ]
 
-    IO.puts("#{Themes.app(self())} is UP.")
-
     opts = [strategy: :one_for_one, name: ExESDB.Supervisor]
-    Supervisor.start_link(children, opts)
+    res = Supervisor.start_link(children, opts)
+
+    IO.puts("#{Themes.app(self())} is UP for store #{inspect(store_id)}")
+    res
   end
 
   @impl true

@@ -6,7 +6,7 @@ defmodule ExESDB.Gateway do
       - get_events/4
       - get_streams/1
 
-      - subscribe/4
+      - add_subscription/4
       - subscribe_to/5
       - unsubscribe/2
       - delete_subscription/4
@@ -22,7 +22,6 @@ defmodule ExESDB.Gateway do
   alias ExESDB.StreamsWriter, as: StreamsW
   alias ExESDB.Themes, as: Themes
 
-  alias ExESDB.Emitters
   require Logger
 
   @type store :: atom()
@@ -69,67 +68,44 @@ defmodule ExESDB.Gateway do
       )
 
   @doc """
-    Create a transient subscription for a specific stream or for all streams.
+    Add a subscription.
   """
-  @spec subscribe(
-          store :: store,
-          type :: subscription_type,
-          selector :: selector_type,
-          subscription_name :: String.t()
-        ) :: :ok | {:error, error}
-  def subscribe(store, type, selector, subscription_name \\ "transient"),
-    do:
-      GenServer.cast(
-        __MODULE__,
-        {:subscribe, store, type, selector, subscription_name}
-      )
-
-  @spec subscribe_to(
+  @spec add_subscription(
           store :: store,
           type :: subscription_type,
           selector :: selector_type,
           subscription_name :: subscription_name,
-          subscriber :: pid,
+          subscriber :: pid | nil,
           start_from :: integer
         ) :: :ok | {:error, error}
-  def subscribe_to(
+  def add_subscription(
         store,
         type,
         selector,
-        subscription_name,
-        subscriber,
+        subscription_name \\ "transient",
+        subscriber \\ nil,
         start_from \\ 0
       ),
       do:
         GenServer.cast(
           __MODULE__,
-          {:subscribe_to, store, type, selector, subscription_name, subscriber, start_from}
+          {:add_subscription, store, type, selector, subscription_name, subscriber, start_from}
         )
-
-  @doc """
-    Unsubscribe from a subscription.
-  """
-  def unsubscribe(store, subscription_name),
-    do:
-      GenServer.cast(
-        __MODULE__,
-        {:unsubscribe, store, subscription_name}
-      )
 
   @doc """
     Delete a subscription.
   """
-  @spec delete_subscription(
+  @spec remove_subscription(
           store :: any,
           type :: subscription_type,
           selector :: selector_type,
           subscription_name :: subscription_name
         ) :: :ok | {:error, error}
-  def delete_subscription(store, type, selector \\ "$all", subscription_name \\ "transient"),
+  def remove_subscription(store, type, selector, subscription_name \\ "transient"),
     do:
       GenServer.cast(
         __MODULE__,
-        {:delete_subscription, store, type, selector, subscription_name}
+        {:remove_subscription, store, type, selector, subscription_name}
       )
 
   ############ HANDLE_CALL ############
@@ -170,23 +146,18 @@ defmodule ExESDB.Gateway do
   @impl GenServer
   def handle_cast({:append_events, store, stream_id, events}, state) do
     current_version =
-      StreamsH.get_version!(store, stream_id)
+      store
+      |> StreamsH.get_version!(stream_id)
 
-    StreamsW.append_events(store, stream_id, current_version, events)
-    {:noreply, state}
-  end
-
-  @impl true
-  def handle_cast({:unsubscribe, store, subscription_name}, state) do
     store
-    |> :khepri.delete!([:subscriptions, subscription_name])
+    |> StreamsW.append_events(stream_id, current_version, events)
 
     {:noreply, state}
   end
 
   @impl true
   def handle_cast(
-        {:delete_subscription, store, type, selector, subscription_name},
+        {:remove_subscription, store, type, selector, subscription_name},
         state
       ) do
     store
@@ -197,19 +168,11 @@ defmodule ExESDB.Gateway do
 
   @impl true
   def handle_cast(
-        {:subscribe_to, store, type, selector, subscription_name, subscriber, start_from},
+        {:add_subscription, store, type, selector, subscription_name, subscriber, start_from},
         state
       ) do
     store
     |> SubsW.put_subscription(type, selector, subscription_name, start_from, subscriber)
-
-    {:noreply, state}
-  end
-
-  @impl true
-  def handle_cast({:subscribe, store, type, selector, subscription_name}, state) do
-    store
-    |> SubsW.put_subscription(type, selector, subscription_name)
 
     {:noreply, state}
   end

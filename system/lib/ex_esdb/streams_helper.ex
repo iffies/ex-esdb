@@ -40,8 +40,7 @@ defmodule ExESDB.StreamsHelper do
      - `stream_id` is the name of the stream.
 
     ## Returns
-     - `{:ok, version}`  if successful.
-     - `{:error, reason}` if unsuccessful.
+     - `version`  or `0` if the stream does not exist.
   """
   def get_version!(store, stream_id) do
     case store

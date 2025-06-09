@@ -132,11 +132,15 @@ defmodule ExESDB.EmitterWorker do
 
   @impl true
   def handle_info({:forward_to_local, topic, event}, pubsub) do
+    %{event_type: event_type, event_stream_id: stream_id} = event
+
     pubsub
     |> emit(topic, event)
 
-    Logger.warning(
-      "#{Themes.emitter_worker(self())} FORWARD_TO_LOCAL #{inspect(event, pretty: true)} => #{inspect(topic, pretty: true)}"
+    msg = "FORWARD"
+
+    IO.puts(
+      "#{Themes.emitter_worker(msg)} #{inspect(stream_id, pretty: true)}:#{inspect(event_type, pretty: true)} => #{inspect(topic, pretty: true)}"
     )
 
     {:noreply, pubsub}

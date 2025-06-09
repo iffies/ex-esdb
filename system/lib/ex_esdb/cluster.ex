@@ -15,6 +15,13 @@ defmodule ExESDB.Cluster do
     end
   end
 
+  def leader?(store) do
+    {_, leader_node} =
+      :ra_leaderboard.lookup_leader(store)
+
+    node() == leader_node
+  end
+
   defp get_medal(leader, member),
     do: if(member == leader, do: "🏆", else: "🥈")
 
@@ -78,7 +85,7 @@ defmodule ExESDB.Cluster do
         end)
     end
 
-    Process.send_after(self(), :members, 2 * state[:timeout])
+    Process.send_after(self(), :members, 5 * state[:timeout])
     {:noreply, state}
   end
 
@@ -94,21 +101,25 @@ defmodule ExESDB.Cluster do
       state
       |> Keyword.get(:store_id)
 
-    {_, leader_node} =
-      :ra_leaderboard.lookup_leader(store)
-
     new_state =
-      state
-      |> Keyword.put(:current_leader, leader_node)
+      case :ra_leaderboard.lookup_leader(store) do
+        {_, leader_node} ->
+          if node() == leader_node && current_leader != leader_node do
+            IO.puts("⚠️⚠️ FOLLOW THE LEADER! ⚠️⚠️")
 
-    if node() == leader_node && current_leader != leader_node do
-      IO.puts("⚠️⚠️ FOLLOW THE LEADER! ⚠️⚠️")
+            store
+            |> LeaderWorker.activate()
+          end
 
-      store
-      |> LeaderWorker.activate()
-    end
+          state
+          |> Keyword.put(:current_leader, leader_node)
 
-    Process.send_after(self(), :check_leader, 2 * timeout)
+        :undefined ->
+          IO.puts("⚠️⚠️ No leader found. ⚠️⚠️")
+          state
+      end
+
+    Process.send_after(self(), :check_leader, timeout)
     {:noreply, new_state}
   end
 
@@ -154,8 +165,8 @@ defmodule ExESDB.Cluster do
     IO.puts("#{Themes.cluster(self())} is UP")
     Process.flag(:trap_exit, true)
     Process.send_after(self(), :join, timeout)
-    Process.send_after(self(), :members, 2 * timeout)
-    Process.send_after(self(), :check_leader, 5 * timeout)
+    Process.send_after(self(), :members, 10 * timeout)
+    Process.send_after(self(), :check_leader, timeout)
     {:ok, state}
   end
 

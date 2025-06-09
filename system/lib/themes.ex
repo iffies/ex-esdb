@@ -3,7 +3,7 @@ defmodule ExESDB.Themes do
   alias BeamCampus.ColorFuncs, as: CF
 
   def app(pid),
-    do: "APP [#{CF.black_on_blue()}#{inspect(pid)}#{CF.reset()}]"
+    do: "ExESDB APP [#{CF.black_on_blue()}#{inspect(pid)}#{CF.reset()}]"
 
   def system(pid),
     do: "SYSTEM [#{CF.black_on_magenta()}#{inspect(pid)}#{CF.reset()}]"
@@ -62,4 +62,12 @@ defmodule ExESDB.Themes do
   ########## GATEWAY ###############
   def gateway(pid),
     do: "GATEWAY [#{CF.bright_cyan_on_black()}#{inspect(pid)}#{CF.reset()}]"
+
+  ################ CONSUMER ################
+  def consumer(pid),
+    do: "CONSUMER [#{CF.bright_yellow_on_black()}#{inspect(pid)}#{CF.reset()}]"
+
+  ################ PRODUCER ################
+  def producer(pid),
+    do: "PRODUCER [#{CF.bright_green_on_black()}#{inspect(pid)}#{CF.reset()}]"
 end
