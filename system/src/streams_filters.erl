@@ -4,7 +4,6 @@
 
 -include_lib("../deps/khepri/include/khepri.hrl").
 
--spec by_stream(Stream :: string()) -> khepri:filter() | {error, term()}.
 by_stream(<<"$all">>) ->
   khepri_evf:tree([streams,
                    #if_path_matches{regex = any},
@@ -25,11 +24,9 @@ by_stream(Stream) ->
                       #{on_actions => [create]})
   end.
 
--spec by_event_type(EventType :: string()) -> khepri:filter().
 by_event_type(EventType) ->
   by_event_pattern(#{event_type => EventType}).
 
--spec by_event_pattern(EventPattern :: map()) -> khepri:filter().
 by_event_pattern(EventPattern) ->
   khepri_evf:tree([streams,
                    #if_path_matches{regex = any},
@@ -39,7 +36,6 @@ by_event_pattern(EventPattern) ->
                               #if_data_matches{pattern = EventPattern}]}],
                   #{on_actions => [create]}).
 
--spec by_event_payload(PayloadPattern :: map()) -> khepri:filter().
 by_event_payload(PayloadPattern) ->
   khepri_evf:tree([streams,
                    #if_path_matches{regex = any},

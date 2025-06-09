@@ -13,18 +13,23 @@ defmodule ExESDB.SubscriptionsTracker do
   use GenServer
 
   require ExESDB.Themes, as: Themes
+  alias ExESDB.Emitters, as: Emitters
 
   ########### HANDLE_INFO ###########
   @impl GenServer
-  def handle_info({:subscription_created, subscription}, state) do
-    IO.puts("Subscription #{inspect(subscription)} registered")
-    # TODO: Start Emitters
+  def handle_info({:feature_created, :subscriptions, data}, state) do
+    IO.puts("Subscription #{inspect(data)} registered")
+    store = state[:store_id]
+
+    store
+    |> Emitters.start_emitter(data)
+
     {:noreply, state}
   end
 
   @impl GenServer
-  def handle_info({:subscription_deleted, subscription}, state) do
-    IO.puts("Subscription #{inspect(subscription)} deleted")
+  def handle_info({:feature_deleted, :subscriptions, data}, state) do
+    IO.puts("Subscription #{inspect(data)} deleted")
     # TODO: Stop Emitters
     {:noreply, state}
   end
@@ -34,7 +39,7 @@ defmodule ExESDB.SubscriptionsTracker do
     store = state[:store_id]
 
     store
-    |> :tracker_group.leave(self())
+    |> :tracker_group.leave(:subscriptions, self())
 
     {:noreply, state}
   end
@@ -58,10 +63,12 @@ defmodule ExESDB.SubscriptionsTracker do
   end
 
   @impl true
-  def terminate(reason, _state) do
-    Logger.warning(
-      "#{Themes.subscriptions_tracker(self())} terminating with reason: #{inspect(reason)}"
-    )
+  def terminate(reason, state) do
+    IO.puts("#{Themes.subscriptions_tracker(self())} terminating with reason: #{inspect(reason)}")
+    store = state[:store_id]
+
+    store
+    |> :tracker_group.leave(:subscriptions, self())
 
     :ok
   end

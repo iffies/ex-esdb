@@ -2,21 +2,24 @@
 
 -export([put_on_new_event/2, get_on_new_event/2]).
 
+on_new_event(Topic) ->
+  [procs, on_new_event, Topic].
+
 -spec get_on_new_event(Store :: khepri:store(), Id :: string()) -> ok | {error, term()}.
 get_on_new_event(Store, Id) when is_atom(Store) ->
   Topic = emitter_group:topic(Store, Id),
-  khepri:get(Store, [procs, on_new_event, Topic]).
+  khepri:get(Store, on_new_event(Topic)).
 
 -spec put_on_new_event(Store :: khepri:store(), Id :: string()) -> ok | {error, term()}.
 put_on_new_event(Store, Id) when is_atom(Store) ->
   Topic = emitter_group:topic(Store, Id),
-  case khepri:exists(Store, [procs, on_new_event, Topic]) of
+  case khepri:exists(Store, on_new_event(Topic)) of
     true ->
       ok;
     false ->
       ok =
         khepri:put(Store,
-                   [procs, on_new_event, Topic],
+                   on_new_event(Topic),
                    fun(Props) ->
                       case maps:get(path, Props, undefined) of
                         undefined -> ok;

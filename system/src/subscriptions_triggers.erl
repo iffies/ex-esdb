@@ -12,13 +12,10 @@ register_on_created(Store) ->
       props_to_return =>
         [payload, payload_version, child_list_version, child_list_length, child_names],
       include_root_props => true},
-  khepri:register_trigger(Store,
-                          "on_subscription_created",
-                          Filter,
-                          subscriptions_procs:on_create_key(),
-                          PropOpts).
+  Id = binary_to_atom(<<"on_subscription_created">>, utf8),
+  khepri:register_trigger(Store, Id, Filter, subscriptions_procs:on_create_key(), PropOpts).
 
--spec register_on_deleted(Store :: khepri:store()) -> ok | {error, term()}.
+-spec register_on_deleted(Store :: atom()) -> ok | {error, term()}.
 register_on_deleted(Store) ->
   Filter = feature_filters:when_deleted(subscriptions),
   PropOpts =
@@ -26,8 +23,5 @@ register_on_deleted(Store) ->
       props_to_return =>
         [payload, payload_version, child_list_version, child_list_length, child_names],
       include_root_props => true},
-  khepri:register_trigger(Store,
-                          "on_subscription_deleted",
-                          Filter,
-                          subscriptions_procs:on_delete_key(),
-                          PropOpts).
+  Id = binary_to_atom(<<"on_subscription_deleted">>, utf8),
+  khepri:register_trigger(Store, Id, Filter, subscriptions_procs:on_delete_key(), PropOpts).

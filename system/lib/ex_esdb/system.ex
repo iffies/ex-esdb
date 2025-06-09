@@ -23,7 +23,7 @@ defmodule ExESDB.System do
       add_pub_sub(opts),
       {ExESDB.Store, opts},
       {ExESDB.Cluster, opts},
-      {ExESDB.Leader, opts},
+      {ExESDB.LeaderSystem, opts},
       {ExESDB.Streams, opts},
       {ExESDB.Subscriptions, opts},
       {PartitionSupervisor, child_spec: DynamicSupervisor, name: ExESDB.EmitterPools},

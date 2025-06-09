@@ -12,9 +12,9 @@ defmodule ExESDB.Emitters do
   #   DynamicSupervisor.init(strategy: :one_for_one)
   # end
 
-  defp build_filter(selector, :by_stream), do: :streams_filter.by_stream(selector)
-  defp build_filter(selector, :by_event_type), do: :streams_filter.by_event_type(selector)
-  defp build_filter(selector, :by_event_pattern), do: :streams_filter.by_event_pattern(selector)
+  defp build_filter(selector, :by_stream), do: :streams_filters.by_stream(selector)
+  defp build_filter(selector, :by_event_type), do: :streams_filters.by_event_type(selector)
+  defp build_filter(selector, :by_event_pattern), do: :streams_filters.by_event_pattern(selector)
 
   def start_emitter(
         store,
@@ -52,22 +52,23 @@ defmodule ExESDB.EmitterPool do
   require Logger
   alias ExESDB.Themes, as: Themes
 
-  def start_link({store, id, pubsub, pool_size, filter}) do
-    Supervisor.start_link(__MODULE__, {store, id, pubsub, pool_size, filter},
-      name: :"#{store}:#{id}_emitter_pool"
+  def start_link({store, sub_topic, pubsub, pool_size, filter}) do
+    Supervisor.start_link(__MODULE__, {store, sub_topic, pubsub, pool_size, filter},
+      name: :"#{store}:#{sub_topic}_emitter_pool"
     )
   end
 
   @impl Supervisor
-  def init({store, id, pubsub, pool_size, filter}) do
+  def init({store, sub_topic, pubsub, pool_size, filter}) do
     scheduler_id = :erlang.system_info(:scheduler_id)
 
     emitters =
-      :emitter_group.setup_emitters(store, id, filter, pool_size)
+      store
+      |> :emitter_group.setup_emitters(sub_topic, filter, pool_size)
 
     children =
       for emitter <- emitters do
-        Supervisor.child_spec({ExESDB.EmitterWorker, {store, id, pubsub, emitter}},
+        Supervisor.child_spec({ExESDB.EmitterWorker, {store, sub_topic, pubsub, emitter}},
           id: emitter
         )
       end

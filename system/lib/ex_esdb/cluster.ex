@@ -4,7 +4,7 @@ defmodule ExESDB.Cluster do
 
   require Logger
 
-  alias ExESDB.Leader, as: Leader
+  alias ExESDB.LeaderWorker, as: LeaderWorker
   alias ExESDB.Options, as: Opts
   alias ExESDB.Themes, as: Themes
 
@@ -105,7 +105,7 @@ defmodule ExESDB.Cluster do
       IO.puts("⚠️⚠️ FOLLOW THE LEADER! ⚠️⚠️")
 
       store
-      |> Leader.activate()
+      |> LeaderWorker.activate()
     end
 
     Process.send_after(self(), :check_leader, 2 * timeout)

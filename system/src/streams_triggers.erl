@@ -2,9 +2,9 @@
 
 -export([register_on_new_event/3]).
 
--spec register_on_new_event(Store :: khepri:store(),
+-spec register_on_new_event(Store :: khepri:store_id(),
                             Id :: string(),
-                            Filter :: khepri:filter()) ->
+                            Filter :: khepri_evf:event_filter()) ->
                              ok | {error, term()}.
 register_on_new_event(Store, Id, Filter) ->
   Topic = emitter_group:topic(Store, Id),
@@ -13,5 +13,5 @@ register_on_new_event(Store, Id, Filter) ->
       props_to_return =>
         [payload, payload_version, child_list_version, child_list_length, child_names],
       include_root_props => true},
-  io:puts("Registering [procs, on_new_event, ~s] FILTER: ~p~n", [Topic, Filter]),
-  khepri:register_trigger(Store, Id, Filter, [procs, on_new_event, Topic], PropOpts).
+  TriggerId = binary_to_atom(Id, utf8),
+  khepri:register_trigger(Store, TriggerId, Filter, [procs, on_new_event, Topic], PropOpts).

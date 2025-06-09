@@ -20,6 +20,7 @@ defmodule ExESDB.Gateway do
   alias ExESDB.StreamsHelper, as: StreamsH
   alias ExESDB.StreamsReader, as: StreamsR
   alias ExESDB.StreamsWriter, as: StreamsW
+  alias ExESDB.Themes, as: Themes
 
   alias ExESDB.Emitters
   require Logger
@@ -199,24 +200,16 @@ defmodule ExESDB.Gateway do
         {:subscribe_to, store, type, selector, subscription_name, subscriber, start_from},
         state
       ) do
-    {:ok, sub} =
-      store
-      |> SubsW.put_subscription(type, selector, subscription_name, start_from, subscriber)
-
-    sub
-    |> Emitters.start_emitter()
+    store
+    |> SubsW.put_subscription(type, selector, subscription_name, start_from, subscriber)
 
     {:noreply, state}
   end
 
   @impl true
   def handle_cast({:subscribe, store, type, selector, subscription_name}, state) do
-    {:ok, sub} =
-      store
-      |> SubsW.put_subscription(type, selector, subscription_name)
-
-    sub
-    |> Emitters.start_emitter()
+    store
+    |> SubsW.put_subscription(type, selector, subscription_name)
 
     {:noreply, state}
   end
@@ -241,6 +234,7 @@ defmodule ExESDB.Gateway do
 
   @impl true
   def init(opts) do
+    IO.puts("#{Themes.gateway(self())} is UP!")
     {:ok, opts}
   end
 end

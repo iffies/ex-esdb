@@ -26,9 +26,10 @@ members(Store, Id) when is_atom(Store) ->
 
 -spec random_emitter(Emitters :: [pid()]) -> {error, {no_such_group, term()}} | pid().
 random_emitter(Emitters) ->
-  Size = tuple_size(Emitters),
+  EmittersTuple = list_to_tuple(Emitters),
+  Size = tuple_size(EmittersTuple),
   Random = rand:uniform(Size),
-  erlang:element(Random, Emitters).
+  erlang:element(Random, EmittersTuple).
 
 -spec broadcast(Store :: atom(), Id :: string(), Event :: map()) -> ok | {error, term()}.
 broadcast(Store, Id, Event) when is_atom(Store) ->
@@ -37,15 +38,14 @@ broadcast(Store, Id, Event) when is_atom(Store) ->
     {error, {no_such_group, _}} ->
       logger:error("NO_GROUP [~p]~n", [Topic]),
       {error, no_such_group};
-    Members ->
-      lists:foreach(fun(Pid) ->
-                       Message =
-                         if node(Pid) =:= node() -> forward_to_local_msg(Topic, Event);
-                            true -> broadcast_msg(Topic, Event)
-                         end,
-                       Pid ! Message
-                    end,
-                    Members)
+    EmitterPid ->
+      Message =
+        if node(EmitterPid) =:= node() ->
+             forward_to_local_msg(Topic, Event);
+           true ->
+             broadcast_msg(Topic, Event)
+        end,
+      EmitterPid ! Message
   end.
 
 -spec forward_to_local_msg(Topic :: binary(), Event :: map()) -> tuple().

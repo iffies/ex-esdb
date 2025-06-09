@@ -40,7 +40,8 @@ defmodule ExESDB.SubscriptionsWriter do
   ############ CALLBACKS ############
   @impl true
   def handle_cast({:delete_subscription, store, type, selector, subscription_name}, state) do
-    key = Helper.subscriptions_key({type, selector, subscription_name})
+    key =
+      :subscriptions_store.key({type, selector, subscription_name})
 
     if store
        |> :khepri.exists!([:subscriptions, key]) do
@@ -57,9 +58,6 @@ defmodule ExESDB.SubscriptionsWriter do
         _from,
         state
       ) do
-    key =
-      Helper.subscriptions_key({type, selector, subscription_name})
-
     subscription =
       %{
         selector: selector,
@@ -69,15 +67,15 @@ defmodule ExESDB.SubscriptionsWriter do
         subscriber: subscriber
       }
 
+    key =
+      :subscriptions_store.key(subscription)
+
     store
-    |> :khepri.put(
-      [:subscriptions, key],
-      subscription
-    )
+    |> :subscriptions_store.put_subscription(subscription)
 
     {:reply,
      store
-     |> :khepri.get([:subscriptions, key]), state}
+     |> :subscriptions_store.get_subscription(key), state}
   end
 
   ######## PLUMBING ############

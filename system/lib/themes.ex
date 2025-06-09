@@ -29,11 +29,15 @@ defmodule ExESDB.Themes do
   def pubsub(pid),
     do: "PUBSUB [#{CF.black_on_cyan()}#{inspect(pid)}#{CF.reset()}]"
 
-  def leader(pid),
-    do: "LEADER [#{CF.black_on_bright_blue()}#{inspect(pid)}#{CF.reset()}]"
+  ############ LEADER SYSTEM ##############
+  def leader_system(pid),
+    do: "LEADER_SYSTEM [#{CF.black_on_magenta()}#{inspect(pid)}#{CF.reset()}]"
 
-  def gateway(pid),
-    do: "GATEWAY [#{CF.bright_cyan_on_black()}#{inspect(pid)}#{CF.reset()}]"
+  def leader_worker(pid),
+    do: "LEADER_WORKER [#{CF.black_on_magenta()}#{inspect(pid)}#{CF.reset()}]"
+
+  def subscriptions_tracker(msg),
+    do: "SUBSCRIPTIONS_TRACKER [#{CF.black_on_magenta()}#{inspect(msg)}#{CF.reset()}]"
 
   ######## SUBSCRIPTIONS ############
   def subscriptions(msg),
@@ -45,9 +49,6 @@ defmodule ExESDB.Themes do
   def subscriptions_writer(msg),
     do: "SUBSCRIPTIONS_WRITER [#{CF.black_on_white()}#{inspect(msg)}#{CF.reset()}]"
 
-  def subscriptions_tracker(msg),
-    do: "SUBSCRIPTIONS_TRACKER [#{CF.black_on_white()}#{inspect(msg)}#{CF.reset()}]"
-
   ########## STREAMS ###############
   def streams(msg),
     do: "STREAMS [#{CF.bright_yellow_on_blue()}#{inspect(msg)}#{CF.reset()}]"
@@ -57,4 +58,8 @@ defmodule ExESDB.Themes do
 
   def streams_writer(msg),
     do: "STREAMS_WRITER [#{CF.bright_yellow_on_blue()}#{inspect(msg)}#{CF.reset()}]"
+
+  ########## GATEWAY ###############
+  def gateway(pid),
+    do: "GATEWAY [#{CF.bright_cyan_on_black()}#{inspect(pid)}#{CF.reset()}]"
 end

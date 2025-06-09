@@ -31,8 +31,7 @@ defmodule ExESDB.Subscriptions do
 
     children = [
       {ExESDB.SubscriptionsReader, opts},
-      {ExESDB.SubscriptionsWriter, opts},
-      {ExESDB.SubscriptionsTracker, opts}
+      {ExESDB.SubscriptionsWriter, opts}
     ]
 
     Supervisor.init(children, strategy: :one_for_one)

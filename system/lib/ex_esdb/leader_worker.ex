@@ -1,34 +1,3 @@
-defmodule ExESDB.Leader do
-  @moduledoc """
-    This module supervises the Leader Subsystem.
-  """
-  use Supervisor
-  require Logger
-  alias ExESDB.Themes, as: Themes
-  ############### PlUMBIng ############
-  #
-  def start_link(opts),
-    do:
-      Supervisor.start_link(
-        __MODULE__,
-        opts,
-        name: __MODULE__
-      )
-
-  @impl true
-  def init(config) do
-    IO.puts("#{Themes.leader(self())} is UP!")
-    Process.flag(:trap_exit, true)
-
-    children = [
-      {ExESDB.LeaderWorker, config},
-      {ExESDB.SubscriptionsTracker, config}
-    ]
-
-    Supervisor.init(children, strategy: :one_for_one)
-  end
-end
-
 defmodule ExESDB.LeaderWorker do
   @moduledoc """
     This module contains the leader's reponsibilities for the cluster.
@@ -55,11 +24,16 @@ defmodule ExESDB.LeaderWorker do
       store
       |> SubsR.get_subscriptions()
 
-    if subscriptions |> Enum.empty?(),
-      do: IO.puts("😦😦 No subscriptions found. 😦😦")
+    case subscriptions
+         |> Enum.count() do
+      0 -> IO.puts("😦😦 No subscriptions found. 😦😦")
+      num -> IO.puts("😎😎 #{num} subscriptions found. 😎😎")
+    end
 
     subscriptions
-    |> Enum.each(fn {_, subscription} ->
+    |> Enum.each(fn {key, subscription} ->
+      IO.puts("🚀🚀 Starting Emitter for key #{inspect(key)} 🚀🚀")
+
       store
       |> Emitters.start_emitter(subscription)
     end)
@@ -105,7 +79,7 @@ defmodule ExESDB.LeaderWorker do
 
   @impl true
   def init(config) do
-    IO.puts("#{Themes.leader(self())} is UP!")
+    IO.puts("#{Themes.leader_worker(self())} is UP!")
     Process.flag(:trap_exit, true)
     {:ok, config}
   end
