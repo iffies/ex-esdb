@@ -148,7 +148,7 @@ defmodule ExESDB.MixProject do
       #      organization: "beam-campus",
       licenses: ["MIT"],
       links: %{
-        "Codeberg" => @source_url
+        "GitHub" => @source_url
       },
       source_url: @source_url
     ]
