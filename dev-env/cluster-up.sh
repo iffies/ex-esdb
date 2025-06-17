@@ -3,7 +3,10 @@
 ## CLEAR ALL DATA
 # echo "Clearing all data"
 # sudo rm -rf /volume
-docker-compose -f ex-esdb-cluster.yaml \
+docker-compose \
+  -f ex-esdb-volumes.yaml \
+  -f ex-esdb-network.yaml \
+  -f ex-esdb-cluster.yaml \
   --profile cluster \
   -p cluster \
   down
@@ -26,7 +29,10 @@ sudo mkdir -p \
 
 sudo chown "$USER" -R /volume/
 
-docker-compose -f ex-esdb-cluster.yaml \
+docker-compose \
+  -f ex-esdb-volumes.yaml \
+  -f ex-esdb-network.yaml \
+  -f ex-esdb-cluster.yaml \
   --profile cluster \
   -p cluster \
   up \

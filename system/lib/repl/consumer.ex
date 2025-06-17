@@ -28,8 +28,8 @@ defmodule ExESDB.Repl.Consumer do
   ############## PLUMBING ##############
   @impl true
   def init(args) do
-    topic = Keyword.get(args, :topic, "reg_gh:$all")
-    pubsub = Keyword.get(args, :pubsub, :ex_esdb_pubsub)
+    topic = topic(args)
+    pubsub = pubsub(args)
 
     pubsub
     |> Phoenix.PubSub.subscribe(topic)
@@ -38,7 +38,7 @@ defmodule ExESDB.Repl.Consumer do
   end
 
   def start_link(args) do
-    topic = Keyword.get(args, :topic, "reg_gh:$all")
+    topic = topic(args)
 
     GenServer.start_link(
       __MODULE__,
@@ -47,8 +47,14 @@ defmodule ExESDB.Repl.Consumer do
     )
   end
 
-  def start_consumer(args) do
-    topic = Keyword.get(args, :topic, "reg_gh:$all")
+  @spec start(keyword()) :: pid()
+  @doc """
+    Starts a consumer process for testing purposes.
+    ## Parameters
+      * `topic`: The topic to consume events from (string, default: `reg_gh:$all`).   
+  """
+  def start(args) do
+    topic = topic(args)
 
     case start_link(args) do
       {:ok, pid} ->
@@ -62,4 +68,7 @@ defmodule ExESDB.Repl.Consumer do
                Reason: #{inspect(reason)}"
     end
   end
+
+  defp topic(args), do: Keyword.get(args, :topic, "reg_gh:$all")
+  defp pubsub(args), do: Keyword.get(args, :pubsub, :ex_esdb_pubsub)
 end

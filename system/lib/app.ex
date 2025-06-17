@@ -5,6 +5,7 @@ defmodule ExESDB.App do
   use Application,
     otp_app: :ex_esdb
 
+  alias ExESDB.GatewayAPI, as: GatewayAPI
   alias ExESDB.Options, as: Options
   alias ExESDB.Themes, as: Themes
 
@@ -13,12 +14,12 @@ defmodule ExESDB.App do
 
   @impl true
   def start(_type, _args) do
-    opts = Options.app_env()
-    store_id = opts[:store_id]
-    Logger.warning("Attempting to start ExESDB with otions: #{inspect(opts, pretty: true)}")
+    config = Options.app_env()
+    store_id = config[:store_id]
+    Logger.warning("Attempting to start ExESDB with otions: #{inspect(config, pretty: true)}")
 
     children = [
-      {ExESDB.System, opts}
+      {ExESDB.System, config}
     ]
 
     opts = [strategy: :one_for_one, name: ExESDB.Supervisor]

@@ -7,10 +7,7 @@ defmodule ExESDB.Commanded.Adapter do
 
   require Logger
 
-  alias ExESDB.Snapshots, as: Snapshots
-  alias ExESDB.StreamsWriter, as: StreamsWriter
-  alias ExESDB.StreamsReader, as: StreamsReader
-  alias ExESDB.SubscriptionsWriter, as: SubscriptionsWriter
+  alias ExESDB.Gateway, as: Gateway
 
   alias ExESDB.Commanded.Mapper, as: Mapper
 
@@ -33,10 +30,7 @@ defmodule ExESDB.Commanded.Adapter do
         ) :: :ok | {:error, error()}
   @impl Commanded.EventStore.Adapter
   def ack_event(meta, pid, event) do
-    Logger.warning(
-      "ack_event/3 is not implemented for #{inspect(meta)}, #{inspect(pid)}, #{inspect(event)}"
-    )
-
+    Gateway.ack_event(meta, pid, event)
     :ok
   end
 

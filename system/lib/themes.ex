@@ -21,10 +21,13 @@ defmodule ExESDB.Themes do
     do: "MONITOR [#{CF.yellow_on_magenta()}#{inspect(pid)}#{CF.reset()}]"
 
   def emitter_pool(pid),
-    do: "EMITTER_POOL [#{CF.black_on_yellow()}#{inspect(pid)}#{CF.reset()}]"
+    do: "EMITTER_POOL [#{CF.yellow_on_black()}#{inspect(pid)}#{CF.reset()}]"
 
   def emitter_worker(pid),
     do: "EMITTER_WORKER [#{CF.yellow_on_black()}#{inspect(pid)}#{CF.reset()}]"
+
+  def persistent_emitter_worker(pid),
+    do: "PERSISTENT_EMITTER_WORKER [#{CF.yellow_on_black()}#{inspect(pid)}#{CF.reset()}]"
 
   def pubsub(pid),
     do: "PUBSUB [#{CF.black_on_cyan()}#{inspect(pid)}#{CF.reset()}]"
@@ -60,8 +63,14 @@ defmodule ExESDB.Themes do
     do: "STREAMS_WRITER [#{CF.bright_yellow_on_blue()}#{inspect(msg)}#{CF.reset()}]"
 
   ########## GATEWAY ###############
-  def gateway(pid),
-    do: "GATEWAY [#{CF.bright_cyan_on_black()}#{inspect(pid)}#{CF.reset()}]"
+  def gateway_worker(pid),
+    do: "GATEWAY_WORKER [#{CF.bright_cyan_on_black()}#{inspect(pid)}#{CF.reset()}]"
+
+  def gateway_supervisor(pid),
+    do: "GATEWAY_SUPERVISOR [#{CF.bright_cyan_on_black()}#{inspect(pid)}#{CF.reset()}]"
+
+  def gateway_api(pid),
+    do: "GATEWAY_API [#{CF.bright_cyan_on_black()}#{inspect(pid)}#{CF.reset()}]"
 
   ################ CONSUMER ################
   def consumer(pid),

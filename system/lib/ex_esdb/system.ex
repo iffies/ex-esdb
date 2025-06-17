@@ -27,7 +27,7 @@ defmodule ExESDB.System do
       {ExESDB.Streams, opts},
       {ExESDB.Subscriptions, opts},
       {PartitionSupervisor, child_spec: DynamicSupervisor, name: ExESDB.EmitterPools},
-      {ExESDB.Gateway, opts}
+      {ExESDB.GatewaySupervisor, opts}
     ]
 
     :os.set_signal(:sigterm, :handle)

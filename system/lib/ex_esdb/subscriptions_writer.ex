@@ -4,7 +4,6 @@ defmodule ExESDB.SubscriptionsWriter do
   """
   use GenServer
 
-  alias ExESDB.SubscriptionsHelper, as: Helper
   require Logger
   alias ExESDB.Themes, as: Themes
 
