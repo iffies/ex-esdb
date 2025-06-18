@@ -6,14 +6,7 @@ defmodule ExESDB.Repl do
   """
   alias ExESDB.Repl.EventGenerator, as: ESGen
 
-  alias ExESDB.Gateway, as: ESGateway
-
-  alias ExESDB.StreamsHelper, as: SHelper
-  alias ExESDB.StreamsWriter, as: StrWriter
-
-  alias ExESDB.SubscriptionsReader, as: SubsReader
-
-  alias ExESDB.System, as: ESSystem
+  alias ExESDB.GatewayAPI, as: API
 
   require Logger
 
@@ -33,9 +26,9 @@ defmodule ExESDB.Repl do
 
   def get_opts, do: ExESDB.Options.app_env()
 
-  def get_streams, do: ESGateway.get_streams(@store)
+  def get_streams, do: API.get_streams(@store)
 
-  def get_subscriptions, do: SubsReader.get_subscriptions(@store)
+  def get_subscriptions, do: API.get_subscriptions(@store)
 
   @doc """
     Append events to a stream.
@@ -45,16 +38,16 @@ defmodule ExESDB.Repl do
           nbr_of_events :: integer()
         ) :: {:ok, list(), integer()} | {:error, term()}
   def append(stream, nbr_of_events) do
-    version = SHelper.get_version!(@store, stream)
+    version = API.get_version!(@store, stream)
 
     events = ESGen.generate_events(version, nbr_of_events)
 
     case @store
-         |> StrWriter.append_events(stream, version, events) do
+         |> API.append_events(stream, version, events) do
       {:ok, new_version} ->
         {:ok, result} =
           @store
-          |> ESGateway.get_events(stream, 1, new_version, :forward)
+          |> API.get_events(stream, 1, new_version, :forward)
 
         {:ok, result, result |> Enum.count()}
 
@@ -63,20 +56,15 @@ defmodule ExESDB.Repl do
     end
   end
 
-  def start_system do
+  def start_all_consumer() do
+  end
+
+  def start_stream_consumer(
+        selector,
+        start_from \\ 0,
+        subscriber \\ nil,
+        susciption_name \\ "transient"
+      ) do
     opts = get_opts()
-
-    case ESSystem.start_link(opts) do
-      {:ok, pid} ->
-        IO.puts("System started with pid #{inspect(pid)}")
-        pid
-
-      {:error, {:already_started, pid}} ->
-        IO.puts("System already started with pid #{inspect(pid)}")
-        pid
-
-      {:error, reason} ->
-        raise "Failed to start system. Reason: #{inspect(reason)}"
-    end
   end
 end

@@ -5,7 +5,6 @@ defmodule ExESDB.App do
   use Application,
     otp_app: :ex_esdb
 
-  alias ExESDB.GatewayAPI, as: GatewayAPI
   alias ExESDB.Options, as: Options
   alias ExESDB.Themes, as: Themes
 

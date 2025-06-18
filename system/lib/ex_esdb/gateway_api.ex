@@ -13,17 +13,44 @@ defmodule ExESDB.GatewayAPI do
   require Logger
   alias ExESDB.Themes, as: Themes
 
+  @doc """
+    Gets a list of all gateway worker pids.
+  """
+  @spec gateway_worker_pids() :: list()
   def gateway_worker_pids,
     do:
       Swarm.registered()
       |> Enum.filter(fn {name, _} -> match?({:gateway_worker, _, _}, name) end)
       |> Enum.map(fn {_, pid} -> pid end)
 
+  @doc """
+    Gets a random pid of a gateway worker in the cluster.
+  """
+  @spec random_gateway_worker() :: pid()
   def random_gateway_worker,
     do:
       gateway_worker_pids()
       |> Enum.random()
 
+  @doc """
+    Get the version of a stream.
+  """
+  @spec get_version(
+          store :: atom(),
+          stream :: stream
+        ) ::
+          {:ok, integer} | {:error, term}
+  def get_version!(store, stream),
+    do:
+      GenServer.call(
+        random_gateway_worker(),
+        {:get_version, store, stream}
+      )
+
+  @doc """
+    Get the subscriptions for a store.
+  """
+  @spec get_subscriptions(store :: atom()) :: {:ok, list()} | {:error, term}
   def get_subscriptions(store),
     do:
       GenServer.call(
@@ -31,6 +58,15 @@ defmodule ExESDB.GatewayAPI do
         {:get_subscriptions, store}
       )
 
+  @doc """
+    Acknowledge receipt of an event by a subscriber to persistent subscription.
+  """
+  @spec ack_event(
+          store :: atom(),
+          subscriber_pid :: pid(),
+          event :: map(),
+          opts :: map()
+        ) :: :ok | {:error, term}
   def ack_event(store, subscriber_pid, event, opts),
     do:
       GenServer.cast(
@@ -38,6 +74,14 @@ defmodule ExESDB.GatewayAPI do
         {:ack_event, store, subscriber_pid, event, opts}
       )
 
+  @doc """
+    Append events to a stream.
+  """
+  @spec append_events(
+          store :: atom(),
+          stream_id :: stream,
+          events :: list()
+        ) :: :ok | {:error, term}
   def append_events(store, stream_id, events),
     do:
       GenServer.cast(
@@ -45,6 +89,16 @@ defmodule ExESDB.GatewayAPI do
         {:append_events, store, stream_id, events}
       )
 
+  @doc """
+    Get events from a stream, staring from a given version, in a given direction.
+  """
+  @spec get_events(
+          store :: atom(),
+          stream_id :: stream,
+          start_version :: integer,
+          count :: integer,
+          direction :: :forward | :backward
+        ) :: {:ok, list()} | {:error, term}
   def get_events(store, stream_id, start_version, count, direction \\ :forward),
     do:
       GenServer.call(
@@ -68,7 +122,7 @@ defmodule ExESDB.GatewayAPI do
       )
 
   @doc """
-    Add a subscription.
+    Add a permanent or transient subscription.
   """
   @spec add_subscription(
           store :: store,
@@ -93,7 +147,7 @@ defmodule ExESDB.GatewayAPI do
         )
 
   @doc """
-    Delete a subscription.
+    Remove a permanent or transient subscription.
   """
   @spec remove_subscription(
           store :: any,
