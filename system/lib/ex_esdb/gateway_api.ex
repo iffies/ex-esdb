@@ -1,12 +1,14 @@
 defmodule ExESDB.GatewayAPI do
   @moduledoc """
-    Provides API functions for working with ExESDB
+    Though the GatewayAPI GenServer is started on each node in the cluster,
+    it acts as a simple high-availability proxy and load balancer for the 
+    GatewayWorker processes in the cluster.
   """
   @type store :: atom()
   @type stream :: String.t()
   @type subscription_name :: String.t()
   @type error :: term
-  @type subscription_type :: :by_stream | :by_event_type | :by_event_pattern
+  @type subscription_type :: :by_stream | :by_event_type | :by_event_pattern | :by_event_payload
   @type selector_type :: String.t() | map()
 
   use GenServer
@@ -40,7 +42,7 @@ defmodule ExESDB.GatewayAPI do
           stream :: stream
         ) ::
           {:ok, integer} | {:error, term}
-  def get_version!(store, stream),
+  def get_version(store, stream),
     do:
       GenServer.call(
         random_gateway_worker(),
@@ -63,28 +65,35 @@ defmodule ExESDB.GatewayAPI do
   """
   @spec ack_event(
           store :: atom(),
+          subscription_name :: String.t(),
           subscriber_pid :: pid(),
-          event :: map(),
-          opts :: map()
+          event :: map()
         ) :: :ok | {:error, term}
-  def ack_event(store, subscriber_pid, event, opts),
+  def ack_event(store, subscription_name, subscriber_pid, event),
     do:
       GenServer.cast(
         random_gateway_worker(),
-        {:ack_event, store, subscriber_pid, event, opts}
+        {:ack_event, store, subscription_name, subscriber_pid, event}
       )
 
   @doc """
     Append events to a stream.
+    ## Parameters
+     - store: the id of the store
+     - stream_id: the id of the stream
+     - events: the events to append
+    ## Returns
+      {:ok, new_version} where new_version is the new version of the stream
+      {:error, reason} if there was an error  
   """
   @spec append_events(
           store :: atom(),
           stream_id :: stream,
           events :: list()
-        ) :: :ok | {:error, term}
+        ) :: {:ok, integer} | {:error, term}
   def append_events(store, stream_id, events),
     do:
-      GenServer.cast(
+      GenServer.call(
         random_gateway_worker(),
         {:append_events, store, stream_id, events}
       )
@@ -124,26 +133,26 @@ defmodule ExESDB.GatewayAPI do
   @doc """
     Add a permanent or transient subscription.
   """
-  @spec add_subscription(
+  @spec save_subscription(
           store :: store,
           type :: subscription_type,
           selector :: selector_type,
           subscription_name :: subscription_name,
-          subscriber :: pid | nil,
-          start_from :: integer
+          start_from :: integer,
+          subscriber :: pid | nil
         ) :: :ok | {:error, error}
-  def add_subscription(
+  def save_subscription(
         store,
         type,
         selector,
         subscription_name \\ "transient",
-        subscriber \\ nil,
-        start_from \\ 0
+        start_from \\ 0,
+        subscriber \\ nil
       ),
       do:
         GenServer.cast(
           random_gateway_worker(),
-          {:add_subscription, store, type, selector, subscription_name, subscriber, start_from}
+          {:save_subscription, store, type, selector, subscription_name, start_from, subscriber}
         )
 
   @doc """

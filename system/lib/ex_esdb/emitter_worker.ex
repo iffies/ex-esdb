@@ -6,11 +6,20 @@ defmodule ExESDB.EmitterWorker do
   """
   use GenServer
 
+  alias ExESDB.Options, as: Options
   alias Phoenix.PubSub, as: PubSub
 
   require ExESDB.Themes, as: Themes
 
   require Logger
+
+  defp send_or_kill(pid, event, store, selector) do
+    if Process.alive?(pid) do
+      Process.send(pid, {:event_emitted, event}, [])
+    else
+      ExESDB.EmitterPool.stop(store, selector)
+    end
+  end
 
   defp emit(pub_sub, topic, event),
     do:
@@ -18,56 +27,73 @@ defmodule ExESDB.EmitterWorker do
       |> PubSub.broadcast(topic, {:event_emitted, event})
 
   @impl GenServer
-  def init({store, id, pubsub}) do
+  def init({store, sub_topic, subscriber}) do
     scheduler_id = :erlang.system_info(:scheduler_id)
-    topic = :emitter_group.topic(store, id)
-    :ok = :emitter_group.join(store, id, self())
+    topic = :emitter_group.topic(store, sub_topic)
+    :ok = :emitter_group.join(store, sub_topic, self())
 
     IO.puts(
-      "#{Themes.emitter_worker(self())} for #{inspect(topic, pretty: true)} is UP on scheduler #{inspect(scheduler_id)}"
+      "#{Themes.emitter_worker(self())} for #{inspect(topic)} is UP on scheduler #{inspect(scheduler_id)}"
     )
 
-    {:ok, pubsub}
+    {:ok, %{subscriber: subscriber, store: store, selector: sub_topic}}
   end
 
-  def start_link({store, id, pubsub, emitter}),
+  @impl GenServer
+  def terminate(reason, %{store: store, selector: selector}) do
+    IO.puts("#{Themes.emitter_worker(self())} is TERMINATED with reason #{inspect(reason)}")
+    :ok = :emitter_group.leave(store, selector, self())
+    :ok
+  end
+
+  def start_link({store, sub_topic, subscriber, emitter}),
     do:
       GenServer.start_link(
         __MODULE__,
-        {store, id, pubsub},
+        {store, sub_topic, subscriber},
         name: emitter
       )
 
   @impl true
-  def handle_info({:broadcast, topic, event}, pubsub) do
-    pubsub
-    |> emit(topic, event)
+  def handle_info(
+        {:broadcast, topic, event},
+        %{subscriber: subscriber, store: store, selector: selector} = state
+      ) do
+    case subscriber do
+      nil ->
+        pubsub = Options.pub_sub()
 
-    Logger.warning(
-      "#{Themes.emitter_worker(self())} BROADCAST #{inspect(event, pretty: true)} => #{inspect(topic, pretty: true)}"
-    )
+        pubsub
+        |> emit(topic, event)
 
-    {:noreply, pubsub}
+      pid ->
+        send_or_kill(pid, event, store, selector)
+    end
+
+    {:noreply, state}
   end
 
   @impl true
-  def handle_info({:forward_to_local, topic, event}, pubsub) do
-    %{event_type: event_type, event_stream_id: stream_id} = event
+  def handle_info(
+        {:forward_to_local, topic, event},
+        %{subscriber: subscriber, store: store, selector: selector} = _state
+      ) do
+    case subscriber do
+      nil ->
+        pubsub = Options.pub_sub()
 
-    pubsub
-    |> emit(topic, event)
+        pubsub
+        |> emit(topic, event)
 
-    msg = "FORWARD"
+      pid ->
+        send_or_kill(pid, event, store, selector)
+    end
 
-    IO.puts(
-      "#{Themes.emitter_worker(msg)} #{inspect(stream_id, pretty: true)}:#{inspect(event_type, pretty: true)} => #{inspect(topic, pretty: true)}"
-    )
-
-    {:noreply, pubsub}
+    {:noreply, subscriber}
   end
 
   @impl true
-  def handle_info(_, pubsub) do
-    {:noreply, pubsub}
+  def handle_info(_, state) do
+    {:noreply, state}
   end
 end

@@ -16,14 +16,14 @@ defmodule ExESDB.Streams do
       )
 
   @impl true
-  def init(opts) do
-    IO.puts("#{Themes.streams(self())} is UP.")
-
+  def init(_) do
     children = [
-      {ExESDB.StreamsReader, opts},
-      {ExESDB.StreamsWriter, opts}
+      {PartitionSupervisor, child_spec: DynamicSupervisor, name: ExESDB.StreamsWriters},
+      {PartitionSupervisor, child_spec: DynamicSupervisor, name: ExESDB.StreamsReaders}
     ]
 
-    Supervisor.init(children, strategy: :one_for_one)
+    ret = Supervisor.init(children, strategy: :one_for_one)
+    IO.puts("#{Themes.streams(self())} is UP.")
+    ret
   end
 end

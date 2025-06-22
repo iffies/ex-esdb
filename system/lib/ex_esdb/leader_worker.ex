@@ -4,9 +4,9 @@ defmodule ExESDB.LeaderWorker do
   """
   use GenServer
   require Logger
+  alias ExESDB.Emitters
   alias ExESDB.SubscriptionsReader, as: SubsR
   alias ExESDB.Themes, as: Themes
-  alias ExESDB.Emitters
   ############ API ############
   def activate(store),
     do:

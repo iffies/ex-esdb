@@ -56,7 +56,9 @@ defmodule ExESDB.MixProject do
         :os_mon,
         :runtime_tools,
         :khepri,
-        :gen_retry
+        :gen_retry,
+        :observer,
+        :wx
       ]
     ]
 

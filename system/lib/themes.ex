@@ -62,6 +62,18 @@ defmodule ExESDB.Themes do
   def streams_writer(msg),
     do: "STREAMS_WRITER [#{CF.bright_yellow_on_blue()}#{inspect(msg)}#{CF.reset()}]"
 
+  def streams_writer_pool(msg),
+    do: "STREAMS_WRITER_POOL [#{CF.bright_yellow_on_blue()}#{inspect(msg)}#{CF.reset()}]"
+
+  def streams_writer_system(msg),
+    do: "STREAMS_WRITER_SYSTEM [#{CF.bright_yellow_on_blue()}#{inspect(msg)}#{CF.reset()}]"
+
+  def streams_writer_worker(msg),
+    do: "STREAMS_WRITER_WORKER [#{CF.bright_yellow_on_blue()}#{inspect(msg)}#{CF.reset()}]"
+
+  def streams_reader_pool(msg),
+    do: "STREAMS_READER_POOL [#{CF.bright_yellow_on_blue()}#{inspect(msg)}#{CF.reset()}]"
+
   ########## GATEWAY ###############
   def gateway_worker(pid),
     do: "GATEWAY_WORKER [#{CF.bright_cyan_on_black()}#{inspect(pid)}#{CF.reset()}]"
@@ -72,9 +84,13 @@ defmodule ExESDB.Themes do
   def gateway_api(pid),
     do: "GATEWAY_API [#{CF.bright_cyan_on_black()}#{inspect(pid)}#{CF.reset()}]"
 
-  ################ CONSUMER ################
-  def consumer(pid),
-    do: "CONSUMER [#{CF.bright_yellow_on_black()}#{inspect(pid)}#{CF.reset()}]"
+  ################ OBSERVER ################
+  def observer(pid),
+    do: "OBSERVER [#{CF.bright_yellow_on_black()}#{inspect(pid)}#{CF.reset()}]"
+
+  ############# SUBSCRIBER ##############
+  def subscriber(pid),
+    do: "SUBSCRIBER [#{CF.bright_yellow_on_green()}#{inspect(pid)}#{CF.reset()}]"
 
   ################ PRODUCER ################
   def producer(pid),

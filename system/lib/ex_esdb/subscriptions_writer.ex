@@ -6,15 +6,8 @@ defmodule ExESDB.SubscriptionsWriter do
 
   require Logger
   alias ExESDB.Themes, as: Themes
+  alias ExESDB.Emitters, as: Emitters
 
-  # @spec put_subscription(
-  #         store :: atom(),
-  #         type :: :by_stream | :by_event_type | :by_event_pattern,
-  #         selector :: String.t() | Enumerable.t(),
-  #         subscription_name :: String.t(),
-  #         start_from :: integer(),
-  #         subscriber :: pid()
-  #       ) :: any()
   def put_subscription(
         store,
         type,
@@ -24,7 +17,7 @@ defmodule ExESDB.SubscriptionsWriter do
         subscriber \\ nil
       ),
       do:
-        GenServer.call(
+        GenServer.cast(
           __MODULE__,
           {:put_subscription, store, type, selector, subscription_name, start_from, subscriber}
         )
@@ -51,10 +44,9 @@ defmodule ExESDB.SubscriptionsWriter do
     {:noreply, state}
   end
 
-  @impl true
-  def handle_call(
+  @impl GenServer
+  def handle_cast(
         {:put_subscription, store, type, selector, subscription_name, start_from, subscriber},
-        _from,
         state
       ) do
     subscription =
@@ -66,15 +58,10 @@ defmodule ExESDB.SubscriptionsWriter do
         subscriber: subscriber
       }
 
-    key =
-      :subscriptions_store.key(subscription)
-
     store
     |> :subscriptions_store.put_subscription(subscription)
 
-    {:reply,
-     store
-     |> :subscriptions_store.get_subscription(key), state}
+    {:noreply, state}
   end
 
   ######## PLUMBING ############

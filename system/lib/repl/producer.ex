@@ -7,6 +7,7 @@ defmodule ExESDB.Repl.Producer do
   alias ExESDB.StreamsHelper, as: SHelper
   alias ExESDB.StreamsWriter, as: StrWriter
   alias ExESDB.Themes, as: Themes
+  alias ExESDB.Options, as: Options
 
   @impl true
   def handle_info(:produce, state) do
@@ -43,15 +44,14 @@ defmodule ExESDB.Repl.Producer do
   @doc """
     Starts a producer process for testing purposes.
     ## Parameters
-      * `store`: The store to use (atom, default: `:reg_gh`).
       * `stream`: The id of the stream to append events to (string, default: `greenhouse0`).
       * `batch_size`: The number of events to append in a single batch (integer, default: `1`).
       * `period`: The time in milliseconds between appending events (integer, default: `2000`).
   """
-  @spec start_producer(keyword()) :: pid()
-  def start_producer(args) do
-    stream = stream(args)
-    store = store(args)
+  @spec start(keyword()) :: pid()
+  def start(stream \\ "greenhouse0", batch_size \\ 1, period \\ 2_000) do
+    store = Options.store_id()
+    args = [store: store, stream: stream, batch_size: batch_size, period: period]
 
     case start_link(args) do
       {:ok, pid} ->
@@ -72,7 +72,7 @@ defmodule ExESDB.Repl.Producer do
   defp stream(args), do: Keyword.get(args, :stream, "greenhouse0")
   defp batch_size(args), do: Keyword.get(args, :batch_size, 1)
   defp period(args), do: Keyword.get(args, :period, 2_000)
-  defp produce(period), do: Process.send_after(self(), :produce, period)
+  defp produce(period), do: Process.send_after(self(), :produce, :rand.uniform(period * 5))
 
   defp append(store, stream, nbr_of_events) do
     version =

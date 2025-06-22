@@ -1,14 +1,15 @@
 -module(emitter_group).
 
 -export([join/3, members/2, broadcast/3, group_key/2, topic/2, emitter_name/2,
-         emitter_name/3, persist_emitters/3, setup_emitters/4]).
+         emitter_name/3, persist_emitters/3, setup_emitter_mechanism/4, leave/3,
+         retrieve_emitters/2]).
 
--spec setup_emitters(Store :: khepri:store(),
-                     Id :: string(),
-                     Filter :: khepri:filter(),
-                     PoolSize :: integer()) ->
-                      list().
-setup_emitters(Store, Id, Filter, PoolSize) ->
+-spec setup_emitter_mechanism(Store :: atom(),
+                              Id :: string(),
+                              Filter :: map(),
+                              PoolSize :: integer()) ->
+                               list().
+setup_emitter_mechanism(Store, Id, Filter, PoolSize) ->
   ok = streams:setup_when_new_event(Store, Id, Filter),
   Emitters = persist_emitters(Store, Id, PoolSize),
   Emitters.
@@ -17,6 +18,12 @@ setup_emitters(Store, Id, Filter, PoolSize) ->
 join(Store, Id, PidOrPids) when is_atom(Store) ->
   Group = group_key(Store, Id),
   ok = pg:join('Elixir.Phoenix.PubSub', Group, PidOrPids),
+  ok.
+
+-spec leave(Store :: atom(), Id :: string(), PidOrPids :: pid() | [pid()]) -> ok.
+leave(Store, Id, PidOrPids) when is_atom(Store) ->
+  Group = group_key(Store, Id),
+  ok = pg:leave('Elixir.Phoenix.PubSub', Group, PidOrPids),
   ok.
 
 -spec members(Store :: atom(), Id :: string()) -> [pid()].
@@ -78,10 +85,10 @@ emitter_name(Store, Id, Number) ->
 -spec persist_emitters(Store :: atom(), Id :: string(), PoolSize :: integer()) -> list().
 persist_emitters(Store, Id, PoolSize) ->
   % Generate a list of emitter names
-  EmitterList = [emitter_name(Store, Id, Number) || Number <- lists:seq(1, PoolSize)],
+  EmitterList = [emitter_name(Store, Id, Number) || Number <- lists:seq(1, PoolSize - 1)],
   Emitters = [emitter_name(Store, Id) | EmitterList],
   Key = group_key(Store, Id),
-  persistent_term:put(Key, list_to_tuple(Emitters)),
+  ok = persistent_term:put(Key, list_to_tuple(Emitters)),
   Emitters.
 
 -spec retrieve_emitters(Store :: atom(), Id :: string()) -> list().

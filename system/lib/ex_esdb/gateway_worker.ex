@@ -1,21 +1,10 @@
 defmodule ExESDB.GatewayWorker do
   @moduledoc """
-    Provides API functions for working with ExESDB
-    ## API
-      - ack_event/4
-      - append_events/4
-      - get_events/4
-      - get_streams/1
-
-      - add_subscription/4
-      - subscribe_to/5
-      - unsubscribe/2
-      - delete_subscription/4
-
+    GatewayWorker processes are started on each node in the cluster,
+    and contain the implementation functions for the GatewayAPI.
   """
   use GenServer
 
-  alias ExESDB.GatewayWorker
   alias ExESDB.SubscriptionsReader, as: SubsR
   alias ExESDB.SubscriptionsWriter, as: SubsW
 
@@ -100,19 +89,23 @@ defmodule ExESDB.GatewayWorker do
     {:reply, {:ok, version}, state}
   end
 
-  ################ HANDLE_CAST #############
   @impl GenServer
-  def handle_cast({:append_events, store, stream_id, events}, state) do
+  def handle_call({:append_events, store, stream_id, events}, _from, state) do
     current_version =
       store
       |> StreamsH.get_version!(stream_id)
 
-    store
-    |> StreamsW.append_events(stream_id, current_version, events)
+    case store
+         |> StreamsW.append_events(stream_id, current_version, events) do
+      {:ok, new_version} ->
+        {:reply, {:ok, new_version}, state}
 
-    {:noreply, state}
+      {:error, reason} ->
+        {:reply, {:error, reason}, state}
+    end
   end
 
+  ################ HANDLE_CAST #############
   @impl true
   def handle_cast(
         {:remove_subscription, store, type, selector, subscription_name},
@@ -126,11 +119,33 @@ defmodule ExESDB.GatewayWorker do
 
   @impl true
   def handle_cast(
-        {:add_subscription, store, type, selector, subscription_name, subscriber, start_from},
+        {:save_subscription, store, type, selector, subscription_name, start_from, subscriber},
         state
       ) do
     store
     |> SubsW.put_subscription(type, selector, subscription_name, start_from, subscriber)
+
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_cast(
+        {:ack_event, store, subscription_name, subscriber_pid, event},
+        state
+      ) do
+    %{
+      event_stream_id: stream_id,
+      event_number: event_number
+    } = event
+
+    store
+    |> SubsW.put_subscription(
+      :by_stream,
+      "$#{stream_id}",
+      subscription_name,
+      event_number + 1,
+      subscriber_pid
+    )
 
     {:noreply, state}
   end

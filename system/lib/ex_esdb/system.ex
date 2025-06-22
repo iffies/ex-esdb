@@ -10,6 +10,7 @@ defmodule ExESDB.System do
   """
   use Supervisor
 
+  alias ExESDB.Options, as: Options
   alias ExESDB.Themes, as: Themes
 
   require Logger
@@ -17,17 +18,15 @@ defmodule ExESDB.System do
 
   @impl true
   def init(opts) do
-    IO.puts("#{Themes.system(self())} is UP")
-
     children = [
       add_pub_sub(opts),
+      {PartitionSupervisor, child_spec: DynamicSupervisor, name: ExESDB.EmitterPools},
       {ExESDB.Store, opts},
       {ExESDB.Cluster, opts},
-      {ExESDB.LeaderSystem, opts},
       {ExESDB.Streams, opts},
       {ExESDB.Subscriptions, opts},
-      {PartitionSupervisor, child_spec: DynamicSupervisor, name: ExESDB.EmitterPools},
-      {ExESDB.GatewaySupervisor, opts}
+      {ExESDB.GatewaySupervisor, opts},
+      {ExESDB.LeaderSystem, opts}
     ]
 
     :os.set_signal(:sigterm, :handle)
@@ -35,10 +34,14 @@ defmodule ExESDB.System do
 
     spawn(fn -> handle_os_signal() end)
 
-    Supervisor.init(
-      children,
-      strategy: :one_for_one
-    )
+    ret =
+      Supervisor.init(
+        children,
+        strategy: :one_for_one
+      )
+
+    IO.puts("#{Themes.system(self())} is UP")
+    ret
   end
 
   defp add_pub_sub(opts) do
@@ -102,4 +105,6 @@ defmodule ExESDB.System do
       type: :supervisor
     }
   end
+
+  defp store(opts), do: Keyword.get(opts, :store, Options.store_id())
 end

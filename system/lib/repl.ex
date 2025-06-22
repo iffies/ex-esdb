@@ -5,17 +5,28 @@ defmodule ExESDB.Repl do
     
   """
   alias ExESDB.Repl.EventGenerator, as: ESGen
+  alias ExESDB.Repl.Observer, as: Observer
+  alias ExESDB.Repl.Producer, as: Producer
+  alias ExESDB.Repl.Subscriber, as: Subscriber
 
   alias ExESDB.GatewayAPI, as: API
 
   require Logger
 
   @store :reg_gh
-  @greenhouse1 :greenhouse1
-  @greenhouse2 :greenhouse2
-  @greenhouse3 :greenhouse3
-  @greenhouse4 :greenhouse4
-  @greenhouse5 :greenhouse5
+  @greenhouse1 "greenhouse1"
+  @greenhouse2 "greenhouse2"
+  @greenhouse3 "greenhouse3"
+  @greenhouse4 "greenhouse4"
+  @greenhouse5 "greenhouse5"
+
+  @greenhouses [
+    @greenhouse1,
+    @greenhouse2,
+    @greenhouse3,
+    @greenhouse4,
+    @greenhouse5
+  ]
 
   def store, do: @store
   def stream1, do: @greenhouse1
@@ -38,12 +49,12 @@ defmodule ExESDB.Repl do
           nbr_of_events :: integer()
         ) :: {:ok, list(), integer()} | {:error, term()}
   def append(stream, nbr_of_events) do
-    version = API.get_version!(@store, stream)
+    {:ok, version} = API.get_version(@store, stream)
 
     events = ESGen.generate_events(version, nbr_of_events)
 
     case @store
-         |> API.append_events(stream, version, events) do
+         |> API.append_events(stream, events) do
       {:ok, new_version} ->
         {:ok, result} =
           @store
@@ -56,15 +67,16 @@ defmodule ExESDB.Repl do
     end
   end
 
-  def start_all_consumer() do
+  def start_observer_for_all_streams do
+    Observer.start(store: @store, type: :by_stream, selector: "$all")
   end
 
-  def start_stream_consumer(
-        selector,
-        start_from \\ 0,
-        subscriber \\ nil,
-        susciption_name \\ "transient"
-      ) do
-    opts = get_opts()
+  def start_greenhouse1_subscriber do
+    Subscriber.start(store: @store, type: :by_stream, selector: "$greenhouse1")
+  end
+
+  def start_producers do
+    ESGen.streams()
+    |> Enum.each(fn stream -> Producer.start(stream) end)
   end
 end

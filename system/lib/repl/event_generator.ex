@@ -6,6 +6,11 @@ defmodule ExESDB.Repl.EventGenerator do
 
   @initialized_v1 "initialized:v1"
 
+  @greenhouse1 "greenhouse1"
+  @greenhouse2 "greenhouse2"
+  @greenhouse3 "greenhouse3"
+  @greenhouse4 "greenhouse4"
+
   @temperature_measured_v1 "temperature_measured:v1"
   @humidity_measured_v1 "humidity_measured:v1"
   @light_measured_v1 "light_measured:v1"
@@ -23,33 +28,59 @@ defmodule ExESDB.Repl.EventGenerator do
   @desired_humidity_set_v1 "desired_humidity_set:v1"
   @desired_light_set_v1 "desired_light_set:v1"
 
-  @event_types [
-    @initialized_v1,
-    @temperature_measured_v1,
-    @humidity_measured_v1,
-    @light_measured_v1,
-    @desired_temperature_set_v1,
-    @desired_humidity_set_v1,
-    @desired_light_set_v1,
-    @light_activated_v1,
-    @light_deactivated_v1,
-    @fan_activated_v1,
-    @fan_deactivated_v1,
-    @heater_activated_v1,
-    @heater_deactivated_v1,
-    @sprinkler_activated_v1,
-    @sprinkler_deactivated_v1
-  ]
+  def streams,
+    do: [
+      @greenhouse1,
+      @greenhouse2,
+      @greenhouse3,
+      @greenhouse4
+    ]
+
+  def event_types,
+    do: [
+      @temperature_measured_v1,
+      @humidity_measured_v1,
+      @light_measured_v1,
+      @desired_temperature_set_v1,
+      @desired_humidity_set_v1,
+      @desired_light_set_v1,
+      @light_activated_v1,
+      @light_deactivated_v1,
+      @fan_activated_v1,
+      @fan_deactivated_v1,
+      @heater_activated_v1,
+      @heater_deactivated_v1,
+      @sprinkler_activated_v1,
+      @sprinkler_deactivated_v1
+    ]
 
   @operators [
     "John",
     "Paul",
     "George",
-    "Ringo"
+    "Ringo",
+    "Jim",
+    "Laura",
+    "Peter"
   ]
 
   # Example content type values
   @content_types [1, 2, 3]
+
+  def temperature_measured_v1, do: "temperature_measured:v1"
+  def humidity_measured_v1, do: "humidity_measured:v1"
+  def light_measured_v1, do: "light_measured:v1"
+  def desired_temperature_set_v1, do: "desired_temperature_set:v1"
+  def desired_humidity_set_v1, do: "desired_humidity_set:v1"
+  def desired_light_set_v1, do: "desired_light_set:v1"
+  def light_activated_v1, do: "light_activated:v1"
+  def light_deactivated_v1, do: "light_deactivated:v1"
+  def fan_activated_v1, do: "fan_activated:v1"
+  def fan_deactivated_v1, do: "fan_deactivated:v1"
+  def heater_activated_v1, do: "heater_activated:v1"
+  def heater_deactivated_v1, do: "heater_deactivated:v1"
+  def sprinkler_activated_v1, do: "sprinkler_activated:v1"
+  def sprinkler_deactivated_v1, do: "sprinkler_deactivated:v1"
 
   defp random_operator, do: Enum.random(@operators)
   defp random_temperature, do: 5 + :rand.uniform(30)
@@ -90,7 +121,7 @@ defmodule ExESDB.Repl.EventGenerator do
 
   defp generate_event(_) do
     event_id = generate_uuid()
-    event_type = Enum.random(@event_types)
+    event_type = Enum.random(event_types())
 
     %ExESDB.NewEvent{
       event_id: event_id,

@@ -17,7 +17,8 @@ defmodule ExESDB.StreamsHelper do
       store
       |> :khepri.exists([:streams, stream_id])
 
-  def version_to_integer(padded_version) when is_binary(padded_version) do
+  def version_to_integer(padded_version)
+      when is_binary(padded_version) do
     padded_version
     |> String.trim_leading("0")
     |> case do
@@ -27,7 +28,9 @@ defmodule ExESDB.StreamsHelper do
     end
   end
 
-  def pad_version(version, length) when is_integer(version) and length > 0 do
+  def pad_version(version, length)
+      when is_integer(version) and
+             length > 0 do
     version
     |> Integer.to_string()
     |> String.pad_leading(length, "0")
@@ -42,6 +45,10 @@ defmodule ExESDB.StreamsHelper do
     ## Returns
      - `version`  or `0` if the stream does not exist.
   """
+  @spec get_version!(
+          store :: atom(),
+          stream_id :: String.t()
+        ) :: integer
   def get_version!(store, stream_id) do
     case store
          |> :khepri.count([

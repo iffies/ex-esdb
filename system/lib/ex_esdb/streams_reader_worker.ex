@@ -1,4 +1,4 @@
-defmodule ExESDB.StreamsReader do
+defmodule ExESDB.StreamsReaderWorker do
   @moduledoc """
     Provides functions for reading and streaming events from the event store.
   """

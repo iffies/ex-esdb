@@ -1,127 +1,69 @@
 defmodule ExESDB.StreamsWriter do
   @moduledoc """
-    Provides functions for writing streams
+    This module is responsible for writing events to a stream.
+    It is actually an API style wrapper around the StreamsWriterWorker.
   """
-
-  use GenServer
-
-  alias ExESDB.StreamsHelper, as: Helper
-  alias ExESDB.Themes, as: Themes
-
-  ############ INTERNALS ############
-  defp handle_transaction_result({:ok, {:commit, result}}), do: {:ok, result}
-  defp handle_transaction_result({:ok, {:abort, reason}}), do: {:error, reason}
-  defp handle_transaction_result({:error, reason}), do: {:error, reason}
-
-  defp try_append_events(store, stream_id, expected_version, events) do
-    current_version =
-      store
-      |> Helper.get_version!(stream_id)
-
-    if current_version == expected_version do
-      new_version =
-        events
-        |> Enum.reduce(
-          current_version,
-          fn event, version ->
-            new_version = version + 1
-            padded_version = Helper.pad_version(new_version, 6)
-            now = DateTime.utc_now()
-            created = now
-
-            created_epoch =
-              now
-              |> DateTime.to_unix(:microsecond)
-
-            recorded_event =
-              event
-              |> Helper.to_event_record(
-                stream_id,
-                new_version,
-                created,
-                created_epoch
-              )
-
-            store
-            |> :khepri.put!([:streams, stream_id, padded_version], recorded_event)
-
-            new_version
-          end
-        )
-
-      {:ok, new_version}
-    else
-      {:error, :wrong_expected_version}
-    end
-  end
 
   ########### API ############
-  @doc """
-    Append events to a stream.
-  """
   @spec append_events(
           store :: atom(),
           stream_id :: any(),
           expected_version :: integer(),
           events :: list()
         ) :: {:ok, integer()} | {:error, term()}
-  def append_events(store, stream_id, expected_version, events),
-    do:
-      GenServer.call(
-        __MODULE__,
-        {:append_events, store, stream_id, expected_version, events}
-      )
+  def append_events(store, stream_id, expected_version, events) do
+    writer = get_writer(store, stream_id)
 
-  ############ CALLBACKS ############
-  @impl true
-  def handle_call({:append_events_tx, store, stream_id, expected_version, events}, _from, state) do
-    result =
-      case store
-           |> :khepri.transaction(fn ->
-             store
-             |> try_append_events(stream_id, expected_version, events)
-           end)
-           |> handle_transaction_result() do
-        {:ok, new_version} ->
-          {:ok, new_version}
-
-        {:error, reason} ->
-          {:error, reason}
-      end
-
-    {:reply, result, state}
+    GenServer.call(
+      writer,
+      {:append_events, store, stream_id, expected_version, events}
+    )
   end
 
-  @impl true
-  def handle_call({:append_events, store, stream_id, expected_version, events}, _from, state) do
-    result =
-      store
-      |> try_append_events(stream_id, expected_version, events)
+  def worker_id(store, stream_id),
+    do: {:streams_writer_worker, store, stream_id}
 
-    {:reply, result, state}
+  defp get_writer(store, stream_id) do
+    case get_cluster_writer(store, stream_id) do
+      nil ->
+        start_writer(store, stream_id)
+
+      writer_pid ->
+        writer_pid
+    end
   end
 
-  ############ PLUMBING ############
-  @impl true
-  def init(opts) do
-    IO.puts("#{Themes.streams_writer(self())} is UP.")
-    {:ok, opts}
+  defp get_cluster_writer(store, stream_id) do
+    case Swarm.registered()
+         |> Enum.filter(fn {name, _} ->
+           match?({:streams_writer_worker, ^store, ^stream_id}, name)
+         end)
+         |> Enum.map(fn {_, pid} -> pid end) do
+      [] ->
+        nil
+
+      writers ->
+        writers
+        |> Enum.random()
+    end
   end
 
-  def child_spec(opts),
-    do: %{
-      id: __MODULE__,
-      start: {__MODULE__, :start_link, [opts]},
-      type: :worker,
-      restart: :permanent,
-      shutdown: 5000
-    }
+  defp partition_for(store, stream_id) do
+    partitions = System.schedulers_online()
+    key = :erlang.phash2({store, stream_id}, partitions)
+    key
+  end
 
-  def start_link(opts),
-    do:
-      GenServer.start_link(
-        __MODULE__,
-        opts,
-        name: __MODULE__
-      )
+  defp start_writer(store, stream_id) do
+    partition = partition_for(store, stream_id)
+
+    case DynamicSupervisor.start_child(
+           {:via, PartitionSupervisor, {ExESDB.StreamsWriters, partition}},
+           {ExESDB.StreamsWriterWorker, {store, stream_id, partition}}
+         ) do
+      {:ok, pid} -> pid
+      {:error, {:already_started, pid}} -> pid
+      {:error, reason} -> raise "failed to start streams writer: #{inspect(reason)}"
+    end
+  end
 end
