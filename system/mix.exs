@@ -56,9 +56,7 @@ defmodule ExESDB.MixProject do
         :os_mon,
         :runtime_tools,
         :khepri,
-        :gen_retry,
-        :observer,
-        :wx
+        :gen_retry
       ]
     ]
 
@@ -82,7 +80,7 @@ defmodule ExESDB.MixProject do
 
   defp deps do
     [
-      {:dialyze, "~> 0.2.0", only: [:dev]},
+      {:dialyze, "~> 0.2.0", only: [:dev], runtime: false},
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
       {:makeup_html, ">= 0.0.0", only: :dev, runtime: false},
       {:ex_doc, "~> 0.37", only: [:dev], runtime: false},

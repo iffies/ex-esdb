@@ -56,23 +56,28 @@ defmodule ExESDB.Themes do
   def streams(msg),
     do: "STREAMS [#{CF.bright_yellow_on_blue()}#{inspect(msg)}#{CF.reset()}]"
 
+  ############## STREAMS_READER ##############
   def streams_reader(msg),
     do: "STREAMS_READER [#{CF.bright_yellow_on_blue()}#{inspect(msg)}#{CF.reset()}]"
 
-  def streams_writer(msg),
-    do: "STREAMS_WRITER [#{CF.bright_yellow_on_blue()}#{inspect(msg)}#{CF.reset()}]"
-
-  def streams_writer_pool(msg),
-    do: "STREAMS_WRITER_POOL [#{CF.bright_yellow_on_blue()}#{inspect(msg)}#{CF.reset()}]"
-
-  def streams_writer_system(msg),
-    do: "STREAMS_WRITER_SYSTEM [#{CF.bright_yellow_on_blue()}#{inspect(msg)}#{CF.reset()}]"
-
-  def streams_writer_worker(msg),
-    do: "STREAMS_WRITER_WORKER [#{CF.bright_yellow_on_blue()}#{inspect(msg)}#{CF.reset()}]"
-
   def streams_reader_pool(msg),
     do: "STREAMS_READER_POOL [#{CF.bright_yellow_on_blue()}#{inspect(msg)}#{CF.reset()}]"
+
+  def streams_reader_worker(msg),
+    do: "STREAMS_READER_WORKER [#{CF.bright_yellow_on_blue()}#{inspect(msg)}#{CF.reset()}]"
+
+  ############## STREAMS_WRITER ##############
+  def streams_writer(msg),
+    do: "STREAMS_WRITER [#{CF.bright_yellow_on_red()}#{inspect(msg)}#{CF.reset()}]"
+
+  def streams_writer_pool(msg),
+    do: "STREAMS_WRITER_POOL [#{CF.bright_yellow_on_red()}#{inspect(msg)}#{CF.reset()}]"
+
+  def streams_writer_system(msg),
+    do: "STREAMS_WRITER_SYSTEM [#{CF.bright_yellow_on_red()}#{inspect(msg)}#{CF.reset()}]"
+
+  def streams_writer_worker(msg),
+    do: "STREAMS_WRITER_WORKER [#{CF.bright_yellow_on_red()}#{inspect(msg)}#{CF.reset()}]"
 
   ########## GATEWAY ###############
   def gateway_worker(pid),

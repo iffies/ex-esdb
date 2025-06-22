@@ -7,39 +7,9 @@ defmodule ExESDB.StreamsReaderWorker do
   alias ExESDB.Themes, as: Themes
 
   alias ExESDB.StreamsHelper, as: Helper
+  alias ExESDB.StreamsReader, as: StreamsReader
 
-  ########### API ############
-  @doc """
-    Returns a list of all streams in the store.
-    ## Parameters
-    #  - `store` is the name of the store.
-    ## Returns
-    #  - `{:ok, streams}`  if successful.
-  """
-  @spec get_streams(store :: atom()) :: {:ok, list()} | {:error, term()}
-  def get_streams(store),
-    do:
-      GenServer.call(
-        __MODULE__,
-        {:get_streams, store}
-      )
-
-  @doc """
-    Streams events from `stream` in batches of `count` events, in a `direction`.
-  """
-  @spec stream_events(
-          store :: atom(),
-          stream_id :: any(),
-          start_version :: integer(),
-          count :: integer(),
-          direction :: :forward | :backward
-        ) :: {:ok, Enumerable.t()} | {:error, term()}
-  def stream_events(store, stream_id, start_version, count, direction \\ :forward),
-    do:
-      GenServer.call(
-        __MODULE__,
-        {:stream_events, store, stream_id, start_version, count, direction}
-      )
+  import ExESDB.Khepri.Conditions
 
   ############ CALLBACKS ############
   @impl true
@@ -72,8 +42,11 @@ defmodule ExESDB.StreamsReaderWorker do
   def handle_call({:get_streams, store}, _from, state) do
     streams =
       store
-      |> :khepri.get!([:streams])
-      |> Enum.reduce([], fn {stream_id, _stream}, acc -> stream_id ++ acc end)
+      |> :khepri.get_many!([
+        :streams,
+        if_node_exists(exists: true)
+      ])
+      |> Enum.reduce([], fn {[:streams, stream_id], _stream}, acc -> [stream_id] ++ acc end)
 
     {:reply, {:ok, streams}, state}
   end
@@ -81,25 +54,38 @@ defmodule ExESDB.StreamsReaderWorker do
   ################## PlUMBING ##################
 
   @impl true
-  def init(opts) do
-    IO.puts("#{Themes.streams_reader(self())} is UP.")
-    {:ok, opts}
+  def init({store, stream_id, partition}) do
+    Process.flag(:trap_exit, true)
+    name = StreamsReader.worker_id(store, stream_id)
+    msg = "[#{inspect(name)}] is UP on partition #{inspect(partition)}, joining the cluster."
+    IO.puts("#{Themes.streams_reader_worker(msg)}")
+    Swarm.register_name(name, self())
+
+    {:ok,
+     %{
+       worker_name: name,
+       store: store,
+       stream_id: stream_id,
+       node: node(),
+       partition: partition
+     }}
   end
 
-  def child_spec(opts),
-    do: %{
-      id: __MODULE__,
-      start: {__MODULE__, :start_link, [opts]},
+  def child_spec({store, stream_id, partition}) do
+    %{
+      id: {StreamsReader.worker_id(store, stream_id), partition},
+      start: {__MODULE__, :start_link, [{store, stream_id, partition}]},
       type: :worker,
       restart: :permanent,
       shutdown: 5000
     }
+  end
 
-  def start_link(opts),
-    do:
-      GenServer.start_link(
-        __MODULE__,
-        opts,
-        name: __MODULE__
-      )
+  def start_link({store, stream_id, partition}) do
+    GenServer.start_link(
+      __MODULE__,
+      {store, stream_id, partition},
+      name: {:global, StreamsReader.worker_id(store, stream_id)}
+    )
+  end
 end

@@ -76,7 +76,7 @@ RUN echo "!!!!!!!! Building runner image...!!!!!!!" && sleep 2
 RUN apt-get update -y && \
   apt-get upgrade -y --autoremove && \
   apt-get clean && \
-  apt-get install -y pkg-config openssl libncurses5 locales ca-certificates curl systemd htop && \
+  apt-get install -y build-essential pkg-config openssl libncurses5 locales ca-certificates curl systemd htop && \
   rm -f /var/lib/apt/lists/*_* 
 #
 # Set the locale

@@ -117,7 +117,8 @@ defmodule ExESDB.StreamsWriterWorker do
        worker_name: name,
        store: store,
        stream_id: stream_id,
-       partition: partition
+       partition: partition,
+       node: node()
      }}
   end
 
