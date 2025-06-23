@@ -42,14 +42,17 @@ defmodule ExESDB.Repl.Observer do
     pubsub = pubsub(args)
     selector = selector(args)
     type = type(args)
-    topic = :emitter_group.topic(store, selector)
+    name = name(args)
 
-    pubsub
-    |> Phoenix.PubSub.subscribe(topic)
+    topic = topic(store, selector, name)
 
     :ok =
       store
-      |> API.save_subscription(type, selector)
+      |> API.save_subscription(type, selector, name)
+
+    :ok =
+      pubsub
+      |> Phoenix.PubSub.subscribe(topic)
 
     {:ok, args}
   end
@@ -58,8 +61,9 @@ defmodule ExESDB.Repl.Observer do
     store = store(args)
     pubsub = pubsub(args)
     selector = selector(args)
+    name = name(args)
 
-    topic = :emitter_group.topic(store, selector)
+    topic = topic(store, selector, name)
 
     args =
       args
@@ -77,26 +81,30 @@ defmodule ExESDB.Repl.Observer do
   @doc """
     Starts an observer process for a given topic.
     ## Parameters
-      * `store`: The store to consume events from (atom, default: the configured store).
-      * `type`: The type of subscription to consume events from (atom, default: `:by_stream`).
-      * `selector`: The selector of the subscription to consume events from (string, default: `"$all"`).
-      * `topic`: The topic to consume events from (string, default: `reg_gh:$all`).
+    - `store`: The store to consume events from (atom, default: the configured store).
+    - `type`: The type of subscription to consume events from (atom, default: `:by_stream`).
+    - `selector`: The selector of the subscription to consume events from (string, default: `"$all"`).
+    - `topic`: The topic to consume events from (string, default: `reg_gh:$all`).
+    - `name`: The name of the observer (string, default: `transient`).
   """
   def start(args) do
     store = store(args)
     selector = selector(args)
+    name = name(args)
 
-    topic = :emitter_group.topic(store, selector)
+    topic = topic(store, selector, name)
 
     case start_link(args) do
       {:ok, pid} ->
         IO.puts("#{Themes.observer(pid)} for [#{inspect(topic)}] is UP!")
+        pid
 
       {:error, {:already_started, pid}} ->
         IO.puts("#{Themes.observer(pid)} for [#{inspect(topic)}] is UP!")
+        pid
 
       {:error, reason} ->
-        raise "Failed to start consumer for [#{inspect(topic)}]. 
+        raise "Failed to start observer for [#{inspect(topic)}]. 
                Reason: #{inspect(reason)}"
     end
   end
@@ -104,6 +112,9 @@ defmodule ExESDB.Repl.Observer do
   defp store(args), do: Keyword.get(args, :store, Options.store_id())
   defp type(args), do: Keyword.get(args, :type, :by_stream)
   defp selector(args), do: Keyword.get(args, :selector, "$all")
-  defp store(args), do: Keyword.get(args, :store)
   defp pubsub(args), do: Keyword.get(args, :pubsub, Options.pub_sub())
+  defp name(args), do: Keyword.get(args, :name, "transient")
+
+  defp topic(store, selector, "transient"), do: :emitter_group.topic(store, selector)
+  defp topic(store, _, name), do: :emitter_group.topic(store, name)
 end

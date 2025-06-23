@@ -25,7 +25,7 @@ In your `mix.exs` file:
 ```elixir
 def deps do
   [
-    {:ex_esdb, "~> 0.0.13-alpha"}
+    {:ex_esdb, "~> 0.0.14-alpha"}
   ]
 end
 ```
