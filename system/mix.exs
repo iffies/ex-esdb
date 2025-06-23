@@ -4,7 +4,7 @@ defmodule ExESDB.MixProject do
 
   @app_name :ex_esdb
   @elixir_version "~> 1.17"
-  @version "0.0.11-alpha"
+  @version "0.0.12-alpha"
   @source_url "https://github.com/beam-campus/ex-esdb"
   #  @homepage_url "https://github.com/beam-campus/ex-esdb"
   @docs_url "https://hexdocs.pm/ex_esdb"
@@ -56,7 +56,9 @@ defmodule ExESDB.MixProject do
         :os_mon,
         :runtime_tools,
         :khepri,
-        :gen_retry
+        :gen_retry,
+        :observer,
+        :wx
       ]
     ]
 

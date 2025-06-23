@@ -47,8 +47,9 @@ defmodule ExESDB.Repl.Observer do
     pubsub
     |> Phoenix.PubSub.subscribe(topic)
 
-    store
-    |> API.save_subscription(type, selector)
+    :ok =
+      store
+      |> API.save_subscription(type, selector)
 
     {:ok, args}
   end

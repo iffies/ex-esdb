@@ -134,13 +134,13 @@ defmodule ExESDB.GatewayAPI do
     Add a permanent or transient subscription.
   """
   @spec save_subscription(
-          store :: store,
-          type :: subscription_type,
-          selector :: selector_type,
-          subscription_name :: subscription_name,
-          start_from :: integer,
-          subscriber :: pid | nil
-        ) :: :ok | {:error, error}
+          store :: atom(),
+          type :: atom(),
+          selector :: String.t() | map(),
+          subscription_name :: String.t(),
+          start_from :: non_neg_integer(),
+          subscriber :: pid() | nil
+        ) :: :ok
   def save_subscription(
         store,
         type,
@@ -148,12 +148,14 @@ defmodule ExESDB.GatewayAPI do
         subscription_name \\ "transient",
         start_from \\ 0,
         subscriber \\ nil
-      ),
-      do:
-        GenServer.cast(
-          random_gateway_worker(),
-          {:save_subscription, store, type, selector, subscription_name, start_from, subscriber}
-        )
+      ) do
+    GenServer.cast(
+      random_gateway_worker(),
+      {:save_subscription, store, type, selector, subscription_name, start_from, subscriber}
+    )
+
+    :ok
+  end
 
   @doc """
     Remove a permanent or transient subscription.

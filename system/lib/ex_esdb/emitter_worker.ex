@@ -76,7 +76,7 @@ defmodule ExESDB.EmitterWorker do
   @impl true
   def handle_info(
         {:forward_to_local, topic, event},
-        %{subscriber: subscriber, store: store, selector: selector} = _state
+        %{subscriber: subscriber, store: store, selector: selector} = state
       ) do
     case subscriber do
       nil ->
@@ -89,11 +89,13 @@ defmodule ExESDB.EmitterWorker do
         send_or_kill(pid, event, store, selector)
     end
 
-    {:noreply, subscriber}
+    {:noreply, state}
   end
 
   @impl true
-  def handle_info(_, state) do
+  def handle_info(msg, state) do
+    Logger.warning("Received unexpected message #{inspect(msg)} on #{inspect(self())}")
+
     {:noreply, state}
   end
 end
