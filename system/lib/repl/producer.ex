@@ -84,9 +84,8 @@ defmodule ExESDB.Repl.Producer do
       store
       |> StrWriter.append_events(stream, version, events)
 
-    IO.puts("
-             Appended #{nbr_of_events} event(s) to #{inspect(store)}:#{stream}. 
-             Now at version #{new_version}.
-            ")
+    msg = "#{nbr_of_events} event(s) to #{inspect(store)}:#{stream}.v(#{new_version})"
+
+    IO.puts(Themes.appended(msg))
   end
 end

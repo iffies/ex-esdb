@@ -22,16 +22,16 @@ defmodule ExESDB.Repl.Observer do
       data: payload
     } = event
 
-    IO.puts("\nCONSUMED #{stream_id}:#{event_type} 
-         version #{inspect(version)}
-         payload: #{inspect(payload, pretty: true)}")
+    msg = "#{stream_id}:#{event_type} (v#{version}) => #{inspect(payload, pretty: true)}"
+
+    IO.puts(Themes.observed(msg))
 
     {:noreply, state}
   end
 
   @impl true
   def handle_info(msg, state) do
-    Logger.warning("Received unexpected message #{inspect(msg)}")
+    Logger.error("Received unexpected message #{inspect(msg)}")
     {:noreply, state}
   end
 

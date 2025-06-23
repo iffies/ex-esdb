@@ -10,6 +10,9 @@ defmodule ExESDB.Repl.EventGenerator do
   @greenhouse2 "greenhouse2"
   @greenhouse3 "greenhouse3"
   @greenhouse4 "greenhouse4"
+  @greenhouse5 "greenhouse5"
+  @greenhouse6 "greenhouse6"
+  @greenhouse7 "greenhouse7"
 
   @temperature_measured_v1 "temperature_measured:v1"
   @humidity_measured_v1 "humidity_measured:v1"
@@ -33,7 +36,10 @@ defmodule ExESDB.Repl.EventGenerator do
       @greenhouse1,
       @greenhouse2,
       @greenhouse3,
-      @greenhouse4
+      @greenhouse4,
+      @greenhouse5,
+      @greenhouse6,
+      @greenhouse7
     ]
 
   def event_types,

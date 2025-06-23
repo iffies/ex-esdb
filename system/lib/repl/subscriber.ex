@@ -8,8 +8,8 @@ defmodule ExESDB.Repl.Subscriber do
   use GenServer
 
   alias ExESDB.GatewayAPI, as: API
-  alias ExESDB.Themes, as: Themes
   alias ExESDB.Options, as: Options
+  alias ExESDB.Themes, as: Themes
 
   @impl true
   def handle_info({:event_emitted, event}, state) do
@@ -25,9 +25,8 @@ defmodule ExESDB.Repl.Subscriber do
       subscription_name: subscription_name
     } = state
 
-    IO.puts("\nCONSUMED #{stream_id}:#{event_type} 
-         version #{inspect(version)}
-         payload: #{inspect(payload, pretty: true)}")
+    msg = "#{stream_id}:#{event_type} v(#{inspect(version)}) => #{inspect(payload, pretty: true)}"
+    IO.puts(Themes.subscription_received(subscription_name, msg))
 
     store
     |> API.ack_event(subscription_name, event, self())
@@ -42,20 +41,20 @@ defmodule ExESDB.Repl.Subscriber do
 
   @impl true
   def handle_info(msg, state) do
-    IO.puts("UNHANDLED MESSAGE #{inspect(msg)}")
+    Logger.warning("Unexpected message: #{inspect(msg)}")
     {:noreply, state}
   end
 
   @spec start(
           subscription_name :: String.t(),
-          start_from :: integer(),
-          selector :: String.t()
+          stream :: String.t(),
+          start_from :: integer()
         ) :: pid()
-  def start(subscription_name, start_from \\ 0, selector \\ "$all") do
+  def start(subscription_name, stream, start_from \\ 0) do
     args = [
       subscription_name: subscription_name,
       start_from: start_from,
-      selector: selector
+      selector: stream
     ]
 
     case start_link(args) do

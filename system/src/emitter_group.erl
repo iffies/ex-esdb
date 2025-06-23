@@ -41,18 +41,18 @@ random_emitter(Emitters) ->
 -spec broadcast(Store :: atom(), Id :: string(), Event :: map()) -> ok | {error, term()}.
 broadcast(Store, Id, Event) when is_atom(Store) ->
   Topic = topic(Store, Id),
-  case random_emitter(members(Store, Id)) of
-    {error, {no_such_group, _}} ->
-      logger:error("NO_GROUP [~p]~n", [Topic]),
-      {error, no_such_group};
-    EmitterPid ->
-      Message =
-        if node(EmitterPid) =:= node() ->
-             forward_to_local_msg(Topic, Event);
-           true ->
-             broadcast_msg(Topic, Event)
-        end,
-      EmitterPid ! Message
+  Members = members(Store, Id),
+  if length(Members) > 0 ->
+       EmitterPid = random_emitter(Members),
+       Message =
+         if node(EmitterPid) =:= node() ->
+              forward_to_local_msg(Topic, Event);
+            true ->
+              broadcast_msg(Topic, Event)
+         end,
+       EmitterPid ! Message;
+     true ->
+       logger:warning("No Emitters for [~p]~n", [Topic])
   end.
 
 -spec forward_to_local_msg(Topic :: binary(), Event :: map()) -> tuple().

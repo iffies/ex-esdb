@@ -68,15 +68,63 @@ defmodule ExESDB.Repl do
   end
 
   def start_observer_for_all_streams do
+    Logger.warning("Starting Observer for all streams in 5 seconds...
+      Switch to :observer application to see it come online.")
+    Process.sleep(5_000)
     Observer.start(store: @store, type: :by_stream, selector: "$all")
   end
 
-  def start_greenhouse1_subscriber do
-    Subscriber.start(store: @store, type: :by_stream, selector: "$greenhouse1")
+  def start_observer_for_stream(stream \\ "$greenhouse-1") do
+    Logger.warning("Starting Observer for [#{stream}] in 5 seconds...
+      Switch to :observer application to see it come online.")
+    Process.sleep(5_000)
+    Observer.start(store: @store, type: :by_stream, selector: stream)
   end
 
-  def start_producers do
-    ESGen.streams()
-    |> Enum.each(fn stream -> Producer.start(stream) end)
+  @doc """
+    Starts an observer for a specific event type.
+    ## Possible event types:
+    - "initialized:v1" (default)
+    - "temperature_measured:v1"
+    - "humidity_measured:v1"
+    - "light_measured:v1"
+    - "fan_activated:v1"
+    - "fan_deactivated:v1"
+    - "light_activated:v1"
+    - "light_deactivated:v1"
+    - "heater_activated:v1"
+    - "heater_deactivated:v1"
+    - "sprinkler_activated:v1"
+    - "sprinkler_deactivated:v1"
+    - "desired_temperature_set:v1"
+    - "desired_humidity_set:v1"
+    - "desired_light_set:v1"
+  """
+  @spec start_observer_for_event_type(event_type :: String.t()) :: :ok
+  def start_observer_for_event_type(event_type \\ "initialized:v1") do
+    Logger.warning("Starting Observer for [#{event_type}] in 5 seconds...
+      Switch to :observer application to see it come online.")
+    Process.sleep(5_000)
+    Observer.start(store: @store, type: :by_event_type, selector: event_type)
+    :ok
+  end
+
+  def start_stream_subscriber(name, stream \\ "$greenhouse-1", start_from \\ 0) do
+    Logger.warning(
+      "Starting Subscriber for [#{name}] to [#{stream}] from [#{start_from}] in 5 seconds... 
+      Switch to :observer application to see it come online."
+    )
+
+    Process.sleep(5_000)
+    Subscriber.start(name, stream, start_from)
+  end
+
+  def start_producers(nbr_of_producers \\ 10) do
+    Logger.warning("Starting #{nbr_of_producers} Producers in 5 seconds. 
+      Switch to :observer application to see them come online.")
+    Process.sleep(5_000)
+
+    1..nbr_of_producers
+    |> Enum.each(fn n -> Producer.start("greenhouse-#{n}") end)
   end
 end

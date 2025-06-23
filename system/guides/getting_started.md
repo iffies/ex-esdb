@@ -8,7 +8,7 @@ Though it is gaining popularity, the number of options for storing these events 
 
 One of the strong-points of the BEAM is, that it comes 'batteries included': there are BEAM-native libraries for many common tasks, like: storage, pub/sub, caching, logging, telemetry, etc.
 
-`ExESDB` is an attempt to create a BEAM-native Event Store written in Elixir, building further upon the [Khepri](https://github.com/rabbitmq/khepri) library, which in turn builds upon the [Ra](https://github.com/rabbitmq/ra) library.
+`ExESDB` is an attempt to create a BEAM-native Event Store written in Erlang/Elixir, building further upon the [Khepri](https://github.com/rabbitmq/khepri) library, which in turn builds upon the [Ra](https://github.com/rabbitmq/ra) library.
 
 ## Status
 
@@ -25,7 +25,7 @@ In your `mix.exs` file:
 ```elixir
 def deps do
   [
-    {:ex_esdb, "~> 0.0.10-alpha"}
+    {:ex_esdb, "~> 0.0.13-alpha"}
   ]
 end
 ```
