@@ -11,6 +11,8 @@ defmodule ExESDB.Repl.Subscriber do
   alias ExESDB.Options, as: Options
   alias ExESDB.Themes, as: Themes
 
+  require Logger
+
   @impl true
   def handle_info({:event_emitted, event}, state) do
     %{
@@ -29,7 +31,7 @@ defmodule ExESDB.Repl.Subscriber do
     IO.puts(Themes.subscription_received(subscription_name, msg))
 
     store
-    |> API.ack_event(subscription_name, event, self())
+    |> API.ack_event(subscription_name, self(), event)
 
     {:noreply, state}
   end

@@ -21,10 +21,10 @@ defmodule ExESDB.EmitterWorker do
     end
   end
 
-  defp emit(pub_sub, topic, event),
-    do:
-      pub_sub
-      |> PubSub.broadcast(topic, {:event_emitted, event})
+  defp emit(pub_sub, topic, event) do
+    pub_sub
+    |> PubSub.broadcast(topic, {:event_emitted, event})
+  end
 
   @impl GenServer
   def init({store, sub_topic, subscriber}) do
@@ -53,6 +53,16 @@ defmodule ExESDB.EmitterWorker do
         {store, sub_topic, subscriber},
         name: emitter
       )
+
+  def child_spec({store, sub_topic, subscriber, emitter}) do
+    %{
+      id: Module.concat(__MODULE__, emitter),
+      start: {__MODULE__, :start_link, [{store, sub_topic, subscriber, emitter}]},
+      restart: :permanent,
+      shutdown: 5000,
+      type: :worker
+    }
+  end
 
   @impl true
   def handle_info(

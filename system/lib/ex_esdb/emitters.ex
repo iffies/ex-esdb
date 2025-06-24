@@ -10,6 +10,11 @@ defmodule ExESDB.Emitters do
   defp build_filter(:by_event_pattern, selector), do: :streams_filters.by_event_pattern(selector)
   defp build_filter(:by_event_payload, selector), do: :streams_filters.by_event_payload(selector)
 
+  defp partition(term) do
+    partitions = System.schedulers_online()
+    :erlang.phash2(term, (:rand.uniform(partitions) + 1) * 10)
+  end
+
   def start_emitter(
         store,
         %{
@@ -26,9 +31,11 @@ defmodule ExESDB.Emitters do
 
     sub_topic = Topics.sub_topic(type, subscription_name, selector)
 
+    args = {store, sub_topic, subscriber, pool_size, filter}
+
     DynamicSupervisor.start_child(
-      {:via, PartitionSupervisor, {ExESDB.EmitterPools, self()}},
-      {ExESDB.EmitterPool, {store, sub_topic, subscriber, pool_size, filter}}
+      {:via, PartitionSupervisor, {ExESDB.EmitterPools, partition(args)}},
+      {ExESDB.EmitterPool, args}
     )
   end
 end
