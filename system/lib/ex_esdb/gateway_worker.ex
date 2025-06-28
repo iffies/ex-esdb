@@ -5,12 +5,16 @@ defmodule ExESDB.GatewayWorker do
   """
   use GenServer
 
+  alias ExESDB.SnapshotsReader, as: SnapshotsR
+  alias ExESDB.SnapshotsWriter, as: SnapshotsW
+
   alias ExESDB.SubscriptionsReader, as: SubsR
   alias ExESDB.SubscriptionsWriter, as: SubsW
 
   alias ExESDB.StreamsHelper, as: StreamsH
   alias ExESDB.StreamsReader, as: StreamsR
   alias ExESDB.StreamsWriter, as: StreamsW
+
   alias ExESDB.Themes, as: Themes
 
   require Logger
@@ -105,6 +109,18 @@ defmodule ExESDB.GatewayWorker do
     end
   end
 
+  @impl GenServer
+  def handle_call({:read_snapshot, store, source_uuid, stream_uuid, version}, _from, state) do
+    case store
+         |> SnapshotsR.read_snapshot(source_uuid, stream_uuid, version) do
+      {:ok, snapshot} ->
+        {:reply, {:ok, snapshot}, state}
+
+      {:error, reason} ->
+        {:reply, {:error, reason}, state}
+    end
+  end
+
   ################ HANDLE_CAST #############
   @impl true
   def handle_cast(
@@ -146,6 +162,25 @@ defmodule ExESDB.GatewayWorker do
       event_number + 1,
       subscriber_pid
     )
+
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_cast(
+        {:record_snapshot, store, source_uuid, stream_uuid, version, snapshot_record},
+        state
+      ) do
+    store
+    |> SnapshotsW.record_snapshot(source_uuid, stream_uuid, version, snapshot_record)
+
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_cast({:delete_snapshot, store, source_uuid, stream_uuid, version}, state) do
+    store
+    |> SnapshotsW.delete_snapshot(source_uuid, stream_uuid, version)
 
     {:noreply, state}
   end

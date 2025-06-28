@@ -23,6 +23,9 @@ defmodule ExESDB.StreamsWriter do
   def worker_id(store, stream_id),
     do: {:streams_writer_worker, store, stream_id}
 
+  def hr_worker_id_atom(store, stream_id),
+    do: :"streams_writer_worker_#{store}_#{stream_id}"
+
   defp get_writer(store, stream_id) do
     case get_cluster_writer(store, stream_id) do
       nil ->

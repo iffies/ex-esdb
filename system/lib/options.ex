@@ -10,6 +10,8 @@ defmodule ExESDB.Options do
   @db_type EnVars.db_type()
   @seed_nodes EnVars.seed_nodes()
   @pub_sub EnVars.pub_sub()
+  @writer_idle_ms EnVars.writer_idle_ms()
+  @reader_idle_ms EnVars.reader_idle_ms()
 
   def sys_env(key), do: System.get_env(key)
   def app_env, do: Application.get_env(:ex_esdb, :khepri)
@@ -54,6 +56,20 @@ defmodule ExESDB.Options do
     case sys_env(@pub_sub) do
       nil -> app_env(:pub_sub) || :native
       pub_sub -> to_unique_atom(pub_sub)
+    end
+  end
+
+  def reader_idle_ms do
+    case sys_env(@reader_idle_ms) do
+      nil -> app_env(:reader_idle_ms) || 10_000
+      reader_idle_ms -> String.to_integer(reader_idle_ms)
+    end
+  end
+
+  def writer_idle_ms do
+    case sys_env(@writer_idle_ms) do
+      nil -> app_env(:writer_idle_ms) || 10_000
+      writer_idle_ms -> String.to_integer(writer_idle_ms)
     end
   end
 

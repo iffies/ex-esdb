@@ -10,9 +10,9 @@ defmodule ExESDB.StreamsReader do
   @doc """
     Returns a list of all streams in the store.
     ## Parameters
-    #  - `store` is the name of the store.
+      - `store` is the name of the store.
     ## Returns
-    #  - `{:ok, streams}`  if successful.
+      - `{:ok, streams}`  if successful.
   """
   @spec get_streams(store :: atom()) :: {:ok, list()} | {:error, term()}
   def get_streams(store),

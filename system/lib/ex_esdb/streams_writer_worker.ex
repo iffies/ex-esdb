@@ -5,14 +5,25 @@ defmodule ExESDB.StreamsWriterWorker do
 
   use GenServer
 
+  alias ExESDB.Options, as: Options
   alias ExESDB.StreamsHelper, as: Helper
   alias ExESDB.StreamsWriter, as: StreamsWriter
   alias ExESDB.Themes, as: Themes
+
+  require Logger
+  require DateTime
 
   ############ INTERNALS ############
   defp handle_transaction_result({:ok, {:commit, result}}), do: {:ok, result}
   defp handle_transaction_result({:ok, {:abort, reason}}), do: {:error, reason}
   defp handle_transaction_result({:error, reason}), do: {:error, reason}
+
+  defp epoch_time_ms,
+    do: DateTime.to_unix(DateTime.utc_now(), :millisecond)
+
+  defp check_idle(ttl) do
+    Process.send_after(self(), :check_idle, ttl)
+  end
 
   defp try_append_events(store, stream_id, expected_version, events) do
     current_version =
@@ -73,6 +84,7 @@ defmodule ExESDB.StreamsWriterWorker do
           {:error, reason}
       end
 
+    state = %{state | idle_since: epoch_time_ms()}
     {:reply, result, state}
   end
 
@@ -82,16 +94,43 @@ defmodule ExESDB.StreamsWriterWorker do
       store
       |> try_append_events(stream_id, expected_version, events)
 
+    state = %{state | idle_since: epoch_time_ms()}
     {:reply, result, state}
   end
 
+  @impl true
+  def handle_info(:check_idle, %{idle_since: idle_since} = state) do
+    writer_ttl = Options.writer_idle_ms()
+
+    if idle_since + writer_ttl < epoch_time_ms() do
+      Process.exit(self(), :ttl_reached)
+      # GenServer.stop(self())
+    end
+
+    check_idle(writer_ttl)
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_info({:EXIT, _pid, reason}, %{worker_name: name} = state) do
+    msg = "[#{inspect(name)}] is EXITING with reason #{inspect(reason)}, leaving the cluster."
+    IO.puts("#{Themes.streams_writer_worker(msg)}")
+    Swarm.unregister_name(name)
+    {:noreply, state}
+  end
+
   ############# PLUMBING #############
+  @doc """
+    Returns a child spec for a streams writer worker.
+    Please note that the restart strategy is set to `:temporary`
+    to avoid restarting the worker when the idle timeout is reached.
+  """
   def child_spec({store, stream_id, partition}) do
     %{
-      id: {StreamsWriter.worker_id(store, stream_id), partition},
+      id: StreamsWriter.hr_worker_id_atom(store, stream_id, partition),
       start: {__MODULE__, :start_link, [{store, stream_id, partition}]},
       type: :worker,
-      restart: :permanent,
+      restart: :temporary,
       shutdown: 5000
     }
   end
@@ -100,17 +139,19 @@ defmodule ExESDB.StreamsWriterWorker do
     GenServer.start_link(
       __MODULE__,
       {store, stream_id, partition},
-      name: {:global, StreamsWriter.worker_id(store, stream_id)}
+      name: StreamsWriter.hr_worker_id_atom(store, stream_id, partition)
     )
   end
 
   @impl true
   def init({store, stream_id, partition}) do
     Process.flag(:trap_exit, true)
-    name = StreamsWriter.worker_id(store, stream_id)
+    ttl = Options.writer_idle_ms()
+    name = StreamsWriter.hr_worker_id_atom(store, stream_id)
     msg = "[#{inspect(name)}] is UP on partition #{inspect(partition)}, joining the cluster."
     IO.puts("#{Themes.streams_writer_worker(msg)}")
     Swarm.register_name(name, self())
+    check_idle(ttl)
 
     {:ok,
      %{
@@ -118,7 +159,8 @@ defmodule ExESDB.StreamsWriterWorker do
        store: store,
        stream_id: stream_id,
        partition: partition,
-       node: node()
+       node: node(),
+       idle_since: epoch_time_ms()
      }}
   end
 
@@ -128,13 +170,5 @@ defmodule ExESDB.StreamsWriterWorker do
     IO.puts("#{Themes.streams_writer_worker(msg)}")
     Swarm.unregister_name(name)
     :ok
-  end
-
-  @impl true
-  def handle_info({:EXIT, _pid, reason}, %{worker_name: name} = state) do
-    msg = "[#{inspect(name)}] is EXITING with reason #{inspect(reason)}, leaving the cluster."
-    IO.puts("#{Themes.streams_writer_worker(msg)}")
-    Swarm.unregister_name(name)
-    {:noreply, state}
   end
 end

@@ -212,4 +212,12 @@ defmodule ExESDB.Repl do
 
     :ok
   end
+
+  @doc """
+    Stops a producer for a specific stream_id.
+  """
+  @spec stop_producer_for_stream(stream_id :: String.t()) :: :ok
+  def stop_producer_for_stream(stream_id \\ "greenhouse-1") do
+    Producer.stop(stream_id)
+  end
 end

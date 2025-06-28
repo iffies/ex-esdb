@@ -173,6 +173,46 @@ defmodule ExESDB.GatewayAPI do
         {:remove_subscription, store, type, selector, subscription_name}
       )
 
+  @spec record_snapshot(
+          store :: atom(),
+          source_uuid :: binary(),
+          stream_uuid :: binary(),
+          version :: non_neg_integer(),
+          snapshot_record :: map()
+        ) :: :ok
+  def record_snapshot(store, source_uuid, stream_uuid, version, snapshot_record),
+    do:
+      GenServer.cast(
+        random_gateway_worker(),
+        {:record_snapshot, store, source_uuid, stream_uuid, version, snapshot_record}
+      )
+
+  @spec delete_snapshot(
+          store :: atom(),
+          source_uuid :: binary(),
+          stream_uuid :: binary(),
+          version :: non_neg_integer()
+        ) :: :ok
+  def delete_snapshot(store, source_uuid, stream_uuid, version),
+    do:
+      GenServer.cast(
+        random_gateway_worker(),
+        {:delete_snapshot, store, source_uuid, stream_uuid, version}
+      )
+
+  @spec read_snapshot(
+          store :: atom(),
+          source_uuid :: binary(),
+          stream_uuid :: binary(),
+          version :: non_neg_integer()
+        ) :: {:ok, map()} | {:error, term()}
+  def read_snapshot(store, source_uuid, stream_uuid, version),
+    do:
+      GenServer.call(
+        random_gateway_worker(),
+        {:read_snapshot, store, source_uuid, stream_uuid, version}
+      )
+
   ################## PLUMBING ##################
   def init(opts) do
     IO.puts("#{Themes.gateway_api(self())} is UP!")

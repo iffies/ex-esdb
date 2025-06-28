@@ -1,52 +1,50 @@
 defmodule ExESDB.Snapshots do
   @moduledoc """
-    Provides functions for working with snapshots
+    The ExESDB Snapshots SubSystem.
   """
-  alias ExESDB.Schema.SnapshotRecord, as: SnapshotRecord
+  use Supervisor
 
-  @doc """
-    Delete a snapshot of the current state of the event store.
-  """
-  @spec delete_snapshot(
-          store :: any,
-          source_uuid :: any
-        ) :: :ok | {:error, any}
-  def delete_snapshot(store, source_uuid) do
-    case store
-         |> :khepri.delete!([:snapshots, source_uuid]) do
-      {:ok, _} -> :ok
-      {:error, reason} -> {:error, reason}
-    end
+  require Logger
+  alias ExESDB.Themes, as: Themes
+
+  def start_link(opts),
+    do:
+      Supervisor.start_link(
+        __MODULE__,
+        opts,
+        name: __MODULE__
+      )
+
+  @impl true
+  def init(_) do
+    children = [
+      {PartitionSupervisor, child_spec: DynamicSupervisor, name: ExESDB.SnapshotsWriters},
+      {PartitionSupervisor, child_spec: DynamicSupervisor, name: ExESDB.SnapshotsReaders}
+    ]
+
+    ret = Supervisor.init(children, strategy: :one_for_one)
+    IO.puts("#{Themes.snapshots_system(self())} is UP.")
+    ret
   end
 
   @doc """
-    Read a snapshot of the current state of the event store.
+  ## Description
+    Returns the key for a snapshot as a Khepri Path.
+  ## Examples
+      iex> ExESDB.Snapshots.path("source_uuid", "stream_uuid", 1)
+      [:snapshots, "source_uuid", "stream_uuid", "000000001"]
   """
-  @spec read_snapshot(
-          store :: any,
-          source_uuid :: any
-        ) :: {:ok, SnapshotRecord.t()} | {:error, any}
-  def read_snapshot(store, source_uuid) do
-    case store
-         |> :khepri.get!([:snapshots, source_uuid]) do
-      {:ok, snapshot_record} -> {:ok, snapshot_record}
-      {:error, reason} -> {:error, reason}
-    end
-  end
+  @spec path(
+          source_uuid :: String.t(),
+          stream_uuid :: String.t(),
+          version :: non_neg_integer()
+        ) :: list()
+  def path(source_uuid, stream_uuid, version) do
+    padded_version =
+      version
+      |> Integer.to_string()
+      |> String.pad_leading(10, "0")
 
-  @doc """
-    Record a snapshot of the current state of the event store.
-  """
-  @spec record_snapshot(
-          store :: any,
-          snapshot_record :: any
-        ) :: :ok | {:error, any}
-  def record_snapshot(store, %{source_uuid: source_uuid} = snapshot_record)
-      when is_struct(snapshot_record, SnapshotRecord) do
-    case store
-         |> :khepri.put!([:snapshots, source_uuid], snapshot_record) do
-      {:ok, _} -> :ok
-      {:error, reason} -> {:error, reason}
-    end
+    [:snapshots, source_uuid, stream_uuid, padded_version]
   end
 end

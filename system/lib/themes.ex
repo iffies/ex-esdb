@@ -94,15 +94,15 @@ defmodule ExESDB.Themes do
     do: "OBSERVER [#{CF.bright_yellow_on_black()}#{inspect(pid)}#{CF.reset()}]"
 
   def observed(msg),
-    do: "OBSERVED [#{CF.bright_green_on_black()}#{inspect(msg)}#{CF.reset()}]"
+    do: "SEEN [#{CF.bright_green_on_black()}#{inspect(msg)}#{CF.reset()}]"
 
-  ############# SUBSCRIBER ##############
+  ################ SUBSCRIBER ##############
   def subscriber(pid),
     do: "SUBSCRIBER [#{CF.bright_yellow_on_green()}#{inspect(pid)}#{CF.reset()}]"
 
   def subscription_received(subscription_name, msg),
     do:
-      "SUBSCRIPTION_RECEIVED [#{CF.bright_green_on_black()}#{inspect(subscription_name)} #{inspect(msg)}#{CF.reset()}]"
+      "RECEIVED [#{CF.bright_green_on_black()}#{inspect(subscription_name)} #{inspect(msg)}#{CF.reset()}]"
 
   ################ PRODUCER ################
   def producer(pid),
@@ -110,4 +110,26 @@ defmodule ExESDB.Themes do
 
   def appended(msg),
     do: "APPENDED [#{CF.bright_yellow_on_black()}#{inspect(msg)}#{CF.reset()}]"
+
+  ################ SNAPSHOTS ################
+  def snapshots_system(pid),
+    do: "SNAPSHOT_SYSTEM [#{CF.blue_on_yellow()}#{inspect(pid)}#{CF.reset()}]"
+
+  def snapshots_reader(pid),
+    do: "SNAPSHOT_READER [#{CF.blue_on_yellow()}#{inspect(pid)}#{CF.reset()}]"
+
+  def snapshots_reader_pool(pid),
+    do: "SNAPSHOT_READER_POOL [#{CF.blue_on_yellow()}#{inspect(pid)}#{CF.reset()}]"
+
+  def snapshots_reader_worker(pid),
+    do: "SNAPSHOT_READER_WORKER [#{CF.blue_on_yellow()}#{inspect(pid)}#{CF.reset()}]"
+
+  def snapshots_writer(pid),
+    do: "SNAPSHOT_WRITER [#{CF.blue_on_yellow()}#{inspect(pid)}#{CF.reset()}]"
+
+  def snapshots_writer_pool(pid),
+    do: "SNAPSHOT_WRITER_POOL [#{CF.blue_on_yellow()}#{inspect(pid)}#{CF.reset()}]"
+
+  def snapshots_writer_worker(pid),
+    do: "SNAPSHOT_WRITER_WORKER [#{CF.blue_on_yellow()}#{inspect(pid)}#{CF.reset()}]"
 end

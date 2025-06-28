@@ -24,6 +24,7 @@ defmodule ExESDB.System do
       {ExESDB.Store, opts},
       {ExESDB.Cluster, opts},
       {ExESDB.Streams, opts},
+      {ExESDB.Snapshots, opts},
       {ExESDB.Subscriptions, opts},
       {ExESDB.GatewaySupervisor, opts},
       {ExESDB.LeaderSystem, opts}
