@@ -7,6 +7,8 @@ defmodule ExESDB.SnapshotsReaderWorker do
   alias ExESDB.Snapshots, as: Snapshots
   alias ExESDB.SnapshotsReader, as: SnapshotsReader
 
+  import ExESDB.Khepri.Conditions
+
   alias ExESDB.Themes, as: Themes
 
   ################ PLUMBING ################
@@ -44,4 +46,37 @@ defmodule ExESDB.SnapshotsReaderWorker do
         {:reply, {:error, reason}, state}
     end
   end
+
+  @impl true
+  def handle_call({:list_snapshots, store, source_uuid, stream_uuid}, _from, state) do
+    query = build_query(source_uuid, stream_uuid)
+
+    case store
+         |> :khepri.get_many(query) do
+      {:ok, snapshots} ->
+        {:reply, {:ok, snapshots}, state}
+
+      {:error, reason} ->
+        {:reply, {:error, reason}, state}
+    end
+  end
+
+  defp build_query(:any, :any),
+    do: [
+      :snapshots,
+      if_path_matches(regex: :any),
+      if_path_matches(regex: :any),
+      if_path_matches(regex: :any)
+    ]
+
+  defp build_query(source_uuid, :any),
+    do: [
+      :snapshots,
+      source_uuid,
+      if_path_matches(regex: :any),
+      if_path_matches(regex: :any)
+    ]
+
+  defp build_query(source_uuid, stream_uuid),
+    do: [:snapshots, source_uuid, stream_uuid, if_path_matches(regex: :any)]
 end

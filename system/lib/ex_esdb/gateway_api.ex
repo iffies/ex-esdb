@@ -213,6 +213,18 @@ defmodule ExESDB.GatewayAPI do
         {:read_snapshot, store, source_uuid, stream_uuid, version}
       )
 
+  @spec list_snapshots(
+          store :: atom(),
+          source_uuid :: binary() | :any,
+          stream_uuid :: binary() | :any
+        ) :: {:ok, [map()]} | {:error, term()}
+  def list_snapshots(store, source_uuid \\ :any, stream_uuid \\ :any),
+    do:
+      GenServer.call(
+        random_gateway_worker(),
+        {:list_snapshots, store, source_uuid, stream_uuid}
+      )
+
   ################## PLUMBING ##################
   def init(opts) do
     IO.puts("#{Themes.gateway_api(self())} is UP!")

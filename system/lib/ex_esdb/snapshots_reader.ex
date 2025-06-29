@@ -4,10 +4,10 @@ defmodule ExESDB.SnapshotsReader do
   """
 
   def hr_snapshots_reader_name(store_id, source_uuid, stream_uuid),
-    do: :"snapshots_reader_#{store_id}_#{source_uuid}_#{stream_uuid}"
+    do: :"#{store_id}_#{source_uuid}_#{stream_uuid}_snaps_rdr"
 
   def cluster_id(store, source_uuid, stream_uuid),
-    do: {:snapshots_reader, store, source_uuid, stream_uuid}
+    do: {:snaps_reader, store, source_uuid, stream_uuid}
 
   @spec worker_pids(
           store :: atom(),
@@ -57,6 +57,24 @@ defmodule ExESDB.SnapshotsReader do
     end
   end
 
+  @doc """
+
+  ## Description
+
+    Reads a snapshot version from the store 
+    for the given source and stream uuids
+
+  ## Parameters
+
+     * `store` - the store to read from
+     * `source_uuid` - the source uuid
+     * `stream_uuid` - the stream uuid
+     * `version` - the version of the snapshot to read
+
+  ## Returns
+
+     * `{:ok, map()}` - the snapshot
+  """
   @spec read_snapshot(
           store :: atom(),
           source_uuid :: binary(),
@@ -67,6 +85,18 @@ defmodule ExESDB.SnapshotsReader do
     GenServer.call(
       get_worker(store, source_uuid, stream_uuid),
       {:read_snapshot, store, source_uuid, stream_uuid, version}
+    )
+  end
+
+  @spec list_snapshots(
+          store :: atom(),
+          source_uuid :: binary() | :any,
+          stream_uuid :: binary() | :any
+        ) :: {:ok, [map()]} | {:error, term()}
+  def list_snapshots(store, source_uuid \\ :any, stream_uuid \\ :any) do
+    GenServer.call(
+      get_worker(store, source_uuid, stream_uuid),
+      {:list_snapshots, store, source_uuid, stream_uuid}
     )
   end
 end

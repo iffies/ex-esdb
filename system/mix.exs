@@ -50,17 +50,24 @@ defmodule ExESDB.MixProject do
   def application,
     do: [
       mod: {ExESDB.App, []},
-      extra_applications: [
-        :logger,
-        :eex,
-        :os_mon,
-        :runtime_tools,
-        :khepri,
-        :gen_retry,
-        :observer,
-        :wx
-      ]
+      extra_applications:
+        [
+          :logger,
+          :eex,
+          :os_mon,
+          :runtime_tools,
+          :khepri,
+          :gen_retry
+        ] ++ extra_applications(Mix.env())
     ]
+
+  defp extra_applications(:dev),
+    do: [
+      :wx,
+      :observer
+    ]
+
+  defp extra_applications(_), do: []
 
   defp erlc_paths(_),
     do: [

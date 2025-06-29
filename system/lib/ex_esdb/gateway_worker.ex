@@ -121,6 +121,18 @@ defmodule ExESDB.GatewayWorker do
     end
   end
 
+  @impl GenServer
+  def handle_call({:list_snapshots, store, source_uuid, stream_uuid}, _from, state) do
+    case store
+         |> SnapshotsR.list_snapshots(source_uuid, stream_uuid) do
+      {:ok, snapshots} ->
+        {:reply, {:ok, snapshots}, state}
+
+      {:error, reason} ->
+        {:reply, {:error, reason}, state}
+    end
+  end
+
   ################ HANDLE_CAST #############
   @impl true
   def handle_cast(
