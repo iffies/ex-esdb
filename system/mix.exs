@@ -4,7 +4,7 @@ defmodule ExESDB.MixProject do
 
   @app_name :ex_esdb
   @elixir_version "~> 1.17"
-  @version "0.0.16"
+  @version "0.0.17"
   @source_url "https://github.com/beam-campus/ex-esdb"
   #  @homepage_url "https://github.com/beam-campus/ex-esdb"
   @docs_url "https://hexdocs.pm/ex_esdb"
@@ -106,7 +106,9 @@ defmodule ExESDB.MixProject do
       {:uuidv7, "~> 1.0"},
       {:elixir_uuid, "~> 1.2"},
       {:commanded, "~> 1.4"},
-      {:swarm, "~> 3.4"}
+      {:swarm, "~> 3.4"},
+      {:bc_utils, "~> 0.3"},
+      {:partisan, "~> 5.0"}
     ]
   end
 

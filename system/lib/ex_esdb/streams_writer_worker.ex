@@ -127,7 +127,7 @@ defmodule ExESDB.StreamsWriterWorker do
   """
   def child_spec({store, stream_id, partition}) do
     %{
-      id: StreamsWriter.hr_worker_id_atom(store, stream_id, partition),
+      id: StreamsWriter.hr_worker_id_atom(store, stream_id),
       start: {__MODULE__, :start_link, [{store, stream_id, partition}]},
       type: :worker,
       restart: :temporary,
@@ -139,7 +139,7 @@ defmodule ExESDB.StreamsWriterWorker do
     GenServer.start_link(
       __MODULE__,
       {store, stream_id, partition},
-      name: StreamsWriter.hr_worker_id_atom(store, stream_id, partition)
+      name: StreamsWriter.hr_worker_id_atom(store, stream_id)
     )
   end
 

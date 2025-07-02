@@ -7,7 +7,7 @@ defmodule ExESDB.Commanded.Adapter do
 
   require Logger
 
-  alias ExESDB.Gateway, as: Gateway
+  alias ExESDB.GatewayAPI, as: API
 
   alias ExESDB.Commanded.Mapper, as: Mapper
 
@@ -23,14 +23,22 @@ defmodule ExESDB.Commanded.Adapter do
   @type source_uuid :: String.t()
   @type error :: term
 
+  defp store(meta), do: Map.get(meta, :store_id, :ex_esdb)
+  defp subscription_name(meta), do: Map.get(meta, :subscription_name, :undefined)
+
   @spec ack_event(
-          adapter_meta(),
-          pid(),
-          Commanded.EventStore.EventData.t()
+          meta :: adapter_meta(),
+          pid :: pid(),
+          event :: Commanded.EventStore.EventData.t()
         ) :: :ok | {:error, error()}
   @impl Commanded.EventStore.Adapter
   def ack_event(meta, pid, event) do
-    Gateway.ack_event(meta, pid, event)
+    store = store(meta)
+    subscription_name = subscription_name(meta)
+
+    store
+    |> API.ack_event(subscription_name, pid, event)
+
     :ok
   end
 

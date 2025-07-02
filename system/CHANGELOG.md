@@ -1,5 +1,20 @@
 # Changelog
 
+## version 0.0.17 (2025.07.01)
+
+### BCUtils
+
+- All functionality related to styling is now transferred to the `:bc_utils` package.
+- Added a Banner after startup.
+
+### ExESDBGater
+
+- The `ExESDB.GatewayAPI` is moved to the `:ex_esdb_gater` package.
+
+#### Features
+
+Snapshots Subsystem provides cluster wide support for reading and writing snapshots, using a key derived from the `source_uuid`, `stream_uuid` and `version` of the snapshot.
+
 ## version 0.0.16 (2025.06.26)
 
 ### Snapshots
