@@ -1,6 +1,6 @@
 defmodule ExESDB.Themes do
   @moduledoc false
-  alias BeamCampus.ColorFuncs, as: CF
+  alias BCUtils.ColorFuncs, as: CF
 
   def app(pid),
     do: "ExESDB APP [#{CF.black_on_blue()}#{inspect(pid)}#{CF.reset()}]"

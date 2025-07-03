@@ -108,7 +108,7 @@ defmodule ExESDB.MixProject do
       {:commanded, "~> 1.4"},
       {:swarm, "~> 3.4"},
       {:bc_utils, "~> 0.3"},
-      {:libcluster, "~> 3.3"}
+      {:libcluster, "~> 3.5"}
     ]
   end
 

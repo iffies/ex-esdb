@@ -14,7 +14,7 @@ services:
     stop_grace_period: 10s
     environment:
       EX_ESDB_STORE_ID: "reg_gh"
-      EX_ESDB_COOKIE: "reg_greenhouse_cookie"
+      EX_ESDB_COOKIE: $REG_GH_DEV_CLIQUE
       EX_ESDB_SEED_NODES: "ex_esdb@node1,ex_esdb@node2,ex_esdb@node3,ex_esdb@node4"
 
   ex-esdb1:
@@ -31,7 +31,7 @@ services:
       - ex-esdb1-data:/data
     environment:
       EX_ESDB_STORE_ID: "reg_gh"
-      EX_ESDB_COOKIE: "reg_greenhouse_cookie"
+      EX_ESDB_COOKIE: $REG_GH_DEV_CLIQUE
       EX_ESDB_SEED_NODES: "ex_esdb@node0,ex_esdb@node2,ex_esdb@node3,ex_esdb@node4"
     stop_grace_period: 10s
     depends_on:
@@ -52,7 +52,7 @@ services:
       - ex-esdb2-data:/data
     environment:
       EX_ESDB_STORE_ID: "reg_gh"
-      EX_ESDB_COOKIE: "reg_greenhouse_cookie"
+      EX_ESDB_COOKIE: $REG_GH_DEV_CLIQUE
       EX_ESDB_SEED_NODES: "ex_esdb@node0,ex_esdb@node1,ex_esdb@node3,ex_esdb@node4"
     stop_grace_period: 10s
     depends_on:
@@ -73,7 +73,7 @@ services:
       - ex-esdb3-data:/data
     environment:
       EX_ESDB_STORE_ID: "reg_gh"
-      EX_ESDB_COOKIE: "reg_greenhouse_cookie"
+      EX_ESDB_COOKIE: $REG_GH_DEV_CLIQUE
       EX_ESDB_SEED_NODES: "ex_esdb@node0,ex_esdb@node1,ex_esdb@node2,ex_esdb@node4"
     stop_grace_period: 10s
     depends_on:
@@ -94,7 +94,7 @@ services:
       - ex-esdb4-data:/data
     environment:
       EX_ESDB_STORE_ID: "reg_gh"
-      EX_ESDB_COOKIE: "reg_greenhouse_cookie"
+      EX_ESDB_COOKIE: $REG_GH_DEV_CLIQUE
       EX_ESDB_SEED_NODES: "ex_esdb@node0,ex_esdb@node1,ex_esdb@node2,ex_esdb@node3"
     stop_grace_period: 10s
     depends_on:
