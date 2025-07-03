@@ -25,7 +25,6 @@ defmodule ExESDB.EnVars do
   @doc """
     Returns the seed nodes. default: `nil`
   """
-  def seed_nodes, do: "EX_ESDB_SEED_NODES"
 
   @doc """
     Returns the name of the pub/sub. default: `ex_esdb_pub_sub`

@@ -19,16 +19,15 @@ config :libcluster,
   topologies: [
     ex_esdb_cluster: [
       # The selected clustering strategy. Required.
-      strategy: Elixir.Cluster.Strategy.Epmd,
+      strategy: Elixir.Cluster.Strategy.Gossip,
       # Configuration for the selected strategy. Optional.
       config: [
-        hosts: [
-          :"ex-esdb@127.0.0.1"
-        ]
-      ],
-      connect: {:net_kernel, :connect_node, []},
-      disconnect: {:erlang, :disconnect_node, []},
-      list_nodes: {:erlang, :nodes, [:connected]}
+        port: 45_892,
+        # The IP address or hostname on which to listen for cluster connections.
+        if_addr: "0.0.0.0",
+        multicast_addr: "255.255.255.255",
+        broadcast_only: true
+      ]
     ]
   ]
 
@@ -40,6 +39,4 @@ config :ex_esdb, :khepri,
   timeout: 10_000,
   # Changed from :single to :cluster
   db_type: :cluster,
-  # Will be populated by Partisan discovery
-  seed_nodes: [],
   pub_sub: :ex_esdb_pubsub

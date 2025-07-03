@@ -27,11 +27,6 @@ defmodule ExESDB.App do
 
     IO.puts("#{Themes.app(self())} is UP for store #{inspect(store_id)}")
 
-    service_name = "ExESDB Server"
-    service_desc = "The BEAN-native Event Store"
-    shoutout = "🚀 Ready to serve!"
-    Banner.display_banner(service_name, service_desc, shoutout)
-
     res
   end
 

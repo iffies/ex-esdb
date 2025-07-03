@@ -18,8 +18,11 @@ defmodule ExESDB.System do
 
   @impl true
   def init(opts) do
+    topologies = Options.topologies()
+
     children = [
       add_pub_sub(opts),
+      {Cluster.Supervisor, [topologies, [name: ExESDB.LibCluster]]},
       {PartitionSupervisor, child_spec: DynamicSupervisor, name: ExESDB.EmitterPools},
       {ExESDB.Store, opts},
       {ExESDB.Cluster, opts},

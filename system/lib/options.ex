@@ -8,7 +8,6 @@ defmodule ExESDB.Options do
   @store_id EnVars.store_id()
   @timeout EnVars.timeout()
   @db_type EnVars.db_type()
-  @seed_nodes EnVars.seed_nodes()
   @pub_sub EnVars.pub_sub()
   @writer_idle_ms EnVars.writer_idle_ms()
   @reader_idle_ms EnVars.reader_idle_ms()
@@ -16,6 +15,8 @@ defmodule ExESDB.Options do
   def sys_env(key), do: System.get_env(key)
   def app_env, do: Application.get_env(:ex_esdb, :khepri)
   def app_env(key), do: Keyword.get(app_env(), key)
+
+  def topologies, do: Application.get_env(:libcluster, :topologies)
 
   def data_dir do
     case sys_env(@data_dir) do
@@ -45,12 +46,6 @@ defmodule ExESDB.Options do
     end
   end
 
-  def seed_nodes do
-    case sys_env(@seed_nodes) do
-      nil -> app_env(:seeds) || [node()]
-      seeds -> to_atoms_list(seeds)
-    end
-  end
 
   def pub_sub do
     case sys_env(@pub_sub) do
