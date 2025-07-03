@@ -55,7 +55,7 @@ defmodule ExESDB.System do
       :native ->
         {ExESDB.PubSub, opts}
 
-      _ ->
+      pub_sub ->
         {Phoenix.PubSub, name: pub_sub}
     end
   end
