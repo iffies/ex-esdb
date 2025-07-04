@@ -2,6 +2,11 @@
 
 ## version 0.0.17 (2025.07.01)
 
+### Auto-Clustering
+
+- `ExESDB` nodes now automatically join the cluster
+- "Split-Brain" scenarios are now mitigated
+
 ### BCUtils
 
 - All functionality related to styling is now transferred to the `:bc_utils` package.

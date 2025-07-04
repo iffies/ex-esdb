@@ -10,6 +10,208 @@ For Event Sourcing use cases however, the Event Store is often a separate servic
 
 This project is an attempt at addressing this point, by building further upon the work of the `rabbitmq/khepri` and `rabbitmq/ra` subsystems.
 
+## Features
+
+ExESDB is a distributed, BEAM-native Event Store that provides high-availability event sourcing capabilities with automatic cluster formation and coordination. Built on top of Khepri and Ra (Raft consensus), it offers enterprise-grade reliability and performance.
+
+### Core Event Store Functionality
+
+#### Event Stream Management
+- **Stream Creation**: Automatic stream creation on first event append
+- **Event Appending**: Atomic append operations with optimistic concurrency control
+- **Event Retrieval**: Query events with forward/backward traversal support
+- **Stream Versioning**: Track stream versions for conflict detection and resolution
+- **Stream Listing**: Enumerate all streams in the store
+
+#### Event Storage
+- **Persistent Storage**: Durable event storage using Khepri's distributed key-value store
+- **ACID Compliance**: Atomic, consistent, isolated, and durable operations
+- **Conflict Resolution**: Built-in optimistic concurrency control
+- **Data Integrity**: Checksum validation and corruption detection
+
+#### Subscription System
+- **Multiple Subscription Types**:
+  - `:by_stream` - Subscribe to specific event streams
+  - `:by_event_type` - Subscribe to events by type classification
+  - `:by_event_pattern` - Pattern-based event matching
+  - `:by_event_payload` - Content-based subscription filtering
+- **Persistent Subscriptions**: Durable subscriptions that survive node restarts
+- **Transient Subscriptions**: Temporary subscriptions for real-time processing
+- **Event Replay**: Start subscriptions from any stream version
+- **Acknowledgment System**: Reliable event delivery with ACK/NACK support
+- **"Follow-the-Leader"**: Subscription processes automatically migrate to cluster leader
+
+#### Snapshot Management
+- **Aggregate Snapshots**: Store and retrieve aggregate state snapshots
+- **Version-based Snapshots**: Snapshots tied to specific stream versions
+- **Snapshot Lifecycle**: Create, read, update, and delete snapshot operations
+- **Performance Optimization**: Reduce replay time for large aggregates
+- **Distributed Storage**: Snapshots stored across the cluster for availability
+
+### Distributed Architecture & Clustering
+
+#### LibCluster Integration
+ExESDB uses LibCluster for automatic cluster discovery and formation:
+
+- **Strategy**: Gossip-based multicast discovery
+- **Protocol**: UDP multicast on configurable port (default: 45892)
+- **Network**: Automatic node discovery on shared networks
+- **Security**: Shared secret authentication for cluster membership
+- **Broadcast Discovery**: Configurable multicast addressing
+
+#### Cluster Formation Process
+1. **Initialization**: Node starts and initializes LibCluster topology
+2. **Discovery**: Uses gossip multicast to discover peer nodes
+3. **Authentication**: Validates cluster membership using shared secrets
+4. **Coordination**: ClusterCoordinator manages join/leave operations
+5. **Consensus**: Khepri cluster formation using Raft consensus
+6. **Monitoring**: Continuous health monitoring and leader election
+
+#### High Availability Features
+- **Automatic Clustering**: Nodes automatically discover and join clusters
+- **Split-Brain Prevention**: ClusterCoordinator prevents network partition issues
+- **Leader Election**: Automatic leader election using Raft consensus
+- **Failover**: Seamless handling of node failures
+- **Data Replication**: Events replicated across cluster nodes
+- **Consensus Protocol**: Ra/Raft ensures data consistency
+
+### Storage Engine
+
+#### Khepri Integration
+- **Distributed Tree Store**: Hierarchical key-value storage
+- **MVCC**: Multi-version concurrency control
+- **Transactions**: ACID transaction support
+- **Schema Evolution**: Support for data structure changes
+- **Triggers**: Event-driven data processing
+
+#### Ra (Raft) Consensus
+- **Strong Consistency**: Linearizable read/write operations
+- **Partition Tolerance**: Operates correctly during network partitions
+- **Leader-based Replication**: Single leader for write operations
+- **Log Compaction**: Automatic cleanup of old log entries
+- **Snapshot Support**: Efficient state transfer for new nodes
+
+### Configuration & Deployment
+
+#### Environment Configuration
+- `EX_ESDB_STORE_ID`: Unique identifier for the store instance
+- `EX_ESDB_DB_TYPE`: Deployment type (`:single` or `:cluster`)
+- `EX_ESDB_DATA_DIR`: Data directory for persistent storage
+- `EX_ESDB_TIMEOUT`: Operation timeout configuration
+- `EX_ESDB_CLUSTER_SECRET`: Shared secret for cluster authentication
+- `EX_ESDB_COOKIE`: Erlang distribution cookie
+- `EX_ESDB_PUB_SUB`: PubSub configuration for event broadcasting
+
+#### LibCluster Configuration
+```elixir
+config :libcluster,
+  topologies: [
+    ex_esdb_cluster: [
+      strategy: Cluster.Strategy.Gossip,
+      config: [
+        port: 45_892,
+        if_addr: "0.0.0.0",
+        multicast_addr: "255.255.255.255",
+        broadcast_only: true,
+        secret: System.get_env("EX_ESDB_CLUSTER_SECRET")
+      ]
+    ]
+  ]
+```
+
+### Gateway API Integration
+
+#### High-Availability Proxy
+- **Load Balancing**: Distribute requests across gateway workers
+- **Service Discovery**: Automatic discovery of available gateway workers
+- **Fault Tolerance**: Handle worker failures gracefully
+- **Request Routing**: Smart routing based on operation type
+
+#### Worker Distribution
+- **Swarm Integration**: Distributed worker management
+- **Process Migration**: Workers can move between cluster nodes
+- **Resource Management**: Efficient resource utilization across cluster
+- **Monitoring**: Real-time worker health and performance tracking
+
+### Operational Features
+
+#### Monitoring & Observability
+- **Cluster Status**: Real-time cluster membership and health
+- **Leader Tracking**: Monitor current cluster leader
+- **Performance Metrics**: Operation latency and throughput
+- **Error Tracking**: Comprehensive error logging and reporting
+- **Health Checks**: Built-in health check endpoints
+
+#### Development Tools
+- **Cluster Manager**: Interactive cluster management script
+- **Docker Compose**: Multi-node development environment
+- **Chaos Engineering**: Built-in chaos testing capabilities
+- **Validation Scripts**: Automated cluster validation tools
+
+### Network Topology
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   ExESDB Node   │    │   ExESDB Node   │    │   ExESDB Node   │
+│    (Leader)     │◄──►│   (Follower)    │◄──►│   (Follower)    │
+│   Khepri + Ra   │    │   Khepri + Ra   │    │   Khepri + Ra   │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+         ▲                       ▲                       ▲
+         │                       │                       │
+         │     Gossip Multicast Network (UDP:45892)     │
+         │                       │                       │
+         ▼                       ▼                       ▼
+    Raft Consensus           Event Storage           Subscription
+     & Replication          & Retrieval             Management
+```
+
+### Deployment Scenarios
+
+#### Single Node Deployment
+- **Development**: Local development and testing
+- **Small Applications**: Simple event sourcing needs
+- **Embedded Usage**: Integration within existing applications
+
+#### Multi-Node Cluster
+- **Production**: High-availability production deployments
+- **Horizontal Scaling**: Scale read/write capacity
+- **Geographic Distribution**: Multi-region deployments
+- **Fault Tolerance**: Survive individual node failures
+
+#### Container Orchestration
+- **Docker Compose**: Development and testing environments
+- **Kubernetes**: Production container orchestration
+- **Docker Swarm**: Simplified container clustering
+- **Health Checks**: Container-level health monitoring
+
+### Performance Characteristics
+
+#### Throughput
+- **Write Performance**: Optimized for high-volume event appending
+- **Read Performance**: Efficient event retrieval and streaming
+- **Concurrent Operations**: Handle multiple simultaneous operations
+- **Batch Processing**: Support for batch event operations
+
+#### Scalability
+- **Horizontal Scaling**: Add nodes to increase capacity
+- **Storage Scalability**: Distributed storage across cluster
+- **Subscription Scaling**: Distribute subscription load
+- **Resource Utilization**: Efficient use of available resources
+
+### Integration Capabilities
+
+#### BEAM Ecosystem
+- **Phoenix Integration**: Real-time web applications
+- **LiveView Support**: Real-time UI updates
+- **GenServer Integration**: Native BEAM process integration
+- **OTP Supervision**: Fault-tolerant supervision trees
+
+#### External Systems
+- **REST APIs**: HTTP-based integration
+- **Message Queues**: Integration with external queuing systems
+- **Databases**: Projection and read model support
+- **Monitoring Systems**: Metrics and alerting integration
+
 ## Contents
 
 - [Getting Started](system/guides/getting_started.md)

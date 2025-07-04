@@ -26,3 +26,7 @@ config :ex_esdb, :khepri,
   # Changed from :single to :cluster
   db_type: :cluster,
   pub_sub: :ex_esdb_pubsub
+
+# Reduce Swarm logging noise - only show true errors
+config :swarm,
+  log_level: :error
