@@ -15,21 +15,7 @@ config :logger, :console,
   metadata: [:mfa],
   level: :info
 
-config :libcluster,
-  topologies: [
-    ex_esdb_cluster: [
-      # The selected clustering strategy. Required.
-      strategy: Elixir.Cluster.Strategy.Gossip,
-      # Configuration for the selected strategy. Optional.
-      config: [
-        port: 45_892,
-        # The IP address or hostname on which to listen for cluster connections.
-        if_addr: "0.0.0.0",
-        multicast_addr: "255.255.255.255",
-        broadcast_only: true
-      ]
-    ]
-  ]
+# LibCluster configuration moved to runtime.exs for dynamic configuration
 
 config :ex_esdb, :logger, level: :debug
 

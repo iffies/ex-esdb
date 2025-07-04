@@ -25,7 +25,7 @@ defmodule ExESDB.System do
       {Cluster.Supervisor, [topologies, [name: ExESDB.LibCluster]]},
       {PartitionSupervisor, child_spec: DynamicSupervisor, name: ExESDB.EmitterPools},
       {ExESDB.Store, opts},
-      {ExESDB.Cluster, opts},
+      {ExESDB.ClusterSystem, opts},
       {ExESDB.Streams, opts},
       {ExESDB.Snapshots, opts},
       {ExESDB.Subscriptions, opts},

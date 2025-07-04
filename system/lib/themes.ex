@@ -14,6 +14,12 @@ defmodule ExESDB.Themes do
   def cluster(pid),
     do: "CLUSTER [#{CF.yellow_on_red()}#{inspect(pid)}#{CF.reset()}]"
 
+  def cluster_coordinator(pid),
+    do: "CLUSTER_COORDINATOR [#{CF.white_on_red()}#{inspect(pid)}#{CF.reset()}]"
+
+  def cluster_system(pid),
+    do: "CLUSTER_SYSTEM [#{CF.bright_white_on_red()}#{inspect(pid)}#{CF.reset()}]"
+
   def projector(pid),
     do: "PROJECTOR [#{CF.black_on_white()}#{inspect(pid)}#{CF.reset()}]"
 

@@ -1,0 +1,112 @@
+# Production environment overrides
+# Use with: docker-compose -f ex-esdb-cluster.yaml -f ex-esdb-prod-override.yaml up
+
+# Production environment template
+x-prod-environment: &prod-env
+  EX_ESDB_STORE_ID: "reg_gh_prod"
+  EX_ESDB_COOKIE: $REG_GH_PROD_CLIQUE
+  EX_ESDB_DB_TYPE: "cluster"
+  EX_ESDB_TIMEOUT: "5000"
+  LOG_LEVEL: "info"
+  RUST_LOG: "info"
+  NODE_ENV: "production"
+
+# Production resource constraints
+x-prod-resource-limits: &prod-resource-limits
+  deploy:
+    resources:
+      limits:
+        memory: 1G
+        cpus: '1.0'
+      reservations:
+        memory: 512M
+        cpus: '0.5'
+    restart_policy:
+      condition: on-failure
+      delay: 10s
+      max_attempts: 5
+      window: 300s
+
+# Production logging
+x-prod-logging: &prod-logging
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "200m"
+      max-file: "5"
+      labels: "service,environment,cluster"
+
+# Production health check (more aggressive)
+x-prod-health-check: &prod-health-check
+  healthcheck:
+    test: ["CMD", "/system/check-ex-esdb.sh"]
+    interval: 15s
+    timeout: 5s
+    retries: 5
+    start_period: 60s
+
+services:
+  ex-esdb0:
+    environment:
+      <<: *prod-env
+      NODE_ID: "0"
+    <<: *prod-resource-limits
+    <<: *prod-logging
+    <<: *prod-health-check
+    labels:
+      - "service=ex-esdb"
+      - "environment=production"
+      - "cluster=primary"
+      - "node=0"
+
+  ex-esdb1:
+    environment:
+      <<: *prod-env
+      NODE_ID: "1"
+    <<: *prod-resource-limits
+    <<: *prod-logging
+    <<: *prod-health-check
+    labels:
+      - "service=ex-esdb"
+      - "environment=production"
+      - "cluster=primary"
+      - "node=1"
+
+  ex-esdb2:
+    environment:
+      <<: *prod-env
+      NODE_ID: "2"
+    <<: *prod-resource-limits
+    <<: *prod-logging
+    <<: *prod-health-check
+    labels:
+      - "service=ex-esdb"
+      - "environment=production"
+      - "cluster=primary"
+      - "node=2"
+
+  ex-esdb3:
+    environment:
+      <<: *prod-env
+      NODE_ID: "3"
+    <<: *prod-resource-limits
+    <<: *prod-logging
+    <<: *prod-health-check
+    labels:
+      - "service=ex-esdb"
+      - "environment=production"
+      - "cluster=primary"
+      - "node=3"
+
+  ex-esdb4:
+    environment:
+      <<: *prod-env
+      NODE_ID: "4"
+    <<: *prod-resource-limits
+    <<: *prod-logging
+    <<: *prod-health-check
+    labels:
+      - "service=ex-esdb"
+      - "environment=production"
+      - "cluster=primary"
+      - "node=4"

@@ -68,6 +68,9 @@ ENV PATH="${PATH}"
 ARG EX_ESDB_COOKIE
 ARG EX_ESDB_DATA_DIR
 ARG EX_ESDB_STORE_ID
+ARG EX_ESDB_CLUSTER_SECRET
+ARG EX_ESDB_GOSSIP_MULTICAST_ADDR
+
 
 ENV ERTS_VERSION=erts-15.2.3
 
@@ -106,10 +109,10 @@ ENV PATH="${PATH}:/system/${ERTS_VERSION}/bin"
 
 VOLUME /data
 
-EXPOSE 4369 9000-9100
+EXPOSE 4369 9000-9100 45892 
 
-RUN echo $EX_ESDB_COOKIE > ~/.erlang.cookie
-RUN chmod 400 ~/.erlang.cookie
+RUN echo ${EX_ESDB_COOKIE} > /root/.erlang.cookie
+RUN chmod 400 /root/.erlang.cookie
 
 HEALTHCHECK --interval=10s --timeout=3s \
   CMD ["./check-ex-esdb.sh"]

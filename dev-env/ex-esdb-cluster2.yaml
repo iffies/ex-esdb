@@ -7,30 +7,30 @@ x-dev-environment: &dev-env
   EX_ESDB_TIMEOUT: "10000"
   EX_ESDB_COOKIE: ${REG_GH_CLIQUE}
   EX_ESDB_CLUSTER_SECRET: ${REG_GH_CLUSTER_SECRET}
-  RELEASE_COOKIE: ${REG_GH_CLIQUE}
+  EX_ESDB_GOSSIP_MULTICAST_ADDR: ${REG_GH_GOSSIP_MULTICAST_ADDR}
   LOG_LEVEL: "debug"
   RUST_LOG: "debug"
 
 x-prod-environment: &prod-env
-  RELEASE_COOKIE: ${REG_GH_CLIQUE}
   EX_ESDB_STORE_ID: "reg_gh"
   EX_ESDB_DB_TYPE: "cluster"
   EX_ESDB_TIMEOUT: "5000"
   EX_ESDB_COOKIE: ${REG_GH_CLIQUE}
   EX_ESDB_CLUSTER_SECRET: ${REG_GH_CLUSTER_SECRET}
+  EX_ESDB_GOSSIP_MULTICAST_ADDR: ${REG_GH_GOSSIP_MULTICAST_ADDR}
   LOG_LEVEL: "info"
   RUST_LOG: "info"
 
-# Resource constraints template
+# Resource constraints template (lighter for cluster2)
 x-resource-limits: &resource-limits
   deploy:
     resources:
       limits:
-        memory: 512M
-        cpus: "0.5"
+        memory: 384M
+        cpus: "0.4"
       reservations:
-        memory: 256M
-        cpus: "0.25"
+        memory: 192M
+        cpus: "0.2"
     restart_policy:
       condition: on-failure
       delay: 5s
@@ -42,8 +42,8 @@ x-logging: &logging
   logging:
     driver: "json-file"
     options:
-      max-size: "100m"
-      max-file: "3"
+      max-size: "50m"
+      max-file: "2"
       labels: "service,environment"
 
 # Main service template
@@ -65,17 +65,16 @@ x-esdb-service: &esdb-service
     EX_ESDB_COOKIE: ${REG_GH_CLIQUE}
     EX_ESDB_CLUSTER_SECRET: ${REG_GH_CLUSTER_SECRET}
     EX_ESDB_GOSSIP_MULTICAST_ADDR: ${REG_GH_GOSSIP_MULTICAST_ADDR}
-    RELEASE_COOKIE: ${REG_GH_CLIQUE}
     LOG_LEVEL: "debug"
     RUST_LOG: "debug"
   deploy:
     resources:
       limits:
-        memory: 512M
-        cpus: "0.5"
+        memory: 384M
+        cpus: "0.4"
       reservations:
-        memory: 256M
-        cpus: "0.25"
+        memory: 192M
+        cpus: "0.2"
     restart_policy:
       condition: on-failure
       delay: 5s
@@ -90,75 +89,90 @@ x-esdb-service: &esdb-service
   logging:
     driver: "json-file"
     options:
-      max-size: "100m"
-      max-file: "3"
+      max-size: "50m"
+      max-file: "2"
       labels: "service,environment"
   labels:
     - "service=ex-esdb"
     - "environment=development"
-    - "cluster=primary"
+    - "cluster=secondary"
 
 # Dependency condition template
 x-health-condition: &health-condition
   condition: service_healthy
 
 services:
-  ex-esdb0:
+  ex-esdb10:
     <<: *esdb-service
-    hostname: node0
-    container_name: ex-esdb0
+    hostname: node10
+    container_name: ex-esdb10
     volumes:
-      - ex-esdb0-data:/data
+      - ex-esdb10-data:/data
 
-  ex-esdb1:
+  ex-esdb11:
     <<: *esdb-service
-    hostname: node1
-    container_name: ex-esdb1
+    hostname: node11
+    container_name: ex-esdb11
     volumes:
-      - ex-esdb1-data:/data
+      - ex-esdb11-data:/data
     depends_on:
-      ex-esdb0: *health-condition
+      ex-esdb10: *health-condition
 
-  ex-esdb2:
+  ex-esdb12:
     <<: *esdb-service
-    hostname: node2
-    container_name: ex-esdb2
+    hostname: node12
+    container_name: ex-esdb12
     volumes:
-      - ex-esdb2-data:/data
+      - ex-esdb12-data:/data
     depends_on:
-      ex-esdb1: *health-condition
+      ex-esdb11: *health-condition
 
-  ex-esdb3:
+  ex-esdb13:
     <<: *esdb-service
-    hostname: node3
-    container_name: ex-esdb3
+    hostname: node13
+    container_name: ex-esdb13
     volumes:
-      - ex-esdb3-data:/data
+      - ex-esdb13-data:/data
     depends_on:
-      ex-esdb2: *health-condition
+      ex-esdb12: *health-condition
 
-  ex-esdb4:
+  ex-esdb14:
     <<: *esdb-service
-    hostname: node4
-    container_name: ex-esdb4
+    hostname: node14
+    container_name: ex-esdb14
     volumes:
-      - ex-esdb4-data:/data
+      - ex-esdb14-data:/data
     depends_on:
-      ex-esdb3: *health-condition
+      ex-esdb13: *health-condition
+
+  ex-esdb15:
+    <<: *esdb-service
+    hostname: node15
+    container_name: ex-esdb15
+    volumes:
+      - ex-esdb15-data:/data
+    depends_on:
+      ex-esdb14: *health-condition
+
+  ex-esdb16:
+    <<: *esdb-service
+    hostname: node16
+    container_name: ex-esdb16
+    volumes:
+      - ex-esdb16-data:/data
+    depends_on:
+      ex-esdb15: *health-condition
+
+  ex-esdb17:
+    <<: *esdb-service
+    hostname: node17
+    container_name: ex-esdb17
+    volumes:
+      - ex-esdb17-data:/data
+    depends_on:
+      ex-esdb16: *health-condition
 
 networks:
   ex-esdb-net:
     external: true
     name: ex-esdb-net
-
-volumes:
-  ex-esdb0-data:
-    driver: local
-  ex-esdb1-data:
-    driver: local
-  ex-esdb2-data:
-    driver: local
-  ex-esdb3-data:
-    driver: local
-  ex-esdb4-data:
-    driver: local
