@@ -12,6 +12,7 @@ defmodule ExESDB.System do
 
   alias ExESDB.Options, as: Options
   alias ExESDB.Themes, as: Themes
+  alias BCUtils.PubSubManager
 
   require Logger
   require Phoenix.PubSub
@@ -59,7 +60,18 @@ defmodule ExESDB.System do
         {ExESDB.PubSub, opts}
 
       pub_sub ->
-        {Phoenix.PubSub, name: pub_sub}
+        # Use PubSubManager to conditionally start Phoenix.PubSub
+        case PubSubManager.maybe_child_spec(pub_sub) do
+          nil ->
+            # PubSub already running, create a dummy child that does nothing
+            %{
+              id: :dummy_pubsub,
+              start: {Task, :start_link, [fn -> :ok end]},
+              restart: :temporary
+            }
+          child_spec ->
+            child_spec
+        end
     end
   end
 

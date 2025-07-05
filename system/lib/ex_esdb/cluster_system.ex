@@ -18,6 +18,8 @@ defmodule ExESDB.ClusterSystem do
     children = [
       # Start ClusterCoordinator first so it's available for Cluster
       {ExESDB.ClusterCoordinator, opts},
+      # Start NodeMonitor for fast failure detection
+      {ExESDB.NodeMonitor, node_monitor_config(opts)},
       {ExESDB.Cluster, opts}
     ]
 
@@ -38,5 +40,18 @@ defmodule ExESDB.ClusterSystem do
       shutdown: :infinity,
       type: :supervisor
     }
+  end
+
+  # Helper function to configure NodeMonitor options
+  defp node_monitor_config(opts) do
+    store_id = Keyword.get(opts, :store_id, :ex_esdb)
+    
+    # More lenient configuration for node monitoring to prevent cascading failures
+    [
+      store_id: store_id,
+      probe_interval: 5_000,    # 5 seconds (less frequent probing)
+      failure_threshold: 6,     # 6 consecutive failures (more tolerance)
+      probe_timeout: 3_000      # 3 second timeout per probe (more time)
+    ]
   end
 end

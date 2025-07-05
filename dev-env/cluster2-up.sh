@@ -15,19 +15,13 @@ echo "Removing caches folder"
 sudo rm -rf /volume/caches
 echo "Creating caches folder"
 sudo mkdir -p /volume/caches
-# ExESDB cluster2 data folders
-echo "removing ExESDB cluster2 data folders"
-sudo rm -rf /volume/ex-esdb/data1[0-7]
-echo "creating ExESDB cluster2 data folders"
+# ExESDB Extended cluster data folders (nodes 10-11)
+echo "removing ExESDB extended cluster data folders"
+sudo rm -rf /volume/ex-esdb/data1[0-1]
+echo "creating ExESDB extended cluster data folders"
 sudo mkdir -p \
   /volume/ex-esdb/data10 \
-  /volume/ex-esdb/data11 \
-  /volume/ex-esdb/data12 \
-  /volume/ex-esdb/data13 \
-  /volume/ex-esdb/data14 \
-  /volume/ex-esdb/data15 \
-  /volume/ex-esdb/data16 \
-  /volume/ex-esdb/data17
+  /volume/ex-esdb/data11
 
 sudo chown "$USER" -R /volume/
 

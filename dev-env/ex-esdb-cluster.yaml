@@ -66,8 +66,8 @@ x-esdb-service: &esdb-service
     EX_ESDB_CLUSTER_SECRET: ${REG_GH_CLUSTER_SECRET}
     EX_ESDB_GOSSIP_MULTICAST_ADDR: ${REG_GH_GOSSIP_MULTICAST_ADDR}
     RELEASE_COOKIE: ${REG_GH_CLIQUE}
-    LOG_LEVEL: "debug"
-    RUST_LOG: "debug"
+    LOG_LEVEL: "info"
+    RUST_LOG: "warn"
   deploy:
     resources:
       limits:
@@ -103,12 +103,19 @@ x-health-condition: &health-condition
   condition: service_healthy
 
 services:
+  # Core 3-node cluster (start simultaneously)
   ex-esdb0:
     <<: *esdb-service
     hostname: node0
     container_name: ex-esdb0
     volumes:
       - ex-esdb0-data:/data
+    labels:
+      - "service=ex-esdb"
+      - "environment=development"
+      - "cluster=core"
+      - "group=core"
+      - "tier=core"
 
   ex-esdb1:
     <<: *esdb-service
@@ -116,8 +123,12 @@ services:
     container_name: ex-esdb1
     volumes:
       - ex-esdb1-data:/data
-    depends_on:
-      ex-esdb0: *health-condition
+    labels:
+      - "service=ex-esdb"
+      - "environment=development"
+      - "cluster=core"
+      - "group=core"
+      - "tier=core"
 
   ex-esdb2:
     <<: *esdb-service
@@ -125,26 +136,12 @@ services:
     container_name: ex-esdb2
     volumes:
       - ex-esdb2-data:/data
-    depends_on:
-      ex-esdb1: *health-condition
-
-  ex-esdb3:
-    <<: *esdb-service
-    hostname: node3
-    container_name: ex-esdb3
-    volumes:
-      - ex-esdb3-data:/data
-    depends_on:
-      ex-esdb2: *health-condition
-
-  ex-esdb4:
-    <<: *esdb-service
-    hostname: node4
-    container_name: ex-esdb4
-    volumes:
-      - ex-esdb4-data:/data
-    depends_on:
-      ex-esdb3: *health-condition
+    labels:
+      - "service=ex-esdb"
+      - "environment=development"
+      - "cluster=core"
+      - "group=core"
+      - "tier=core"
 
 networks:
   ex-esdb-net:

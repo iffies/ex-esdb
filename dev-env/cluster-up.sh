@@ -1,5 +1,8 @@
 #! /bin/bash
 
+# ExESDB Core Cluster (3 nodes: 0, 1, 2)
+# Use start-core.sh, start-extended.sh, or start-massive.sh for tiered clusters
+
 ## CLEAR ALL DATA
 # echo "Clearing all data"
 # sudo rm -rf /volume

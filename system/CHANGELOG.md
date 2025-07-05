@@ -11,6 +11,25 @@
 
 - All functionality related to styling is now transferred to the `:bc_utils` package.
 - Added a Banner after startup.
+- Logger filtering for Swarm and LibCluster noise reduction (via BCUtils.LoggerFilters)
+
+### ExESDB Logger Filtering
+
+#### Features
+
+The `ExESDB.LoggerFilters` module provides additional log noise reduction specifically for ExESDB's distributed systems components:
+
+- **Ra Consensus Filtering**: Reduces Ra heartbeat, append_entries, pre_vote, request_vote, and routine state transition messages while preserving all errors/warnings
+- **Khepri Database Filtering**: Filters internal Khepri operations (cluster state, store operations) at info/debug levels while maintaining error/warning visibility
+- **Enhanced Swarm Filtering**: Complements BCUtils filtering with additional ExESDB-specific Swarm noise reduction
+- **Enhanced LibCluster Filtering**: Complements BCUtils filtering with additional ExESDB-specific cluster formation noise reduction
+
+#### Benefits
+
+- Dramatically improves log readability in development and production environments
+- Intelligent filtering preserves all error and warning messages
+- Focused on ExESDB-specific distributed systems infrastructure (Ra, Khepri)
+- Works in conjunction with BCUtils.LoggerFilters for comprehensive noise reduction
 
 ### ExESDBGater
 

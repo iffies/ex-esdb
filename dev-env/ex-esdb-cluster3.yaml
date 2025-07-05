@@ -21,7 +21,7 @@ x-prod-environment: &prod-env
   LOG_LEVEL: "info"
   RUST_LOG: "info"
 
-# Resource constraints template (lighter for cluster2)
+# Resource constraints template (lighter for cluster3)
 x-resource-limits: &resource-limits
   deploy:
     resources:
@@ -96,39 +96,117 @@ x-esdb-service: &esdb-service
   labels:
     - "service=ex-esdb"
     - "environment=development"
-    - "cluster=secondary"
+    - "cluster=tertiary"
 
 # Dependency condition template
 x-health-condition: &health-condition
   condition: service_healthy
 
 services:
-  # Extended cluster: Core + 2 additional nodes (wait for core to be established)
-  ex-esdb10:
+  # Massive cluster: Core + Extended + 8 additional nodes
+  ex-esdb20:
     <<: *esdb-service
-    hostname: node10
-    container_name: ex-esdb10
+    hostname: node20
+    container_name: ex-esdb20
     volumes:
-      - ex-esdb10-data:/data
+      - ex-esdb20-data:/data
     labels:
       - "service=ex-esdb"
       - "environment=development"
-      - "cluster=extended"
-      - "group=extended"
-      - "tier=extended"
+      - "cluster=massive"
+      - "group=massive"
+      - "tier=massive"
 
-  ex-esdb11:
+  ex-esdb21:
     <<: *esdb-service
-    hostname: node11
-    container_name: ex-esdb11
+    hostname: node21
+    container_name: ex-esdb21
     volumes:
-      - ex-esdb11-data:/data
+      - ex-esdb21-data:/data
     labels:
       - "service=ex-esdb"
       - "environment=development"
-      - "cluster=extended"
-      - "group=extended"
-      - "tier=extended"
+      - "cluster=massive"
+      - "group=massive"
+      - "tier=massive"
+
+  ex-esdb22:
+    <<: *esdb-service
+    hostname: node22
+    container_name: ex-esdb22
+    volumes:
+      - ex-esdb22-data:/data
+    labels:
+      - "service=ex-esdb"
+      - "environment=development"
+      - "cluster=massive"
+      - "group=massive"
+      - "tier=massive"
+
+  ex-esdb23:
+    <<: *esdb-service
+    hostname: node23
+    container_name: ex-esdb23
+    volumes:
+      - ex-esdb23-data:/data
+    labels:
+      - "service=ex-esdb"
+      - "environment=development"
+      - "cluster=massive"
+      - "group=massive"
+      - "tier=massive"
+
+  ex-esdb24:
+    <<: *esdb-service
+    hostname: node24
+    container_name: ex-esdb24
+    volumes:
+      - ex-esdb24-data:/data
+    labels:
+      - "service=ex-esdb"
+      - "environment=development"
+      - "cluster=massive"
+      - "group=massive"
+      - "tier=massive"
+
+  ex-esdb25:
+    <<: *esdb-service
+    hostname: node25
+    container_name: ex-esdb25
+    volumes:
+      - ex-esdb25-data:/data
+    labels:
+      - "service=ex-esdb"
+      - "environment=development"
+      - "cluster=massive"
+      - "group=massive"
+      - "tier=massive"
+
+  ex-esdb26:
+    <<: *esdb-service
+    hostname: node26
+    container_name: ex-esdb26
+    volumes:
+      - ex-esdb26-data:/data
+    labels:
+      - "service=ex-esdb"
+      - "environment=development"
+      - "cluster=massive"
+      - "group=massive"
+      - "tier=massive"
+
+  ex-esdb27:
+    <<: *esdb-service
+    hostname: node27
+    container_name: ex-esdb27
+    volumes:
+      - ex-esdb27-data:/data
+    labels:
+      - "service=ex-esdb"
+      - "environment=development"
+      - "cluster=massive"
+      - "group=massive"
+      - "tier=massive"
 
 networks:
   ex-esdb-net:
@@ -136,7 +214,19 @@ networks:
     name: ex-esdb-net
 
 volumes:
-  ex-esdb10-data:
+  ex-esdb20-data:
     driver: local
-  ex-esdb11-data:
+  ex-esdb21-data:
+    driver: local
+  ex-esdb22-data:
+    driver: local
+  ex-esdb23-data:
+    driver: local
+  ex-esdb24-data:
+    driver: local
+  ex-esdb25-data:
+    driver: local
+  ex-esdb26-data:
+    driver: local
+  ex-esdb27-data:
     driver: local

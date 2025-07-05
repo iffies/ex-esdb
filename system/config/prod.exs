@@ -1,17 +1,25 @@
 import Config
 
+# Production: Further reduce Ra and Khepri verbosity - only errors
 config :khepri,
-  log_level: :information,
+  log_level: :error,
   logger: true
 
 config :ra,
-  log_level: :information,
+  log_level: :error,
   logger: true
 
 config :logger, :console,
   format: "$time ($metadata) [$level] $message\n",
   metadata: [:mfa],
-  level: :debug
+  level: :info,
+  # Production filters to minimize noise
+  filters: [
+    ra_noise: {ExESDB.LoggerFilters, :filter_ra},
+    khepri_noise: {ExESDB.LoggerFilters, :filter_khepri},
+    swarm_noise: {ExESDB.LoggerFilters, :filter_swarm},
+    libcluster_noise: {ExESDB.LoggerFilters, :filter_libcluster}
+  ]
 
 config :ex_esdb,
   logger: true,
@@ -24,4 +32,10 @@ config :ex_esdb, :khepri,
   db_type: :cluster,
   pub_sub: :ex_esdb_pubsub
 
-# LibCluster configuration moved to runtime.exs for dynamic configuration
+config :swarm,
+  log_level: :error,
+  logger: true
+
+config :ex_esdb_gater, :logger, level: :debug
+
+config :ex_esdb_gater, :api, pub_sub: :ex_esdb_pubsub

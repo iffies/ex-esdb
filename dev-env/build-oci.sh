@@ -1,3 +1,3 @@
 #! /bin/bash
 
-docker build ../system/. -t local/ex-esdb
+docker build ../system/. -t local/ex-esdb --no-cache

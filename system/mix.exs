@@ -4,7 +4,7 @@ defmodule ExESDB.MixProject do
 
   @app_name :ex_esdb
   @elixir_version "~> 1.17"
-  @version "0.0.17"
+  @version "0.0.18"
   @source_url "https://github.com/beam-campus/ex-esdb"
   #  @homepage_url "https://github.com/beam-campus/ex-esdb"
   @docs_url "https://hexdocs.pm/ex_esdb"
@@ -101,14 +101,8 @@ defmodule ExESDB.MixProject do
       {:jason, "~> 1.4", optional: true},
       {:phoenix_pubsub, "~> 2.1"},
       {:khepri, "~> 0.17"},
-      {:protobuf, "~> 0.14"},
-      {:gen_retry, "~> 1.4"},
-      {:uuidv7, "~> 1.0"},
-      {:elixir_uuid, "~> 1.2"},
       {:commanded, "~> 1.4"},
-      {:swarm, "~> 3.4"},
-      {:bc_utils, "~> 0.3"},
-      {:libcluster, "~> 3.5"}
+      {:ex_esdb_gater, "~> 0.0.3"}
     ]
   end
 
@@ -133,6 +127,14 @@ defmodule ExESDB.MixProject do
         "guides/testing.md": [
           filename: "testing",
           title: "Testing"
+        ],
+        "guides/failure_handling.md": [
+          filename: "failure-handling",
+          title: "Failure Handling"
+        ],
+        "guides/loggers_in_exesdb.md": [
+          filename: "logger-filtering",
+          title: "Logger Filtering"
         ],
         "../README.md": [
           filename: "readme",
