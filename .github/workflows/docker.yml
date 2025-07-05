@@ -34,8 +34,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
-          context: system
-          file: Dockerfile
+          context: ./system
+          file: ./system/Dockerfile
           push: true
           tags: |
             beamcampus/ex_esdb:latest
