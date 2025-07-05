@@ -3,6 +3,18 @@ import Config
 alias ExESDB.EnVars, as: EnVars
 import ExESDB.Options
 
+config :logger, :console,
+  format: "$time [$level] $message\n",
+  metadata: [:mfa],
+  level: :info,
+  # Multiple filters to reduce noise from various components
+  filters: [
+    ra_noise: {ExESDB.LoggerFilters, :filter_ra},
+    khepri_noise: {ExESDB.LoggerFilters, :filter_khepri},
+    swarm_noise: {ExESDB.LoggerFilters, :filter_swarm},
+    libcluster_noise: {ExESDB.LoggerFilters, :filter_libcluster}
+  ]
+
 config :ex_esdb, :khepri,
   data_dir: data_dir(),
   store_id: store_id(),

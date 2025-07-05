@@ -4,7 +4,7 @@ defmodule ExESDB.MixProject do
 
   @app_name :ex_esdb
   @elixir_version "~> 1.17"
-  @version "0.0.18"
+  @version "0.0.19"
   @source_url "https://github.com/beam-campus/ex-esdb"
   #  @homepage_url "https://github.com/beam-campus/ex-esdb"
   @docs_url "https://hexdocs.pm/ex_esdb"
@@ -37,6 +37,7 @@ defmodule ExESDB.MixProject do
       ex_esdb: [
         include_erts: true,
         include_executables_for: [:unix],
+        runtime_config_path: "config/runtime.exs",
         steps: [:assemble, :tar],
         applications: [
           runtime_tools: :permanent,
@@ -102,7 +103,7 @@ defmodule ExESDB.MixProject do
       {:phoenix_pubsub, "~> 2.1"},
       {:khepri, "~> 0.17"},
       {:commanded, "~> 1.4"},
-      {:ex_esdb_gater, "~> 0.0.3"}
+      {:ex_esdb_gater, "~> 0.0.5"}
     ]
   end
 

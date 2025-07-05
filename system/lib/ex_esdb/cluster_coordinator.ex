@@ -97,7 +97,7 @@ defmodule ExESDB.ClusterCoordinator do
   end
 
   defp join_existing_cluster(store, target_node) do
-    Logger.debug(
+    Logger.info(
       "#{Themes.cluster_coordinator(node())} => Joining existing Khepri cluster via: #{inspect(target_node)}"
     )
 
@@ -107,10 +107,32 @@ defmodule ExESDB.ClusterCoordinator do
           "#{Themes.cluster_coordinator(node())} => Successfully joined existing Khepri cluster via #{inspect(target_node)}"
         )
 
-        :ok
+        # Verify we actually joined by checking members
+        case :khepri_cluster.members(store) do
+          {:ok, members} when length(members) > 1 ->
+            Logger.info(
+              "#{Themes.cluster_coordinator(node())} => Cluster join verified, now part of #{length(members)}-node cluster"
+            )
+
+            :ok
+
+          {:ok, [_single]} ->
+            Logger.warning(
+              "#{Themes.cluster_coordinator(node())} => Join appeared successful but still only 1 member, may need retry"
+            )
+
+            :ok
+
+          {:error, verify_reason} ->
+            Logger.error(
+              "#{Themes.cluster_coordinator(node())} => Join succeeded but verification failed: #{inspect(verify_reason)}"
+            )
+
+            :ok
+        end
 
       {:error, reason} ->
-        Logger.debug(
+        Logger.warning(
           "#{Themes.cluster_coordinator(node())} => Failed to join via #{inspect(target_node)}: #{inspect(reason)}"
         )
 
@@ -124,13 +146,48 @@ defmodule ExESDB.ClusterCoordinator do
       try do
         # Check if the node has an active Khepri cluster
         case :rpc.call(node, :khepri_cluster, :members, [store], 5000) do
-          {:ok, members} when length(members) > 0 -> true
-          _ -> false
+          {:ok, members} when members != [] ->
+            Logger.debug(
+              "#{Themes.cluster_coordinator(node())} => Found existing cluster on #{inspect(node)} with #{length(members)} members"
+            )
+
+            true
+
+          {:ok, []} ->
+            Logger.debug(
+              "#{Themes.cluster_coordinator(node())} => Node #{inspect(node)} has empty cluster"
+            )
+
+            false
+
+          {:error, reason} ->
+            Logger.debug(
+              "#{Themes.cluster_coordinator(node())} => Node #{inspect(node)} cluster check failed: #{inspect(reason)}"
+            )
+
+            false
+
+          other ->
+            Logger.debug(
+              "#{Themes.cluster_coordinator(node())} => Node #{inspect(node)} unexpected response: #{inspect(other)}"
+            )
+
+            false
         end
       rescue
-        _ -> false
+        e ->
+          Logger.debug(
+            "#{Themes.cluster_coordinator(node())} => Node #{inspect(node)} cluster check exception: #{inspect(e)}"
+          )
+
+          false
       catch
-        _, _ -> false
+        type, reason ->
+          Logger.debug(
+            "#{Themes.cluster_coordinator(node())} => Node #{inspect(node)} cluster check caught: #{inspect(type)} #{inspect(reason)}"
+          )
+
+          false
       end
     end)
   end
@@ -144,7 +201,7 @@ defmodule ExESDB.ClusterCoordinator do
   defp should_handle_nodeup_event?(store) do
     # Check if we're already part of a cluster
     case :khepri_cluster.members(store) do
-      {:ok, members} when length(members) > 1 ->
+      {:ok, members} when members != [] ->
         # We're already in a cluster, no need to handle nodeup
         false
 

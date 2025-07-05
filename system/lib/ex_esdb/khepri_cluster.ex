@@ -1,4 +1,4 @@
-defmodule ExESDB.Cluster do
+defmodule ExESDB.KhepriCluster do
   @moduledoc false
   use GenServer
 
@@ -91,7 +91,7 @@ defmodule ExESDB.Cluster do
 
   @impl true
   def handle_info(:members, state) do
-    IO.puts("\nMEMBERS")
+    IO.puts("\nExESDB MEMBERS")
 
     leader = Keyword.get(state, :current_leader)
     store = state[:store_id]
@@ -174,15 +174,11 @@ defmodule ExESDB.Cluster do
 
     # Check if we should handle this nodeup event
     if ClusterCoordinator.should_handle_nodeup?(store) do
-      Logger.info(
-        "#{Themes.cluster(node())} attempting coordinated cluster join due to new node"
-      )
+      Logger.info("#{Themes.cluster(node())} attempting coordinated cluster join due to new node")
 
       case join_via_connected_nodes(store) do
         :ok ->
-          Logger.info(
-            "#{Themes.cluster(node())} successfully joined cluster after nodeup event"
-          )
+          Logger.info("#{Themes.cluster(node())} successfully joined cluster after nodeup event")
 
         :coordinator ->
           Logger.info("#{Themes.cluster(node())} acting as coordinator after nodeup event")
@@ -193,9 +189,7 @@ defmodule ExESDB.Cluster do
           )
       end
     else
-      Logger.debug(
-        "#{Themes.cluster(node())} already in cluster, ignoring nodeup event"
-      )
+      Logger.debug("#{Themes.cluster(node())} already in cluster, ignoring nodeup event")
     end
 
     {:noreply, state}

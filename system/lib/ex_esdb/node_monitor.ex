@@ -1,7 +1,7 @@
 defmodule ExESDB.NodeMonitor do
   @moduledoc """
   Provides fast failure detection and cluster health monitoring to handle hard node crashes.
-  
+
   This module implements a multi-layer approach:
   1. Active health probing of cluster nodes
   2. Fast detection of unresponsive nodes
@@ -13,9 +13,12 @@ defmodule ExESDB.NodeMonitor do
 
   alias ExESDB.Themes
 
-  @default_probe_interval 2_000  # 2 seconds
-  @default_failure_threshold 3   # 3 consecutive failures
-  @default_probe_timeout 1_000   # 1 second timeout per probe
+  # 2 seconds
+  @default_probe_interval 2_000
+  # 3 consecutive failures
+  @default_failure_threshold 3
+  # 1 second timeout per probe
+  @default_probe_timeout 1_000
 
   ## Public API
 
@@ -45,21 +48,26 @@ defmodule ExESDB.NodeMonitor do
 
     # Enable node monitoring
     :ok = :net_kernel.monitor_nodes(true, [:nodedown_reason])
-    
+
     # Schedule initial health probe
     Process.send_after(self(), :health_probe, probe_interval)
 
-    Logger.info("#{Themes.cluster(node())} NodeMonitor started with #{probe_interval}ms intervals")
+    Logger.info(
+      "#{Themes.node_monitor(node())} NodeMonitor started with probe interval: #{inspect(probe_interval)}ms"
+    )
 
-    {:ok, %{
-      probe_interval: probe_interval,
-      failure_threshold: failure_threshold,
-      probe_timeout: probe_timeout,
-      store_id: store_id,
-      node_failures: %{},  # Track consecutive failures per node
-      last_seen: %{},      # Last successful contact per node
-      known_nodes: MapSet.new()
-    }}
+    {:ok,
+     %{
+       probe_interval: probe_interval,
+       failure_threshold: failure_threshold,
+       probe_timeout: probe_timeout,
+       store_id: store_id,
+       # Track consecutive failures per node
+       node_failures: %{},
+       # Last successful contact per node
+       last_seen: %{},
+       known_nodes: MapSet.new()
+     }}
   end
 
   @impl true
@@ -70,6 +78,7 @@ defmodule ExESDB.NodeMonitor do
       last_seen: state.last_seen,
       threshold: state.failure_threshold
     }
+
     {:reply, status, state}
   end
 
@@ -88,16 +97,19 @@ defmodule ExESDB.NodeMonitor do
 
   @impl true
   def handle_info({:nodedown, node, reason}, state) do
-    Logger.warning("#{Themes.cluster(node())} NodeMonitor detected nodedown: #{inspect(node)} (#{inspect(reason)})")
-    
+    Logger.warning(
+      "#{Themes.node_monitor(node())} 🔴 detected nodedown: #{inspect(node)} (#{inspect(reason)})"
+    )
+
     # Immediately handle the failed node
     handle_failed_nodes([node], state.store_id)
-    
+
     # Remove from monitoring state
-    new_state = %{state |
-      known_nodes: MapSet.delete(state.known_nodes, node),
-      node_failures: Map.delete(state.node_failures, node),
-      last_seen: Map.delete(state.last_seen, node)
+    new_state = %{
+      state
+      | known_nodes: MapSet.delete(state.known_nodes, node),
+        node_failures: Map.delete(state.node_failures, node),
+        last_seen: Map.delete(state.last_seen, node)
     }
 
     {:noreply, new_state}
@@ -105,12 +117,13 @@ defmodule ExESDB.NodeMonitor do
 
   @impl true
   def handle_info({:nodeup, node}, state) do
-    Logger.info("#{Themes.cluster(node())} NodeMonitor detected nodeup: #{inspect(node)}")
-    
+    Logger.info("#{Themes.node_monitor(node())} 🟢 detected nodeup: #{inspect(node)}")
+
     # Reset failure count for recovering node
-    new_state = %{state |
-      node_failures: Map.delete(state.node_failures, node),
-      last_seen: Map.put(state.last_seen, node, System.monotonic_time(:millisecond))
+    new_state = %{
+      state
+      | node_failures: Map.delete(state.node_failures, node),
+        last_seen: Map.put(state.last_seen, node, System.monotonic_time(:millisecond))
     }
 
     {:noreply, new_state}
@@ -124,24 +137,26 @@ defmodule ExESDB.NodeMonitor do
   defp perform_health_probe_cycle(state) do
     cluster_nodes = get_cluster_nodes(state.store_id)
     new_known_nodes = build_known_nodes_set(cluster_nodes)
-    
-    {updated_failures, updated_last_seen} = 
+
+    {updated_failures, updated_last_seen} =
       probe_all_nodes(new_known_nodes, state.node_failures, state.last_seen, state)
-    
+
     failed_nodes = extract_failed_nodes(updated_failures, state.failure_threshold)
     maybe_handle_failed_nodes(failed_nodes, state.store_id)
-    
-    %{state |
-      known_nodes: new_known_nodes,
-      node_failures: updated_failures,
-      last_seen: updated_last_seen
+
+    %{
+      state
+      | known_nodes: new_known_nodes,
+        node_failures: updated_failures,
+        last_seen: updated_last_seen
     }
   end
 
   defp build_known_nodes_set(cluster_nodes) do
     cluster_nodes
     |> MapSet.new()
-    |> MapSet.delete(node())  # Don't monitor ourselves
+    # Don't monitor ourselves
+    |> MapSet.delete(node())
   end
 
   defp extract_failed_nodes(failures, threshold) do
@@ -151,6 +166,7 @@ defmodule ExESDB.NodeMonitor do
   end
 
   defp maybe_handle_failed_nodes([], _store_id), do: :ok
+
   defp maybe_handle_failed_nodes(failed_nodes, store_id) do
     handle_failed_nodes(failed_nodes, store_id)
   end
@@ -160,7 +176,7 @@ defmodule ExESDB.NodeMonitor do
       {:ok, members} ->
         members
         |> Enum.map(fn {_store, node} -> node end)
-      
+
       {:error, _reason} ->
         # Fallback to connected nodes if Khepri is unavailable
         Node.list()
@@ -169,8 +185,8 @@ defmodule ExESDB.NodeMonitor do
 
   defp probe_all_nodes(nodes, current_failures, current_last_seen, state) do
     now = System.monotonic_time(:millisecond)
-    
-    {new_failures, new_last_seen} = 
+
+    {new_failures, new_last_seen} =
       nodes
       |> Enum.reduce({current_failures, current_last_seen}, fn node, {failures_acc, seen_acc} ->
         case perform_health_probe(node, state.probe_timeout) do
@@ -180,14 +196,16 @@ defmodule ExESDB.NodeMonitor do
               Map.delete(failures_acc, node),
               Map.put(seen_acc, node, now)
             }
-          
+
           :unhealthy ->
             # Node failed probe, increment failure count
             current_count = Map.get(failures_acc, node, 0)
             new_count = current_count + 1
-            
-            Logger.debug("#{Themes.cluster(node())} Health probe failed for #{inspect(node)} (#{new_count}/#{state.failure_threshold})")
-            
+
+            Logger.debug(
+              "#{Themes.node_monitor(node())} 🟠 Health probe failed for #{inspect(node)} (#{new_count}/#{state.failure_threshold})"
+            )
+
             {
               Map.put(failures_acc, node, new_count),
               seen_acc
@@ -236,14 +254,16 @@ defmodule ExESDB.NodeMonitor do
 
   defp handle_failed_nodes(failed_nodes, store_id) do
     Enum.each(failed_nodes, fn node ->
-      Logger.error("#{Themes.cluster(node())} Node #{inspect(node)} detected as failed, initiating cleanup")
-      
+      Logger.error(
+        "#{Themes.node_monitor(node())} ❌ Node #{inspect(node)} detected as failed, initiating cleanup"
+      )
+
       # 1. Clean up Swarm registrations for the failed node
       cleanup_swarm_registrations(node)
-      
+
       # 2. Notify cluster about the failure (this could trigger Khepri cleanup)
       notify_cluster_failure(node, store_id)
-      
+
       # 3. Trigger subscription cleanup if needed
       cleanup_subscriptions(node)
     end)
@@ -278,17 +298,22 @@ defmodule ExESDB.NodeMonitor do
 
   defp unregister_failed_nodes(registrations, failed_node) do
     Enum.each(registrations, fn {name, _pid} ->
-      Logger.info("#{Themes.cluster(node())} Cleaning up Swarm registration: #{inspect(name)} from failed node #{inspect(failed_node)}")
+      Logger.info(
+        "#{Themes.node_monitor(node())} 🧹 Cleaning up Swarm registration: #{inspect(name)} from failed node #{inspect(failed_node)}"
+      )
+
       Swarm.unregister_name(name)
     end)
   end
 
   defp log_swarm_cleanup_warning do
-    Logger.warning("#{Themes.cluster(node())} Could not retrieve Swarm registrations for cleanup")
+    Logger.warning(
+      "#{Themes.node_monitor(node())} Could not retrieve Swarm registrations for cleanup"
+    )
   end
 
   defp log_swarm_cleanup_error(error) do
-    Logger.error("#{Themes.cluster(node())} Error during Swarm cleanup: #{inspect(error)}")
+    Logger.error("#{Themes.node_monitor(node())}  Error during Swarm cleanup: #{inspect(error)}")
   end
 
   defp notify_cluster_failure(failed_node, store_id) do
@@ -296,9 +321,11 @@ defmodule ExESDB.NodeMonitor do
     # 1. Force Khepri to remove the node from cluster
     # 2. Trigger leader election if the failed node was the leader
     # 3. Redistribute data/workers as needed
-    
-    Logger.info("#{Themes.cluster(node())} Notifying cluster about failed node: #{inspect(failed_node)}")
-    
+
+    Logger.info(
+      "#{Themes.node_monitor(node())} Notifying cluster about failed node: #{inspect(failed_node)}"
+    )
+
     # For now, just log and let the existing Khepri mechanisms handle it
     # In the future, you could add more aggressive cleanup here
   end
@@ -306,7 +333,9 @@ defmodule ExESDB.NodeMonitor do
   defp cleanup_subscriptions(failed_node) do
     # Clean up any subscriptions that were managed by the failed node
     # This is application-specific and could be extended based on your needs
-    Logger.debug("#{Themes.cluster(node())} Cleaning up subscriptions for failed node: #{inspect(failed_node)}")
+    Logger.debug(
+      "#{Themes.node_monitor(node())} Cleaning up subscriptions for failed node: #{inspect(failed_node)}"
+    )
   end
 
   ## Child Spec

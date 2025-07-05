@@ -12,13 +12,16 @@ defmodule ExESDB.Themes do
     do: "STORE [#{CF.black_on_green()}#{inspect(pid)}#{CF.reset()}]"
 
   def cluster(pid),
-    do: "CLUSTER [#{CF.yellow_on_red()}#{inspect(pid)}#{CF.reset()}]"
+    do: "KHEPRI CLUSTER [#{CF.yellow_on_red()}#{inspect(pid)}#{CF.reset()}]"
 
   def cluster_coordinator(pid),
     do: "CLUSTER_COORDINATOR [#{CF.white_on_red()}#{inspect(pid)}#{CF.reset()}]"
 
   def cluster_system(pid),
     do: "CLUSTER_SYSTEM [#{CF.bright_white_on_red()}#{inspect(pid)}#{CF.reset()}]"
+
+  def node_monitor(pid),
+    do: "NODE_MONITOR [#{CF.yellow_on_magenta()}#{inspect(pid)}#{CF.reset()}]"
 
   def projector(pid),
     do: "PROJECTOR [#{CF.black_on_white()}#{inspect(pid)}#{CF.reset()}]"

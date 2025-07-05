@@ -212,6 +212,154 @@ config :libcluster,
 - **Databases**: Projection and read model support
 - **Monitoring Systems**: Metrics and alerting integration
 
+## Installation
+
+### Docker Installation
+
+ExESDB is available as a Docker image on Docker Hub with automatic versioning based on the `mix.exs` version.
+
+#### Available Tags
+- `beamcampus/ex_esdb:latest` - Latest build from master branch
+- `beamcampus/ex_esdb:0.0.18` - Specific version (current version)
+- `beamcampus/ex_esdb:0.0.x` - Any specific version tag
+
+#### Quick Start
+
+**Single Node:**
+```bash
+docker run -d \
+  --name ex-esdb \
+  -p 4369:4369 \
+  -p 9000-9100:9000-9100 \
+  -p 45892:45892/udp \
+  -e EX_ESDB_STORE_ID="my-store" \
+  -e EX_ESDB_DB_TYPE="single" \
+  -e EX_ESDB_DATA_DIR="/data" \
+  -v ex-esdb-data:/data \
+  beamcampus/ex_esdb:latest
+```
+
+**Multi-Node Cluster:**
+```bash
+# Node 1 (seed node)
+docker run -d \
+  --name ex-esdb-node1 \
+  --network ex-esdb-net \
+  -p 4369:4369 \
+  -p 9001:9000 \
+  -p 45892:45892/udp \
+  -e EX_ESDB_STORE_ID="cluster-store" \
+  -e EX_ESDB_DB_TYPE="cluster" \
+  -e EX_ESDB_DATA_DIR="/data" \
+  -e EX_ESDB_CLUSTER_SECRET="your-secret-key" \
+  -e EX_ESDB_COOKIE="your-erlang-cookie" \
+  -v ex-esdb-node1-data:/data \
+  beamcampus/ex_esdb:latest
+
+# Node 2
+docker run -d \
+  --name ex-esdb-node2 \
+  --network ex-esdb-net \
+  -p 9002:9000 \
+  -e EX_ESDB_STORE_ID="cluster-store" \
+  -e EX_ESDB_DB_TYPE="cluster" \
+  -e EX_ESDB_DATA_DIR="/data" \
+  -e EX_ESDB_CLUSTER_SECRET="your-secret-key" \
+  -e EX_ESDB_COOKIE="your-erlang-cookie" \
+  -v ex-esdb-node2-data:/data \
+  beamcampus/ex_esdb:latest
+
+# Node 3
+docker run -d \
+  --name ex-esdb-node3 \
+  --network ex-esdb-net \
+  -p 9003:9000 \
+  -e EX_ESDB_STORE_ID="cluster-store" \
+  -e EX_ESDB_DB_TYPE="cluster" \
+  -e EX_ESDB_DATA_DIR="/data" \
+  -e EX_ESDB_CLUSTER_SECRET="your-secret-key" \
+  -e EX_ESDB_COOKIE="your-erlang-cookie" \
+  -v ex-esdb-node3-data:/data \
+  beamcampus/ex_esdb:latest
+```
+
+#### Docker Compose
+
+For development and testing, use the provided Docker Compose setup:
+
+```bash
+# Clone the repository
+git clone https://github.com/beam-campus/ex-esdb.git
+cd ex-esdb/dev-env
+
+# Start a 3-node cluster
+./start-core-only.sh
+
+# Or use the interactive cluster manager
+./ez-cluster.sh
+```
+
+The Docker Compose setup includes:
+- **Core Cluster**: 3-node ExESDB cluster (ex-esdb0, ex-esdb1, ex-esdb2)
+- **Extended Tier**: Additional 2 nodes (ex-esdb10, ex-esdb11)
+- **Massive Tier**: Additional 8 nodes (ex-esdb20-27)
+- **Automatic Networking**: Configured Docker networks for cluster communication
+- **Data Persistence**: Named volumes for data persistence
+- **Health Checks**: Built-in container health monitoring
+
+#### Environment Variables
+
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `EX_ESDB_STORE_ID` | Unique store identifier | - | Yes |
+| `EX_ESDB_DB_TYPE` | Deployment type (`single` or `cluster`) | `single` | No |
+| `EX_ESDB_DATA_DIR` | Data directory path | `/data` | No |
+| `EX_ESDB_TIMEOUT` | Operation timeout (ms) | `5000` | No |
+| `EX_ESDB_CLUSTER_SECRET` | Cluster authentication secret | - | Yes (cluster) |
+| `EX_ESDB_COOKIE` | Erlang distribution cookie | - | Yes (cluster) |
+| `EX_ESDB_PUB_SUB` | PubSub process name | `:ex_esdb_pubsub` | No |
+
+#### Ports
+
+| Port | Protocol | Description |
+|------|----------|-------------|
+| `4369` | TCP | EPMD (Erlang Port Mapper Daemon) |
+| `9000-9100` | TCP | Erlang distribution ports |
+| `45892` | UDP | LibCluster gossip multicast |
+
+#### Health Checks
+
+The Docker image includes a built-in health check script:
+
+```bash
+# Check container health
+docker exec ex-esdb ./check-ex-esdb.sh
+
+# View health status
+docker inspect --format='{{.State.Health.Status}}' ex-esdb
+```
+
+#### Production Considerations
+
+1. **Security**: Use strong, unique values for `EX_ESDB_CLUSTER_SECRET` and `EX_ESDB_COOKIE`
+2. **Networking**: Ensure proper firewall rules for cluster communication
+3. **Storage**: Use named volumes or bind mounts for data persistence
+4. **Monitoring**: Implement external monitoring for cluster health
+5. **Backups**: Regular backup of data volumes
+6. **Resource Limits**: Set appropriate CPU and memory limits
+
+### Hex Installation
+
+ExESDB is also available as a Hex package for direct integration:
+
+```elixir
+def deps do
+  [
+    {:ex_esdb, "~> 0.0.18"}
+  ]
+end
+```
+
 ## Contents
 
 - [Getting Started](system/guides/getting_started.md)

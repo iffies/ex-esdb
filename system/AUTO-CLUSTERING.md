@@ -7,14 +7,15 @@
 - Solving the **Split Brain** Problem using `ExESDB.ClusterCoordinator`
 - `ExESDB.NodeMonitor` for efficiently mitigating **Hard Node Crashes**.
 
-## ExESDB Gater v0.0.2
+## ExESDB Gater v0.0.3
 
 - **BEAM-native API** for working with ExESDB
 - Automatic ExESDB **Cluster Discovery**
 - Load Balancing
 
-## BCUtils v0.7.0
+## BCUtils v0.9.0
 
 - BitFlags
 - ColorFuncs
 - PubSubManager
+- LoggingFilter

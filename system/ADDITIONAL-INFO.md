@@ -5,12 +5,14 @@
 - https://hex.pm/packages/ex_esdb
 - https://hexdocs.pm/ex_esdb
 - https://github.com/beam-campus/ex-esdb
+- `docker pull beamcampus/ex-esdb`
 
 ## ExESDB Gater (API + Load Balancer)
 
 - https://hex.pm/packages/ex_esdb_gater
 - https://hexdocs.pm/ex_esdb_gater
 - https://github.com/beam-campus/ex-esdb-gater
+- `docker pull beamcampus/ex-esdb-gater`
 
 ## BCUtils
 
