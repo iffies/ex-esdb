@@ -103,7 +103,7 @@ defmodule ExESDB.MixProject do
       {:phoenix_pubsub, "~> 2.1"},
       {:khepri, "~> 0.17"},
       {:commanded, "~> 1.4"},
-      {:ex_esdb_gater, "~> 0.0.5"}
+      {:ex_esdb_gater, "~> 0.0.6"}
     ]
   end
 
