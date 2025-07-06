@@ -137,6 +137,10 @@ defmodule ExESDB.MixProject do
           filename: "logger-filtering",
           title: "Logger Filtering"
         ],
+        "guides/how_exesdb_handles_multiple_stores.md": [
+          filename: "multiple-stores",
+          title: "Multiple Stores"
+        ],
         "../README.md": [
           filename: "readme",
           title: "Read Me"
