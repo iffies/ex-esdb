@@ -99,14 +99,29 @@ defmodule ExESDB.GatewayWorker do
       store
       |> StreamsH.get_version!(stream_id)
 
-    case store
-         |> StreamsW.append_events(stream_id, current_version, events) do
-      {:ok, new_version} ->
-        {:reply, {:ok, new_version}, state}
+    reply =
+      append_events(store, stream_id, current_version, events)
 
-      {:error, reason} ->
-        {:reply, {:error, reason}, state}
-    end
+    {:reply, reply, state}
+  end
+
+  @impl GenServer
+  def handle_call({:append_events, store, stream_id, expected_version, events}, _from, state) do
+    current_version =
+      store
+      |> StreamsH.get_version!(stream_id)
+
+    reply =
+      case expected_version == current_version do
+        true ->
+          store
+          |> StreamsW.append_events(stream_id, current_version, events)
+
+        _ ->
+          {:error, {:wrong_expected_version, current_version}}
+      end
+
+    {:reply, reply, state}
   end
 
   @impl GenServer
@@ -127,6 +142,34 @@ defmodule ExESDB.GatewayWorker do
          |> SnapshotsR.list_snapshots(source_uuid, stream_uuid) do
       {:ok, snapshots} ->
         {:reply, {:ok, snapshots}, state}
+
+      {:error, reason} ->
+        {:reply, {:error, reason}, state}
+    end
+  end
+
+  @impl GenServer
+  def handle_call(:list_stores, _from, state) do
+    stores = ExESDB.StoreManager.list_stores()
+    {:reply, {:ok, stores}, state}
+  end
+
+  @impl GenServer
+  def handle_call({:get_store_status, store_id}, _from, state) do
+    case ExESDB.StoreManager.get_store_status(store_id) do
+      {:ok, status} ->
+        {:reply, {:ok, status}, state}
+
+      {:error, reason} ->
+        {:reply, {:error, reason}, state}
+    end
+  end
+
+  @impl GenServer
+  def handle_call({:get_store_config, store_id}, _from, state) do
+    case ExESDB.StoreManager.get_store_config(store_id) do
+      {:ok, config} ->
+        {:reply, {:ok, config}, state}
 
       {:error, reason} ->
         {:reply, {:error, reason}, state}
@@ -193,6 +236,32 @@ defmodule ExESDB.GatewayWorker do
   def handle_cast({:delete_snapshot, store, source_uuid, stream_uuid, version}, state) do
     store
     |> SnapshotsW.delete_snapshot(source_uuid, stream_uuid, version)
+
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_cast({:create_store, store_id, config}, state) do
+    case ExESDB.StoreManager.create_store(store_id, config) do
+      {:ok, ^store_id} ->
+        Logger.info("Successfully created store: #{store_id}")
+
+      {:error, reason} ->
+        Logger.error("Failed to create store #{store_id}: #{inspect(reason)}")
+    end
+
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_cast({:remove_store, store_id}, state) do
+    case ExESDB.StoreManager.remove_store(store_id) do
+      :ok ->
+        Logger.info("Successfully removed store: #{store_id}")
+
+      {:error, reason} ->
+        Logger.error("Failed to remove store #{store_id}: #{inspect(reason)}")
+    end
 
     {:noreply, state}
   end
