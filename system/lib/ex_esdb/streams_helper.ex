@@ -62,13 +62,13 @@ defmodule ExESDB.StreamsHelper do
   end
 
   def to_event_record(
-        %ExESDB.NewEvent{} = new_event,
+        %ExESDB.Schema.NewEvent{} = new_event,
         stream_id,
         version,
         created,
         created_epoch
       ),
-      do: %ExESDB.EventRecord{
+      do: %ExESDB.Schema.EventRecord{
         event_stream_id: stream_id,
         event_number: version,
         event_id: new_event.event_id,

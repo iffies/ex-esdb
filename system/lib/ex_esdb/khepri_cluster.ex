@@ -6,11 +6,12 @@ defmodule ExESDB.KhepriCluster do
 
   alias ExESDB.LeaderWorker, as: LeaderWorker
   alias ExESDB.Themes, as: Themes
+  alias ExESDB.Options, as: Options
 
   # defp ping?(node) do
   #   case :net_adm.ping(node) do
-  #     :pong -> true
-  #     _ -> false
+  #     :pong => true
+  #     _ => false
   #   end
   # end
 
@@ -24,10 +25,118 @@ defmodule ExESDB.KhepriCluster do
   defp get_medal(leader, member),
     do: if(member == leader, do: "🏆", else: "🥈")
 
-  alias ExESDB.ClusterCoordinator
-
   defp join_via_connected_nodes(store) do
-    ClusterCoordinator.join_cluster(store)
+    case Options.db_type() do
+      :cluster ->
+        # In cluster mode, use ClusterCoordinator if available
+        case Process.whereis(ExESDB.ClusterCoordinator) do
+          nil ->
+            Logger.warning(
+              "#{Themes.cluster(node())} => ClusterCoordinator not available, trying direct join"
+            )
+
+            join_cluster_direct(store)
+
+          _pid ->
+            ExESDB.ClusterCoordinator.join_cluster(store)
+        end
+
+      :single ->
+        # In single mode, just ensure the store is started locally
+        Logger.info("#{Themes.cluster(node())} => Running in single-node mode")
+        :coordinator
+
+      _ ->
+        Logger.warning(
+          "#{Themes.cluster(node())} => Unknown db_type, defaulting to single-node mode"
+        )
+
+        :coordinator
+    end
+  end
+
+  defp join_cluster_direct(store) do
+    # Fallback direct cluster join logic for when ClusterCoordinator is not available
+    connected_nodes = Node.list()
+
+    if Enum.empty?(connected_nodes) do
+      Logger.info(
+        "#{Themes.cluster(node())} => No connected nodes, starting as single node cluster"
+      )
+
+      :no_nodes
+    else
+      Logger.info(
+        "#{Themes.cluster(node())} => Attempting direct join to cluster via: #{inspect(connected_nodes)}"
+      )
+
+      # Try to find a node with an existing cluster
+      case find_cluster_node(store, connected_nodes) do
+        nil ->
+          Logger.info(
+            "#{Themes.cluster(node())} => No existing cluster found, starting as coordinator"
+          )
+
+          :coordinator
+
+        target_node ->
+          case :khepri_cluster.join(store, target_node) do
+            :ok ->
+              Logger.info(
+                "#{Themes.cluster(node())} => Successfully joined cluster via #{inspect(target_node)}"
+              )
+
+              :ok
+
+            {:error, reason} ->
+              Logger.warning(
+                "#{Themes.cluster(node())} => Failed to join via #{inspect(target_node)}: #{inspect(reason)}"
+              )
+
+              :failed
+          end
+      end
+    end
+  end
+
+  defp find_cluster_node(store, nodes) do
+    Enum.find(nodes, fn node ->
+      try do
+        case :rpc.call(node, :khepri_cluster, :members, [store], 5000) do
+          {:ok, members} when members != [] -> true
+          _ -> false
+        end
+      rescue
+        _ -> false
+      catch
+        _, _ -> false
+      end
+    end)
+  end
+
+  defp should_handle_nodeup?(store) do
+    case Options.db_type() do
+      :cluster ->
+        # In cluster mode, check if we should handle nodeup events
+        case Process.whereis(ExESDB.ClusterCoordinator) do
+          nil ->
+            # No coordinator available, check if we're already in a cluster
+            case :khepri_cluster.members(store) do
+              {:ok, members} when length(members) > 1 -> false
+              _ -> true
+            end
+
+          _pid ->
+            ExESDB.ClusterCoordinator.should_handle_nodeup?(store)
+        end
+
+      :single ->
+        # In single mode, never handle nodeup events for clustering
+        false
+
+      _ ->
+        false
+    end
   end
 
   defp leave(store) do
@@ -90,61 +199,138 @@ defmodule ExESDB.KhepriCluster do
   end
 
   @impl true
-  def handle_info(:members, state) do
-    IO.puts("\nExESDB MEMBERS")
-
+  def handle_info(:check_members, state) do
     leader = Keyword.get(state, :current_leader)
     store = state[:store_id]
+    previous_members = Keyword.get(state, :previous_members, [])
 
-    case store
-         |> members() do
+    case store |> members() do
       {:error, reason} ->
-        IO.puts("⚠️⚠️ Failed to get store members. reason: #{inspect(reason)} ⚠️⚠️")
+        # Only log errors if they're different from the last error
+        last_error = Keyword.get(state, :last_member_error)
+        if last_error != reason do
+          IO.puts("⚠️⚠️ Failed to get store members. reason: #{inspect(reason)} ⚠️⚠️")
+        end
+        new_state = Keyword.put(state, :last_member_error, reason)
+        Process.send_after(self(), :check_members, 5 * state[:timeout])
+        {:noreply, new_state}
 
-      {:ok, members} ->
-        members
-        |> Enum.each(fn {_store, member} ->
-          medal = get_medal(leader, member)
-          IO.puts("#{medal} #{inspect(member)}")
-        end)
+      {:ok, current_members} ->
+        # Normalize members for comparison (sort by member name)
+        normalized_current = Enum.sort_by(current_members, fn {_store, member} -> member end)
+        normalized_previous = Enum.sort_by(previous_members, fn {_store, member} -> member end)
+        
+        # Only report if membership has changed
+        if normalized_current != normalized_previous do
+          IO.puts("\n#{Themes.cluster(self())} ==> MEMBERSHIP CHANGED")
+          
+          # Report additions
+          new_members = normalized_current -- normalized_previous
+          if !Enum.empty?(new_members) do
+            Enum.each(new_members, fn {_store, member} ->
+              medal = get_medal(leader, member)
+              IO.puts("  ✅ #{medal} #{inspect(member)} joined")
+            end)
+          end
+          
+          # Report removals
+          removed_members = normalized_previous -- normalized_current
+          if !Enum.empty?(removed_members) do
+            Enum.each(removed_members, fn {_store, member} ->
+              IO.puts("  ❌ #{inspect(member)} left")
+            end)
+          end
+          
+          # Show current full membership
+          IO.puts("\n  Current members:")
+          normalized_current
+          |> Enum.each(fn {_store, member} ->
+            medal = get_medal(leader, member)
+            IO.puts("  #{medal} #{inspect(member)}")
+          end)
+          
+          IO.puts("")
+        end
+        
+        # Update state with current members and clear any previous error
+        new_state = state
+          |> Keyword.put(:previous_members, current_members)
+          |> Keyword.delete(:last_member_error)
+        
+        Process.send_after(self(), :check_members, 5 * state[:timeout])
+        {:noreply, new_state}
     end
-
-    Process.send_after(self(), :members, 5 * state[:timeout])
-    {:noreply, state}
   end
 
   @impl true
   def handle_info(:check_leader, state) do
     timeout = state[:timeout]
-
-    current_leader =
-      state
-      |> Keyword.get(:current_leader)
-
-    store =
-      state
-      |> Keyword.get(:store_id)
-
+    previous_leader = Keyword.get(state, :current_leader)
+    store = Keyword.get(state, :store_id)
+    
     new_state =
       case :ra_leaderboard.lookup_leader(store) do
         {_, leader_node} ->
-          if node() == leader_node && current_leader != leader_node do
-            IO.puts("⚠️⚠️ FOLLOW THE LEADER! ⚠️⚠️")
-
-            store
-            |> LeaderWorker.activate()
+          cond do
+            # Leadership changed to a different node
+            previous_leader != nil && previous_leader != leader_node ->
+              report_leadership_change(previous_leader, leader_node, store)
+              
+              # If we became the leader, activate LeaderWorker
+              if node() == leader_node do
+                store |> LeaderWorker.activate()
+              end
+              
+              state |> Keyword.put(:current_leader, leader_node)
+            
+            # First time detecting leader or same leader
+            previous_leader == nil ->
+              if leader_node != nil do
+                IO.puts("\n#{Themes.cluster(self())} ==> LEADER DETECTED: 🏆 #{inspect(leader_node)}")
+                
+                # If we are the initial leader, activate LeaderWorker
+                if node() == leader_node do
+                  IO.puts("#{Themes.cluster(self())} ==> 🚀 This node is the leader, activating LeaderWorker")
+                  store |> LeaderWorker.activate()
+                end
+              end
+              
+              state |> Keyword.put(:current_leader, leader_node)
+            
+            # Same leader, no change needed
+            true ->
+              state
           end
-
-          state
-          |> Keyword.put(:current_leader, leader_node)
-
+          
         :undefined ->
-          IO.puts("⚠️⚠️ No leader found. ⚠️⚠️")
-          state
+          # Only report if we previously had a leader
+          if previous_leader != nil do
+            IO.puts("\n#{Themes.cluster(self())} ==> ⚠️ LEADERSHIP LOST: No leader found")
+          end
+          
+          state |> Keyword.put(:current_leader, nil)
       end
 
     Process.send_after(self(), :check_leader, timeout)
     {:noreply, new_state}
+  end
+  
+  defp report_leadership_change(old_leader, new_leader, _store) do
+    IO.puts("\n#{Themes.cluster(self())} ==> 🔄 LEADERSHIP CHANGED")
+    IO.puts("  🔴 Previous leader: #{inspect(old_leader)}")
+    IO.puts("  🟢 New leader:      🏆 #{inspect(new_leader)}")
+    
+    # Check if we are the new leader
+    if node() == new_leader do
+      IO.puts("  🚀 This node is now the leader!")
+    else
+      IO.puts("  📞 Following new leader: #{inspect(new_leader)}")
+    end
+    
+    # Also trigger a membership check to show updated leadership in membership
+    Process.send(self(), :check_members, [])
+    
+    IO.puts("")
   end
 
   @impl true
@@ -173,15 +359,20 @@ defmodule ExESDB.KhepriCluster do
     store = state[:store_id]
 
     # Check if we should handle this nodeup event
-    if ClusterCoordinator.should_handle_nodeup?(store) do
+    if should_handle_nodeup?(store) do
       Logger.info("#{Themes.cluster(node())} attempting coordinated cluster join due to new node")
 
       case join_via_connected_nodes(store) do
         :ok ->
           Logger.info("#{Themes.cluster(node())} successfully joined cluster after nodeup event")
+          # Trigger immediate membership and leadership checks after successful join
+          Process.send(self(), :check_members, [])
+          Process.send(self(), :check_leader, [])
 
         :coordinator ->
           Logger.info("#{Themes.cluster(node())} acting as coordinator after nodeup event")
+          # Trigger immediate leadership check when acting as coordinator
+          Process.send(self(), :check_leader, [])
 
         _ ->
           Logger.debug(
@@ -190,6 +381,9 @@ defmodule ExESDB.KhepriCluster do
       end
     else
       Logger.debug("#{Themes.cluster(node())} already in cluster, ignoring nodeup event")
+      # Still trigger membership and leadership checks to detect any changes
+      Process.send(self(), :check_members, [])
+      Process.send(self(), :check_leader, [])
     end
 
     {:noreply, state}
@@ -198,6 +392,9 @@ defmodule ExESDB.KhepriCluster do
   @impl true
   def handle_info({:nodedown, node}, state) do
     Logger.info("#{Themes.cluster(self())} detected node down: #{inspect(node)}")
+    # Trigger immediate membership and leadership checks after node down event
+    Process.send(self(), :check_members, [])
+    Process.send(self(), :check_leader, [])
     {:noreply, state}
   end
 
@@ -228,7 +425,7 @@ defmodule ExESDB.KhepriCluster do
     :ok = :net_kernel.monitor_nodes(true)
 
     Process.send_after(self(), :join, timeout)
-    Process.send_after(self(), :members, 10 * timeout)
+    Process.send_after(self(), :check_members, 10 * timeout)
     Process.send_after(self(), :check_leader, timeout)
     {:ok, state}
   end

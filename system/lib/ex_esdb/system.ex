@@ -19,20 +19,43 @@ defmodule ExESDB.System do
 
   @impl true
   def init(opts) do
-    topologies = Options.topologies()
+    db_type = Options.db_type()
+
+    Logger.info("Starting ExESDB in #{db_type} mode")
 
     children = [
       add_pub_sub(opts),
-      {Cluster.Supervisor, [topologies, [name: ExESDB.LibCluster]]},
       {PartitionSupervisor, child_spec: DynamicSupervisor, name: ExESDB.EmitterPools},
       {ExESDB.StoreManager, opts},
-      {ExESDB.ClusterSystem, opts},
       {ExESDB.Streams, opts},
       {ExESDB.Snapshots, opts},
       {ExESDB.Subscriptions, opts},
-      {ExESDB.GatewaySupervisor, opts},
-      {ExESDB.LeaderSystem, opts}
+      {ExESDB.LeaderSystem, opts},
+      # Always include KhepriCluster - it's mode-aware
+      {ExESDB.KhepriCluster, opts},
+      {ExESDB.GatewaySupervisor, opts}
     ]
+
+    # Conditionally add clustering components based on db_type
+    children =
+      case db_type do
+        :cluster ->
+          topologies = Options.topologies()
+          Logger.info("Adding clustering components for cluster mode")
+
+          [
+            {Cluster.Supervisor, [topologies, [name: ExESDB.LibCluster]]},
+            {ExESDB.ClusterSystem, opts}
+          ] ++ children
+
+        :single ->
+          Logger.info("Skipping clustering components for single-node mode")
+          children
+
+        _ ->
+          Logger.warning("Unknown db_type: #{inspect(db_type)}, defaulting to single-node mode")
+          children
+      end
 
     :os.set_signal(:sigterm, :handle)
     :os.set_signal(:sigquit, :handle)
@@ -69,6 +92,7 @@ defmodule ExESDB.System do
               start: {Task, :start_link, [fn -> :ok end]},
               restart: :temporary
             }
+
           child_spec ->
             child_spec
         end
