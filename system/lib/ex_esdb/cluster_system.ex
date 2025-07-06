@@ -1,13 +1,12 @@
 defmodule ExESDB.ClusterSystem do
   @moduledoc """
-  Supervisor for all cluster-related components.
+  Supervisor for cluster coordination components.
 
-  This supervisor manages:
+  This supervisor manages cluster-specific coordination components:
   - ClusterCoordinator: Handles coordination logic and split-brain prevention
-  - Cluster: Manages Khepri cluster operations (join, leave, members, leader detection)
+  - NodeMonitor: Monitors node health and handles failures
 
-  The ClusterCoordinator is started first to ensure it's available when the Cluster
-  module needs to make coordination decisions.
+  Note: KhepriCluster is managed at the System level since it's mode-aware.
   """
   use Supervisor
 
@@ -16,11 +15,10 @@ defmodule ExESDB.ClusterSystem do
   @impl true
   def init(opts) do
     children = [
-      # Start ClusterCoordinator first so it's available for KhepriCluster
+      # ClusterCoordinator handles coordination logic and split-brain prevention
       {ExESDB.ClusterCoordinator, opts},
-      # Start NodeMonitor for fast failure detection
-      {ExESDB.NodeMonitor, node_monitor_config(opts)},
-      {ExESDB.KhepriCluster, opts}
+      # NodeMonitor provides fast failure detection
+      {ExESDB.NodeMonitor, node_monitor_config(opts)}
     ]
 
     IO.puts("#{Themes.cluster_system(self())} is UP")

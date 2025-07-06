@@ -12,7 +12,7 @@ defmodule ExESDB.SubscriptionsTracker do
   """
   use GenServer
 
-  alias ExESDB.Cluster, as: Cluster
+  alias ExESDB.KhepriCluster, as: Cluster
   alias ExESDB.Emitters, as: Emitters
   alias ExESDB.Themes, as: Themes
 

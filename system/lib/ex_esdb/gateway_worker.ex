@@ -100,7 +100,8 @@ defmodule ExESDB.GatewayWorker do
       |> StreamsH.get_version!(stream_id)
 
     reply =
-      append_events(store, stream_id, current_version, events)
+      store
+      |> StreamsW.append_events(stream_id, current_version, events)
 
     {:reply, reply, state}
   end

@@ -102,8 +102,7 @@ defmodule ExESDB.MixProject do
       {:jason, "~> 1.4", optional: true},
       {:phoenix_pubsub, "~> 2.1"},
       {:khepri, "~> 0.17"},
-      {:commanded, "~> 1.4"},
-      {:ex_esdb_gater, "~> 0.0.6"}
+      {:ex_esdb_gater, path: "../../ex-esdb-gater/system/"}
     ]
   end
 

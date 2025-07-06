@@ -18,25 +18,38 @@ defmodule ExESDB.LeaderWorker do
   ########## HANDLE_CAST ##########
   @impl true
   def handle_cast({:activate, store}, state) do
-    IO.puts("🚀🚀 Activating LEADER #{inspect(node())} 🚀🚀")
+    IO.puts("\n#{Themes.leader_worker(self())} ==> 🚀 ACTIVATING LEADERSHIP RESPONSIBILITIES")
+    IO.puts("  🏆 Node: #{inspect(node())}")
+    IO.puts("  📊 Store: #{inspect(store)}")
 
     subscriptions =
       store
       |> SubsR.get_subscriptions()
 
-    case subscriptions
-         |> Enum.count() do
-      0 -> IO.puts("😦😦 No subscriptions found. 😦😦")
-      num -> IO.puts("😎😎 #{num} subscriptions found. 😎😎")
+    subscription_count = Enum.count(subscriptions)
+    
+    case subscription_count do
+      0 -> 
+        IO.puts("  📝 No active subscriptions to manage")
+      1 -> 
+        IO.puts("  📝 Managing 1 active subscription")
+      num -> 
+        IO.puts("  📝 Managing #{num} active subscriptions")
     end
 
-    subscriptions
-    |> Enum.each(fn {key, subscription} ->
-      IO.puts("🚀🚀 Starting Emitter for key #{inspect(key)} 🚀🚀")
-
-      store
-      |> Emitters.start_emitter(subscription)
-    end)
+    if subscription_count > 0 do
+      IO.puts("\n  Starting emitters for active subscriptions:")
+      
+      subscriptions
+      |> Enum.each(fn {key, subscription} ->
+        IO.puts("    ⚙️  Starting emitter for: #{inspect(key)}")
+        
+        store
+        |> Emitters.start_emitter(subscription)
+      end)
+    end
+    
+    IO.puts("\n  ✅ Leadership activation complete\n")
 
     {:noreply, state}
   end
