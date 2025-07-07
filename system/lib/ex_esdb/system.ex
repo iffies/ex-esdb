@@ -68,7 +68,8 @@ defmodule ExESDB.System do
         strategy: :one_for_one
       )
 
-    IO.puts("#{Themes.system(self())} is UP")
+    msg = "is UP in #{db_type} mode!"
+    IO.puts("#{Themes.system(self(), msg)}")
     ret
   end
 

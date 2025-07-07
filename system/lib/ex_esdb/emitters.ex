@@ -12,10 +12,10 @@ defmodule ExESDB.Emitters do
 
   defp partition(term) do
     partitions = System.schedulers_online()
-    :erlang.phash2(term, (:rand.uniform(partitions) + 1) * 10)
+    :erlang.phash2(term, :rand.uniform(partitions))
   end
 
-  def start_emitter(
+  def start_emitter_pool(
         store,
         %{
           type: type,
@@ -23,7 +23,7 @@ defmodule ExESDB.Emitters do
           selector: selector,
           subscriber: subscriber
         },
-        pool_size \\ 3
+        pool_size \\ 1
       ) do
     filter =
       type
@@ -37,5 +37,63 @@ defmodule ExESDB.Emitters do
       {:via, PartitionSupervisor, {ExESDB.EmitterPools, partition(args)}},
       {ExESDB.EmitterPool, args}
     )
+  end
+
+  @doc """
+  Stops an EmitterPool for a given subscription.
+  """
+  def stop_emitter_pool(
+        store,
+        %{
+          type: type,
+          subscription_name: subscription_name,
+          selector: selector
+        }
+      ) do
+    sub_topic = Topics.sub_topic(type, subscription_name, selector)
+    ExESDB.EmitterPool.stop(store, sub_topic)
+  end
+
+  @doc """
+  Updates an EmitterPool with new subscription data.
+  This is typically called when the subscriber PID changes.
+  """
+  def update_emitter_pool(
+        store,
+        %{
+          type: type,
+          subscription_name: subscription_name,
+          selector: selector,
+          subscriber: new_subscriber
+        } = subscription_data
+      ) do
+    sub_topic = Topics.sub_topic(type, subscription_name, selector)
+    pool_name = ExESDB.EmitterPool.name(store, sub_topic)
+    
+    # Check if the pool exists
+    case Process.whereis(pool_name) do
+      nil ->
+        # Pool doesn't exist, start it
+        start_emitter_pool(store, subscription_data)
+        
+      pool_pid ->
+        # Pool exists, update the workers with new subscriber PID
+        update_pool_workers(pool_pid, new_subscriber)
+    end
+  end
+  
+  @doc """
+  Updates all workers in a pool with a new subscriber PID.
+  """
+  defp update_pool_workers(pool_pid, new_subscriber) do
+    # Get all child workers from the supervisor
+    children = Supervisor.which_children(pool_pid)
+    
+    # Send update message to each worker
+    Enum.each(children, fn {_id, worker_pid, :worker, _modules} ->
+      if worker_pid != :undefined and Process.alive?(worker_pid) do
+        GenServer.cast(worker_pid, {:update_subscriber, new_subscriber})
+      end
+    end)
   end
 end

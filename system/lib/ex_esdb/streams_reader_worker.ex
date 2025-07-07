@@ -23,11 +23,19 @@ defmodule ExESDB.StreamsReaderWorker do
   end
 
   defp stream_events(store, stream_id, start_version, count, direction) do
-    with :ok <- validate_stream_exists(store, stream_id),
-         :ok <- validate_parameters(start_version, count),
+    with :ok <- validate_parameters(start_version, count),
          {:ok, event_stream} <- fetch_events(store, stream_id, start_version, count, direction) do
       {:ok, event_stream}
     else
+      # If stream doesn't exist, check if that's the real issue
+      {:error, :stream_not_found} = error ->
+        case validate_stream_exists(store, stream_id) do
+          :ok -> error  # Stream exists but fetch failed - propagate original error
+          {:error, :stream_not_found} -> 
+            Logger.info("Stream #{stream_id} not found, returning empty stream for aggregate loading")
+            {:ok, []}  # Return empty stream for aggregate loading
+        end
+      
       error -> error
     end
   rescue
@@ -37,16 +45,36 @@ defmodule ExESDB.StreamsReaderWorker do
   end
 
   defp validate_stream_exists(store, stream_id) do
-    if Helper.stream_exists?(store, stream_id) do
+    exists = Helper.stream_exists?(store, stream_id)
+    
+    if exists do
+      Logger.debug("Stream validation: #{stream_id} exists")
       :ok
     else
+      Logger.warning("Stream validation: #{stream_id} not found in store #{store}")
+      
+      # Try to list available streams for debugging
+      case get_streams_safe(store) do
+        {:ok, streams} when is_list(streams) and length(streams) > 0 ->
+          sample_streams = Enum.take(streams, 5)
+          Logger.warning("Available streams (sample): #{inspect(sample_streams)}")
+        
+        {:ok, []} ->
+          Logger.warning("No streams found in store #{store}")
+        
+        {:error, reason} ->
+          Logger.warning("Could not list streams: #{inspect(reason)}")
+      end
+      
       {:error, :stream_not_found}
     end
   end
 
   defp validate_parameters(start_version, count) do
     cond do
+      not is_integer(start_version) -> {:error, {:invalid_start_version, start_version}}
       start_version < 0 -> {:error, :invalid_start_version}
+      not is_integer(count) -> {:error, {:invalid_count, count}}
       count < 1 -> {:error, :invalid_count}
       true -> :ok
     end
@@ -54,18 +82,28 @@ defmodule ExESDB.StreamsReaderWorker do
 
   defp fetch_events(store, stream_id, start_version, count, direction) do
     stream_length = Helper.get_version!(store, stream_id)
-    desired_versions = Helper.calculate_versions(start_version, count, direction)
     
-    valid_versions = Enum.filter(desired_versions, fn version ->
-      version >= 0 && version <= stream_length
-    end)
-
-    event_stream =
-      valid_versions
-      |> Stream.map(&fetch_single_event(store, stream_id, &1))
-      |> Stream.reject(&is_nil/1)
-
-    {:ok, event_stream}
+    # Validate stream_length is a proper integer
+    case stream_length do
+      length when is_integer(length) and length >= -1 ->
+        desired_versions = Helper.calculate_versions(start_version, count, direction)
+        
+        valid_versions = Enum.filter(desired_versions, fn version ->
+          version >= 0 && version <= length
+        end)
+        
+        event_stream =
+          valid_versions
+          |> Stream.map(&fetch_single_event(store, stream_id, &1))
+          |> Stream.reject(&is_nil/1)
+        
+        {:ok, event_stream}
+        
+      invalid_length ->
+        Logger.warning("Invalid stream length #{inspect(invalid_length)} for stream #{stream_id}, treating as empty stream")
+        # Return empty stream instead of error to avoid breaking aggregate loading
+        {:ok, []}
+    end
   end
 
   defp fetch_single_event(store, stream_id, version) do

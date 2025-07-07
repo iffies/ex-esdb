@@ -5,8 +5,8 @@ defmodule ExESDB.Themes do
   def app(pid),
     do: "ExESDB APP [#{CF.black_on_blue()}#{inspect(pid)}#{CF.reset()}]"
 
-  def system(pid),
-    do: "SYSTEM [#{CF.black_on_magenta()}#{inspect(pid)}#{CF.reset()}]"
+  def system(pid, msg),
+    do: "[#{CF.black_on_magenta()}#{inspect(pid)}#{CF.reset()}][ExESDB SYSTEM] #{msg}"
 
   def store(pid),
     do: "STORE [#{CF.black_on_green()}#{inspect(pid)}#{CF.reset()}]"
@@ -29,14 +29,14 @@ defmodule ExESDB.Themes do
   def monitor(pid),
     do: "MONITOR [#{CF.yellow_on_magenta()}#{inspect(pid)}#{CF.reset()}]"
 
-  def emitter_pool(pid),
-    do: "EMITTER_POOL [#{CF.yellow_on_black()}#{inspect(pid)}#{CF.reset()}]"
+  def emitter_pool(pid, msg),
+    do: "[#{CF.yellow_on_black()}#{inspect(pid)}#{CF.reset()}][EMITTER_POOL] #{msg}"
 
-  def emitter_worker(pid),
-    do: "EMITTER_WORKER [#{CF.yellow_on_black()}#{inspect(pid)}#{CF.reset()}]"
+  def emitter_worker(pid, msg),
+    do: "[#{CF.yellow_on_black()}#{inspect(pid)}#{CF.reset()}][EMITTER] #{msg}"
 
-  def persistent_emitter_worker(pid),
-    do: "PERSISTENT_EMITTER_WORKER [#{CF.yellow_on_black()}#{inspect(pid)}#{CF.reset()}]"
+  def persistent_emitter_worker(pid, msg),
+    do: "[#{CF.yellow_on_black()}#{inspect(pid)}#{CF.reset()}][PERS.EMITTER] #{msg}"
 
   def pubsub(pid),
     do: "PUBSUB [#{CF.black_on_cyan()}#{inspect(pid)}#{CF.reset()}]"

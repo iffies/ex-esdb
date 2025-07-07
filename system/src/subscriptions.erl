@@ -8,4 +8,6 @@ setup_tracking(Store, PidOrPids) ->
   subscriptions_triggers:register_on_created(Store),
   subscriptions_procs:put_on_delete_func(Store),
   subscriptions_triggers:register_on_deleted(Store),
+  subscriptions_procs:put_on_update_func(Store),
+  subscriptions_triggers:register_on_updated(Store),
   ok.

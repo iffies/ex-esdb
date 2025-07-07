@@ -13,7 +13,7 @@ defmodule ExESDB.EmitterWorker do
 
   require Logger
 
-  defp send_or_kill(pid, event, store, selector) do
+  defp send_or_kill_pool(pid, event, store, selector) do
     if Process.alive?(pid) do
       Process.send(pid, {:events, [event]}, [])
     else
@@ -32,16 +32,17 @@ defmodule ExESDB.EmitterWorker do
     topic = :emitter_group.topic(store, sub_topic)
     :ok = :emitter_group.join(store, sub_topic, self())
 
-    IO.puts(
-      "#{Themes.emitter_worker(self())} for #{inspect(topic)} is UP on scheduler #{inspect(scheduler_id)}"
-    )
+    msg = "for #{inspect(topic)} is UP on scheduler #{inspect(scheduler_id)}"
+
+    IO.puts("#{Themes.emitter_worker(self(), msg)}")
 
     {:ok, %{subscriber: subscriber, store: store, selector: sub_topic}}
   end
 
   @impl GenServer
   def terminate(reason, %{store: store, selector: selector}) do
-    IO.puts("#{Themes.emitter_worker(self())} is TERMINATED with reason #{inspect(reason)}")
+    msg = "is TERMINATED with reason #{inspect(reason)}"
+    IO.puts("#{Themes.emitter_worker(self(), msg)}")
     :ok = :emitter_group.leave(store, selector, self())
     :ok
   end
@@ -77,7 +78,7 @@ defmodule ExESDB.EmitterWorker do
         |> emit(topic, event)
 
       pid ->
-        send_or_kill(pid, event, store, selector)
+        send_or_kill_pool(pid, event, store, selector)
     end
 
     {:noreply, state}
@@ -96,10 +97,17 @@ defmodule ExESDB.EmitterWorker do
         |> emit(topic, event)
 
       pid ->
-        send_or_kill(pid, event, store, selector)
+        send_or_kill_pool(pid, event, store, selector)
     end
 
     {:noreply, state}
+  end
+
+  @impl GenServer
+  def handle_cast({:update_subscriber, new_subscriber}, state) do
+    Logger.info("EmitterWorker updating subscriber from #{inspect(state.subscriber)} to #{inspect(new_subscriber)}")
+    updated_state = %{state | subscriber: new_subscriber}
+    {:noreply, updated_state}
   end
 
   @impl true
