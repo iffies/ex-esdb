@@ -38,7 +38,7 @@ defmodule ExESDB.LeaderTracker do
   end
 
   def handle_info({:EXIT, pid, reason}, state) do
-    IO.puts("#{Themes.subscriptions_tracker(pid)} exited with reason: #{inspect(reason)}")
+    IO.puts("#{Themes.leader_tracker(pid)} exited with reason: #{inspect(reason)}")
     store = state[:store_id]
 
     store
@@ -57,7 +57,7 @@ defmodule ExESDB.LeaderTracker do
   def init(opts) do
     Process.flag(:trap_exit, true)
     store = Keyword.get(opts, :store_id)
-    IO.puts("#{Themes.subscriptions_tracker(self())} is UP.")
+    IO.puts("#{Themes.leader_tracker(self())} is UP.")
 
     :ok =
       store
@@ -68,7 +68,7 @@ defmodule ExESDB.LeaderTracker do
 
   @impl true
   def terminate(reason, state) do
-    IO.puts("#{Themes.subscriptions_tracker(self())} terminating with reason: #{inspect(reason)}")
+    IO.puts("#{Themes.leader_tracker(self())} terminating with reason: #{inspect(reason)}")
     store = state[:store_id]
 
     store

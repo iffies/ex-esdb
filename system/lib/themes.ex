@@ -48,8 +48,8 @@ defmodule ExESDB.Themes do
   def leader_worker(pid),
     do: "LEADER_WORKER [#{CF.black_on_magenta()}#{inspect(pid)}#{CF.reset()}]"
 
-  def subscriptions_tracker(msg),
-    do: "SUBSCRIPTIONS_TRACKER [#{CF.black_on_magenta()}#{inspect(msg)}#{CF.reset()}]"
+  def leader_tracker(msg),
+    do: "LEADER_TRACKER [#{CF.black_on_magenta()}#{inspect(msg)}#{CF.reset()}]"
 
   ######## SUBSCRIPTIONS ############
   def subscriptions(msg),
