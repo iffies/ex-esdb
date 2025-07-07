@@ -22,7 +22,7 @@ defmodule ExESDB.LeaderSystem do
 
     children = [
       {ExESDB.LeaderWorker, config},
-      {ExESDB.SubscriptionsTracker, config}
+      {ExESDB.LeaderTracker, config}
     ]
 
     Supervisor.init(children, strategy: :one_for_one)

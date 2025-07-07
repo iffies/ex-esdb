@@ -1,6 +1,6 @@
 # Theme: Auto-Discovery, Load Balancing and Failure Handling
 
-## ExESDB _The BEAM-native Event Store_ (v0.0.19)
+## ExESDB _The BEAM-native Event Store_ (v0.0.20)
 
 - Automatic **Node Discovery**
 - **Khepri Membership** Automation

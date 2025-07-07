@@ -15,7 +15,7 @@ defmodule ExESDB.EmitterWorker do
 
   defp send_or_kill(pid, event, store, selector) do
     if Process.alive?(pid) do
-      Process.send(pid, {:event_emitted, event}, [])
+      Process.send(pid, {:events, [event]}, [])
     else
       ExESDB.EmitterPool.stop(store, selector)
     end
@@ -23,7 +23,7 @@ defmodule ExESDB.EmitterWorker do
 
   defp emit(pub_sub, topic, event) do
     pub_sub
-    |> PubSub.broadcast(topic, {:event_emitted, event})
+    |> PubSub.broadcast(topic, {:events, [event]})
   end
 
   @impl GenServer
@@ -99,6 +99,13 @@ defmodule ExESDB.EmitterWorker do
         send_or_kill(pid, event, store, selector)
     end
 
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_info({:events, events}, state) when is_list(events) do
+    # Handle events messages - these might come from feedback loops or external systems
+    # Just ignore them since they're already processed events
     {:noreply, state}
   end
 

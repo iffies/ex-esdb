@@ -37,13 +37,18 @@ defmodule ExESDB.StreamsHelper do
   end
 
   @doc """
-    Returns the version of the stream.
+    Returns the version of the stream using 0-based indexing.
     ## Parameters
      - `store` is the name of the store.
      - `stream_id` is the name of the stream.
 
     ## Returns
-     - `version`  or `0` if the stream does not exist.
+     - `version` (0-based) or `-1` if the stream does not exist.
+     This means:
+     - New stream (no events): -1
+     - Stream with 1 event: 0 (version of latest event)
+     - Stream with 2 events: 1 (version of latest event)
+     - etc.
   """
   @spec get_version!(
           store :: atom(),
@@ -56,8 +61,9 @@ defmodule ExESDB.StreamsHelper do
            stream_id,
            if_node_exists(exists: true)
          ]) do
-      {:ok, version} -> version
-      _ -> 0
+      {:ok, 0} -> -1  # No events in stream, so version is -1
+      {:ok, count} -> count - 1  # Convert 1-based count to 0-based version
+      _ -> -1  # Stream doesn't exist
     end
   end
 

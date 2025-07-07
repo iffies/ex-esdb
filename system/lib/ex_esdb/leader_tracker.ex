@@ -1,4 +1,4 @@
-defmodule ExESDB.SubscriptionsTracker do
+defmodule ExESDB.LeaderTracker do
   @moduledoc """
     As part of the ExESDB.System, the SubscriptionsTracker is responsible for
     observing the subscriptions that are maintained in the Store.
@@ -12,8 +12,8 @@ defmodule ExESDB.SubscriptionsTracker do
   """
   use GenServer
 
-  alias ExESDB.KhepriCluster, as: Cluster
   alias ExESDB.Emitters, as: Emitters
+  alias ExESDB.KhepriCluster, as: Cluster
   alias ExESDB.Themes, as: Themes
 
   ########### HANDLE_INFO ###########

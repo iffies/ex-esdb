@@ -12,13 +12,13 @@ defmodule ExESDB.Themes do
     do: "STORE [#{CF.black_on_green()}#{inspect(pid)}#{CF.reset()}]"
 
   def cluster(pid),
-    do: "KHEPRI CLUSTER [#{CF.yellow_on_red()}#{inspect(pid)}#{CF.reset()}]"
+    do: "KHEPRI CLUSTER [#{CF.yellow_on_blue()}#{inspect(pid)}#{CF.reset()}]"
 
   def cluster_coordinator(pid),
-    do: "CLUSTER_COORDINATOR [#{CF.white_on_red()}#{inspect(pid)}#{CF.reset()}]"
+    do: "CLUSTER_COORDINATOR [#{CF.white_on_blue()}#{inspect(pid)}#{CF.reset()}]"
 
   def cluster_system(pid),
-    do: "CLUSTER_SYSTEM [#{CF.bright_white_on_red()}#{inspect(pid)}#{CF.reset()}]"
+    do: "CLUSTER_SYSTEM [#{CF.bright_white_on_blue()}#{inspect(pid)}#{CF.reset()}]"
 
   def node_monitor(pid),
     do: "NODE_MONITOR [#{CF.yellow_on_magenta()}#{inspect(pid)}#{CF.reset()}]"
@@ -77,16 +77,16 @@ defmodule ExESDB.Themes do
 
   ############## STREAMS_WRITER ##############
   def streams_writer(msg),
-    do: "STREAMS_WRITER [#{CF.bright_yellow_on_red()}#{inspect(msg)}#{CF.reset()}]"
+    do: "STREAMS_WRITER [#{CF.bright_yellow_on_black()}#{inspect(msg)}#{CF.reset()}]"
 
   def streams_writer_pool(msg),
-    do: "STREAMS_WRITER_POOL [#{CF.bright_yellow_on_red()}#{inspect(msg)}#{CF.reset()}]"
+    do: "STREAMS_WRITER_POOL [#{CF.bright_yellow_on_black()}#{inspect(msg)}#{CF.reset()}]"
 
   def streams_writer_system(msg),
-    do: "STREAMS_WRITER_SYSTEM [#{CF.bright_yellow_on_red()}#{inspect(msg)}#{CF.reset()}]"
+    do: "STREAMS_WRITER_SYSTEM [#{CF.bright_yellow_on_black()}#{inspect(msg)}#{CF.reset()}]"
 
   def streams_writer_worker(msg),
-    do: "STREAMS_WRITER_WORKER [#{CF.bright_yellow_on_red()}#{inspect(msg)}#{CF.reset()}]"
+    do: "STREAMS_WRITER_WORKER [#{CF.bright_yellow_on_black()}#{inspect(msg)}#{CF.reset()}]"
 
   ########## GATEWAY ###############
   def gateway_worker(pid),
