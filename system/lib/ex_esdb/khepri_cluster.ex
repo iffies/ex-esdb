@@ -16,10 +16,17 @@ defmodule ExESDB.KhepriCluster do
   # end
 
   def leader?(store) do
-    {_, leader_node} =
-      :ra_leaderboard.lookup_leader(store)
+    Logger.debug("#{Themes.cluster(node())} checking if node is leader")
 
-    node() == leader_node
+    case :ra_leaderboard.lookup_leader(store) do
+      {_, leader_node} ->
+        Logger.debug("#{Themes.cluster(node())} node is leader: #{inspect(leader_node)}")
+        node() == leader_node
+
+      msg ->
+        Logger.debug("#{Themes.cluster(node())} leader lookup failed: #{inspect(msg)}")
+        false
+    end
   end
 
   defp get_medal(leader, member),
@@ -208,9 +215,11 @@ defmodule ExESDB.KhepriCluster do
       {:error, reason} ->
         # Only log errors if they're different from the last error
         last_error = Keyword.get(state, :last_member_error)
+
         if last_error != reason do
           IO.puts("⚠️⚠️ Failed to get store members. reason: #{inspect(reason)} ⚠️⚠️")
         end
+
         new_state = Keyword.put(state, :last_member_error, reason)
         Process.send_after(self(), :check_members, 5 * state[:timeout])
         {:noreply, new_state}
@@ -219,44 +228,48 @@ defmodule ExESDB.KhepriCluster do
         # Normalize members for comparison (sort by member name)
         normalized_current = Enum.sort_by(current_members, fn {_store, member} -> member end)
         normalized_previous = Enum.sort_by(previous_members, fn {_store, member} -> member end)
-        
+
         # Only report if membership has changed
         if normalized_current != normalized_previous do
           IO.puts("\n#{Themes.cluster(self())} ==> MEMBERSHIP CHANGED")
-          
+
           # Report additions
           new_members = normalized_current -- normalized_previous
+
           if !Enum.empty?(new_members) do
             Enum.each(new_members, fn {_store, member} ->
               medal = get_medal(leader, member)
               IO.puts("  ✅ #{medal} #{inspect(member)} joined")
             end)
           end
-          
+
           # Report removals
           removed_members = normalized_previous -- normalized_current
+
           if !Enum.empty?(removed_members) do
             Enum.each(removed_members, fn {_store, member} ->
               IO.puts("  ❌ #{inspect(member)} left")
             end)
           end
-          
+
           # Show current full membership
           IO.puts("\n  Current members:")
+
           normalized_current
           |> Enum.each(fn {_store, member} ->
             medal = get_medal(leader, member)
             IO.puts("  #{medal} #{inspect(member)}")
           end)
-          
+
           IO.puts("")
         end
-        
+
         # Update state with current members and clear any previous error
-        new_state = state
+        new_state =
+          state
           |> Keyword.put(:previous_members, current_members)
           |> Keyword.delete(:last_member_error)
-        
+
         Process.send_after(self(), :check_members, 5 * state[:timeout])
         {:noreply, new_state}
     end
@@ -267,7 +280,7 @@ defmodule ExESDB.KhepriCluster do
     timeout = state[:timeout]
     previous_leader = Keyword.get(state, :current_leader)
     store = Keyword.get(state, :store_id)
-    
+
     new_state =
       case :ra_leaderboard.lookup_leader(store) do
         {_, leader_node} ->
@@ -275,61 +288,66 @@ defmodule ExESDB.KhepriCluster do
             # Leadership changed to a different node
             previous_leader != nil && previous_leader != leader_node ->
               report_leadership_change(previous_leader, leader_node, store)
-              
+
               # If we became the leader, activate LeaderWorker
               if node() == leader_node do
                 store |> LeaderWorker.activate()
               end
-              
+
               state |> Keyword.put(:current_leader, leader_node)
-            
+
             # First time detecting leader or same leader
             previous_leader == nil ->
               if leader_node != nil do
-                IO.puts("\n#{Themes.cluster(self())} ==> LEADER DETECTED: 🏆 #{inspect(leader_node)}")
-                
+                IO.puts(
+                  "\n#{Themes.cluster(self())} ==> LEADER DETECTED: 🏆 #{inspect(leader_node)}"
+                )
+
                 # If we are the initial leader, activate LeaderWorker
                 if node() == leader_node do
-                  IO.puts("#{Themes.cluster(self())} ==> 🚀 This node is the leader, activating LeaderWorker")
+                  IO.puts(
+                    "#{Themes.cluster(self())} ==> 🚀 This node is the leader, activating LeaderWorker"
+                  )
+
                   store |> LeaderWorker.activate()
                 end
               end
-              
+
               state |> Keyword.put(:current_leader, leader_node)
-            
+
             # Same leader, no change needed
             true ->
               state
           end
-          
+
         :undefined ->
           # Only report if we previously had a leader
           if previous_leader != nil do
             IO.puts("\n#{Themes.cluster(self())} ==> ⚠️ LEADERSHIP LOST: No leader found")
           end
-          
+
           state |> Keyword.put(:current_leader, nil)
       end
 
     Process.send_after(self(), :check_leader, timeout)
     {:noreply, new_state}
   end
-  
+
   defp report_leadership_change(old_leader, new_leader, _store) do
     IO.puts("\n#{Themes.cluster(self())} ==> 🔄 LEADERSHIP CHANGED")
     IO.puts("  🔴 Previous leader: #{inspect(old_leader)}")
     IO.puts("  🟢 New leader:      🏆 #{inspect(new_leader)}")
-    
+
     # Check if we are the new leader
     if node() == new_leader do
       IO.puts("  🚀 This node is now the leader!")
     else
       IO.puts("  📞 Following new leader: #{inspect(new_leader)}")
     end
-    
+
     # Also trigger a membership check to show updated leadership in membership
     Process.send(self(), :check_members, [])
-    
+
     IO.puts("")
   end
 

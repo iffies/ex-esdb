@@ -8,6 +8,7 @@ defmodule ExESDB.Topics do
     |> Integer.to_string(16)
   end
 
+  def sub_topic(:by_stream, "all-events", "$all"), do: "$all"
   def sub_topic(:by_stream, "transient", selector), do: selector
   def sub_topic(:by_stream, subscription_name, _selector), do: "$#{subscription_name}"
   def sub_topic(:by_event_type, "transient", selector), do: selector

@@ -13,11 +13,11 @@ defmodule ExESDB.LeaderTracker do
   use GenServer
 
   alias ExESDB.Emitters, as: Emitters
-  alias ExESDB.KhepriCluster, as: Cluster
+  alias ExESDB.KhepriCluster, as: KhepriCluster
   alias ExESDB.Themes, as: Themes
 
   ########### PRIVATE HELPERS ###########
-  
+
   @doc """
   Formats subscription data from Khepri into the format expected by Emitters.
   """
@@ -32,19 +32,24 @@ defmodule ExESDB.LeaderTracker do
         subscriber: _subscriber
       } = formatted_data ->
         formatted_data
-        
+
       # If data has different key names, map them
       %{} = map_data ->
         %{
           type: Map.get(map_data, :type) || Map.get(map_data, "type"),
-          subscription_name: Map.get(map_data, :subscription_name) || Map.get(map_data, "subscription_name") || Map.get(map_data, :name),
+          subscription_name:
+            Map.get(map_data, :subscription_name) || Map.get(map_data, "subscription_name") ||
+              Map.get(map_data, :name),
           selector: Map.get(map_data, :selector) || Map.get(map_data, "selector"),
-          subscriber: Map.get(map_data, :subscriber) || Map.get(map_data, "subscriber") || Map.get(map_data, :subscriber_pid)
+          subscriber:
+            Map.get(map_data, :subscriber) || Map.get(map_data, "subscriber") ||
+              Map.get(map_data, :subscriber_pid)
         }
-        
+
       # Fallback: log the data format and return a default structure
       _ ->
         IO.puts("Warning: Unknown subscription data format: #{inspect(data)}")
+
         %{
           type: :by_stream,
           subscription_name: "unknown",
@@ -60,19 +65,25 @@ defmodule ExESDB.LeaderTracker do
     IO.puts("Subscription #{inspect(data)} registered")
     store = state[:store_id]
 
-    if Cluster.leader?(store) do
+    if KhepriCluster.leader?(store) do
       # Extract subscription data and start emitter pool
       subscription_data = format_subscription_data(data)
-      
+
       case Emitters.start_emitter_pool(store, subscription_data) do
         {:ok, _pid} ->
-          IO.puts("Successfully started EmitterPool for subscription #{subscription_data.subscription_name}")
-        
+          IO.puts(
+            "Successfully started EmitterPool for subscription #{subscription_data.subscription_name}"
+          )
+
         {:error, {:already_started, _pid}} ->
-          IO.puts("EmitterPool already exists for subscription #{subscription_data.subscription_name}")
-        
+          IO.puts(
+            "EmitterPool already exists for subscription #{subscription_data.subscription_name}"
+          )
+
         {:error, reason} ->
-          IO.puts("Failed to start EmitterPool for subscription #{subscription_data.subscription_name}: #{inspect(reason)}")
+          IO.puts(
+            "Failed to start EmitterPool for subscription #{subscription_data.subscription_name}: #{inspect(reason)}"
+          )
       end
     end
 
@@ -83,15 +94,20 @@ defmodule ExESDB.LeaderTracker do
   def handle_info({:feature_updated, :subscriptions, data}, state) do
     IO.puts("Subscription #{inspect(data)} updated")
 
-    if Cluster.leader?(state[:store_id]) do
+    if KhepriCluster.leader?(state[:store_id]) do
       subscription_data = format_subscription_data(data)
-      
+
       try do
         Emitters.update_emitter_pool(state[:store_id], subscription_data)
-        IO.puts("Successfully updated EmitterPool for subscription #{subscription_data.subscription_name}")
+
+        IO.puts(
+          "Successfully updated EmitterPool for subscription #{subscription_data.subscription_name}"
+        )
       rescue
         error ->
-          IO.puts("Failed to update EmitterPool for subscription #{subscription_data.subscription_name}: #{inspect(error)}")
+          IO.puts(
+            "Failed to update EmitterPool for subscription #{subscription_data.subscription_name}: #{inspect(error)}"
+          )
       end
     end
 
@@ -102,15 +118,20 @@ defmodule ExESDB.LeaderTracker do
   def handle_info({:feature_deleted, :subscriptions, data}, state) do
     IO.puts("Subscription #{inspect(data)} deleted")
 
-    if Cluster.leader?(state[:store_id]) do
+    if KhepriCluster.leader?(state[:store_id]) do
       subscription_data = format_subscription_data(data)
-      
+
       try do
         Emitters.stop_emitter_pool(state[:store_id], subscription_data)
-        IO.puts("Successfully stopped EmitterPool for subscription #{subscription_data.subscription_name}")
+
+        IO.puts(
+          "Successfully stopped EmitterPool for subscription #{subscription_data.subscription_name}"
+        )
       rescue
         error ->
-          IO.puts("Failed to stop EmitterPool for subscription #{subscription_data.subscription_name}: #{inspect(error)}")
+          IO.puts(
+            "Failed to stop EmitterPool for subscription #{subscription_data.subscription_name}: #{inspect(error)}"
+          )
       end
     end
 

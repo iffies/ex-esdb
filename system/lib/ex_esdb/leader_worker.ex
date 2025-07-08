@@ -9,18 +9,16 @@ defmodule ExESDB.LeaderWorker do
   alias ExESDB.SubscriptionsWriter, as: SubsW
   alias ExESDB.Themes, as: Themes
   ############ API ############
-  def activate(store),
-    do:
-      GenServer.cast(
-        __MODULE__,
-        {:activate, store}
-      )
+  def activate(store) do
+    GenServer.call(
+      __MODULE__,
+      {:save_default_subscriptions, store}
+    )
 
-  defp create_all_subscription(store) do
-    Logger.info("Creating default [#{store}:$all] subscription.")
-
-    store
-    |> SubsW.put_subscription(:by_stream, "$all")
+    GenServer.cast(
+      __MODULE__,
+      {:activate, store}
+    )
   end
 
   ########## HANDLE_CAST ##########
@@ -29,9 +27,6 @@ defmodule ExESDB.LeaderWorker do
     IO.puts("\n#{Themes.leader_worker(self())} ==> 🚀 ACTIVATING LEADERSHIP RESPONSIBILITIES")
     IO.puts("  🏆 Node: #{inspect(node())}")
     IO.puts("  📊 Store: #{inspect(store)}")
-
-    store
-    |> create_all_subscription()
 
     subscriptions =
       store
@@ -81,6 +76,15 @@ defmodule ExESDB.LeaderWorker do
   end
 
   ############# HANDLE_CALL ##########
+  @impl true
+  def handle_call({:save_default_subscriptions, store}, _from, state) do
+    res =
+      store
+      |> SubsW.put_subscription(:by_stream, "$all", "all-events")
+
+    {:reply, {:ok, res}, state}
+  end
+
   @impl true
   def handle_call(msg, _from, state) do
     Logger.warning("Leader received unexpected CALL: #{inspect(msg)}")
