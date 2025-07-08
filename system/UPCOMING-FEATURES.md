@@ -1,6 +1,6 @@
 # Upcoming Features
 
-## v0.0.20
+## v0.0.21
 
 - Adapter for the `Commanded` Library
 - ExESDB Terminal UI

@@ -6,7 +6,6 @@ defmodule ExESDB.SubscriptionsWriter do
 
   require Logger
   alias ExESDB.Themes, as: Themes
-  alias ExESDB.Emitters, as: Emitters
 
   def put_subscription(
         store,
@@ -58,8 +57,13 @@ defmodule ExESDB.SubscriptionsWriter do
         subscriber: subscriber
       }
 
-    store
-    |> :subscriptions_store.put_subscription(subscription)
+    if :subscriptions_store.exists(store, subscription) do
+      store
+      |> :subscriptions_store.update_subscription(subscription)
+    else
+      store
+      |> :subscriptions_store.put_subscription(subscription)
+    end
 
     {:noreply, state}
   end

@@ -1,7 +1,7 @@
 defmodule ExESDB.GatewayWorker do
   @moduledoc """
     GatewayWorker processes are started on each node in the cluster,
-    and contain the implementation functions for the GatewayAPI.
+    and contain the implementation functions for the Gater.API.
   """
   use GenServer
 
@@ -112,18 +112,41 @@ defmodule ExESDB.GatewayWorker do
       store
       |> StreamsH.get_version!(stream_id)
 
+    Logger.info(
+      "GATEWAY: stream_id=#{stream_id}, current_version=#{inspect(current_version)}, expected_version=#{inspect(expected_version)}"
+    )
+
+    matches = version_matches?(current_version, expected_version)
+
+    Logger.info(
+      "GATEWAY: version_matches?(#{inspect(current_version)}, #{inspect(expected_version)}) = #{matches}"
+    )
+
     reply =
-      case expected_version == current_version do
+      case matches do
         true ->
+          Logger.info("GATEWAY: Proceeding with event append for stream #{stream_id}")
+
           store
           |> StreamsW.append_events(stream_id, current_version, events)
 
-        _ ->
+        false ->
+          Logger.error(
+            "GATEWAY: Version mismatch for stream #{stream_id}: current=#{current_version}, expected=#{expected_version}"
+          )
+
           {:error, {:wrong_expected_version, current_version}}
       end
 
     {:reply, reply, state}
   end
+
+  # Helper function to check if current version matches expected version
+  defp version_matches?(_current, :any), do: true
+  defp version_matches?(current, :stream_exists) when current >= 0, do: true
+  # Stream doesn't exist
+  defp version_matches?(-1, :stream_exists), do: false
+  defp version_matches?(current, expected) when is_integer(expected), do: current == expected
 
   @impl GenServer
   def handle_call({:read_snapshot, store, source_uuid, stream_uuid, version}, _from, state) do
@@ -210,6 +233,7 @@ defmodule ExESDB.GatewayWorker do
       event_number: event_number
     } = event
 
+    # Use 0-based versioning: next event to process is event_number + 1
     store
     |> SubsW.put_subscription(
       :by_stream,

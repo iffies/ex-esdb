@@ -6,14 +6,20 @@ defmodule ExESDB.LeaderWorker do
   require Logger
   alias ExESDB.Emitters
   alias ExESDB.SubscriptionsReader, as: SubsR
+  alias ExESDB.SubscriptionsWriter, as: SubsW
   alias ExESDB.Themes, as: Themes
   ############ API ############
-  def activate(store),
-    do:
-      GenServer.cast(
-        __MODULE__,
-        {:activate, store}
-      )
+  def activate(store) do
+    GenServer.call(
+      __MODULE__,
+      {:save_default_subscriptions, store}
+    )
+
+    GenServer.cast(
+      __MODULE__,
+      {:activate, store}
+    )
+  end
 
   ########## HANDLE_CAST ##########
   @impl true
@@ -27,28 +33,30 @@ defmodule ExESDB.LeaderWorker do
       |> SubsR.get_subscriptions()
 
     subscription_count = Enum.count(subscriptions)
-    
+
     case subscription_count do
-      0 -> 
+      0 ->
         IO.puts("  📝 No active subscriptions to manage")
-      1 -> 
+
+      1 ->
         IO.puts("  📝 Managing 1 active subscription")
-      num -> 
+
+      num ->
         IO.puts("  📝 Managing #{num} active subscriptions")
     end
 
     if subscription_count > 0 do
       IO.puts("\n  Starting emitters for active subscriptions:")
-      
+
       subscriptions
       |> Enum.each(fn {key, subscription} ->
         IO.puts("    ⚙️  Starting emitter for: #{inspect(key)}")
-        
+
         store
-        |> Emitters.start_emitter(subscription)
+        |> Emitters.start_emitter_pool(subscription)
       end)
     end
-    
+
     IO.puts("\n  ✅ Leadership activation complete\n")
 
     {:noreply, state}
@@ -68,6 +76,15 @@ defmodule ExESDB.LeaderWorker do
   end
 
   ############# HANDLE_CALL ##########
+  @impl true
+  def handle_call({:save_default_subscriptions, store}, _from, state) do
+    res =
+      store
+      |> SubsW.put_subscription(:by_stream, "$all", "all-events")
+
+    {:reply, {:ok, res}, state}
+  end
+
   @impl true
   def handle_call(msg, _from, state) do
     Logger.warning("Leader received unexpected CALL: #{inspect(msg)}")

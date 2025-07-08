@@ -11,8 +11,7 @@ defmodule ExESDB.GatewaySupervisor do
   def init(opts) do
     children =
       [
-        {ExESDB.GatewayWorker, opts},
-        {ExESDB.GatewayAPI, opts}
+        {ExESDB.GatewayWorker, opts}
       ]
 
     IO.puts("#{Themes.gateway_supervisor(self())} is UP!")

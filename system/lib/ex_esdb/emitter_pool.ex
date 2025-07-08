@@ -7,7 +7,7 @@ defmodule ExESDB.EmitterPool do
   require Logger
   alias ExESDB.Themes, as: Themes
 
-  defp name(store, sub_topic),
+  def name(store, sub_topic),
     do: :"#{store}:#{sub_topic}_emitter_pool"
 
   def start_link({store, sub_topic, subscriber, pool_size, filter}) do
@@ -32,9 +32,8 @@ defmodule ExESDB.EmitterPool do
         )
       end
 
-    IO.puts(
-      "#{Themes.emitter_pool(self())} for [#{name(store, sub_topic)}] started with #{length(emitter_names)} emitters"
-    )
+    msg = "for [#{name(store, sub_topic)}] started with #{length(emitter_names)} emitters"
+    IO.puts("#{Themes.emitter_pool(self(), msg)}")
 
     Supervisor.init(children, strategy: :one_for_one)
   end

@@ -31,12 +31,17 @@ defmodule ExESDB.StreamsWriterWorker do
       |> Helper.get_version!(stream_id)
 
     if current_version == expected_version do
-      new_version =
+      {final_version, _} =
         events
+        |> Enum.with_index()
         |> Enum.reduce(
-          current_version,
-          fn event, version ->
-            new_version = version + 1
+          {current_version, length(events)},
+          fn {event, index}, {_prev_version, _count} ->
+            # 0-based versioning: next version is current + index + 1
+            # For new stream (current_version = -1), first event gets version 0
+            # For existing stream, next event gets current_version + 1, then +2, etc.
+            new_version = current_version + index + 1
+            # Store using 0-based keys directly
             padded_version = Helper.pad_version(new_version, 6)
             now = DateTime.utc_now()
             created = now
@@ -57,11 +62,11 @@ defmodule ExESDB.StreamsWriterWorker do
             store
             |> :khepri.put!([:streams, stream_id, padded_version], recorded_event)
 
-            new_version
+            {new_version, length(events)}
           end
         )
 
-      {:ok, new_version}
+      {:ok, final_version}
     else
       {:error, :wrong_expected_version}
     end
@@ -113,8 +118,6 @@ defmodule ExESDB.StreamsWriterWorker do
 
   @impl true
   def handle_info({:EXIT, _pid, reason}, %{worker_name: name} = state) do
-    msg = "[#{inspect(name)}] is EXITING with reason #{inspect(reason)}, leaving the cluster."
-    IO.puts("#{Themes.streams_writer_worker(msg)}")
     Swarm.unregister_name(name)
     {:noreply, state}
   end
@@ -166,8 +169,6 @@ defmodule ExESDB.StreamsWriterWorker do
 
   @impl true
   def terminate(reason, %{worker_name: name}) do
-    msg = "[#{inspect(name)}] is TERMINATED with reason #{inspect(reason)}, leaving the cluster."
-    IO.puts("#{Themes.streams_writer_worker(msg)}")
     Swarm.unregister_name(name)
     :ok
   end
