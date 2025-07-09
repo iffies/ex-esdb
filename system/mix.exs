@@ -124,6 +124,10 @@ defmodule ExESDB.MixProject do
           filename: "getting-started",
           title: "Getting Started"
         ],
+        "guides/ex-esdb-architecture.md": [
+          filename: "architecture",
+          title: "Architecture"
+        ],
         "guides/testing.md": [
           filename: "testing",
           title: "Testing"
