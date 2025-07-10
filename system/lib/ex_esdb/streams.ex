@@ -23,7 +23,7 @@ defmodule ExESDB.Streams do
     ]
 
     ret = Supervisor.init(children, strategy: :one_for_one)
-    IO.puts("#{Themes.streams(self())} is UP.")
+    IO.puts("#{Themes.streams(self(), "is UP.")}")
     ret
   end
 end

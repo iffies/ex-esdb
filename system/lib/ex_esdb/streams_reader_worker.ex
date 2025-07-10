@@ -205,7 +205,7 @@ defmodule ExESDB.StreamsReaderWorker do
   defp safe_log_startup(name, partition) do
     try do
       msg = "[#{inspect(name)}] is UP on partition #{inspect(partition)}, joining the cluster."
-      IO.puts("#{Themes.streams_reader_worker(msg)}")
+      IO.puts("#{Themes.streams_reader_worker(self(), msg)}")
     rescue
       _error ->
         # Fallback to basic logging if theme formatting fails

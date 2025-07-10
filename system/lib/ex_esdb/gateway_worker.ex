@@ -319,7 +319,7 @@ defmodule ExESDB.GatewayWorker do
     name = gateway_worker_name()
     new_state = Keyword.put(opts, :gateway_worker_name, name)
     msg = "[#{inspect(name)}] is UP, joining the cluster."
-    IO.puts("#{Themes.gateway_worker(msg)}")
+    IO.puts("#{Themes.gateway_worker(self(), msg)}")
     Swarm.register_name(name, self())
     {:ok, new_state}
   end
@@ -328,7 +328,7 @@ defmodule ExESDB.GatewayWorker do
   def terminate(reason, state) do
     name = Keyword.get(state, :gateway_worker_name)
     msg = "[#{inspect(name)}] is TERMINATED with reason #{inspect(reason)}, leaving the cluster."
-    IO.puts("#{Themes.gateway_worker(msg)}")
+    IO.puts("#{Themes.gateway_worker(self(), msg)}")
     Swarm.unregister_name(name)
     :ok
   end
@@ -337,7 +337,7 @@ defmodule ExESDB.GatewayWorker do
   def handle_info({:EXIT, _pid, reason}, state) do
     name = Keyword.get(state, :gateway_worker_name)
     msg = "[#{inspect(name)}] is EXITING with reason #{inspect(reason)}, leaving the cluster."
-    IO.puts("#{Themes.gateway_worker(msg)}")
+    IO.puts("#{Themes.gateway_worker(self(), msg)}")
     Swarm.unregister_name(name)
     {:noreply, state}
   end

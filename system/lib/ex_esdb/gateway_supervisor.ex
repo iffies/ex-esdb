@@ -14,7 +14,7 @@ defmodule ExESDB.GatewaySupervisor do
         {ExESDB.GatewayWorker, opts}
       ]
 
-    IO.puts("#{Themes.gateway_supervisor(self())} is UP!")
+    IO.puts("#{Themes.gateway_supervisor(self(), "is UP!")}")
     Supervisor.init(children, strategy: :one_for_one)
   end
 

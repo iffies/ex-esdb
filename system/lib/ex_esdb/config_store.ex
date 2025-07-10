@@ -1,31 +1,30 @@
-defmodule ExESDB.Store do
+defmodule ExESDB.ConfigStore do
   @moduledoc """
-    A GenServer wrapper around :khepri to act as a distributed event store.
-    Inspired by EventStoreDB's API.
+  A GenServer wrapper around a dedicated Khepri store for configuration data.
+  This store is separate from data stores and optimized for metadata operations.
   """
   use GenServer
 
   require Logger
-
+  alias ExESDB.Options, as: Options
   alias ExESDB.Themes, as: Themes
 
   defp start_khepri(opts) do
-    store = opts[:store_id]
     timeout = opts[:timeout]
-    data_dir = opts[:data_dir]
-    :khepri.start(data_dir, store, timeout)
+    data_dir = Path.join(opts[:data_dir], "config")
+    :khepri.start(data_dir, :ex_esdb_config, timeout)
   end
 
   # Client API
   @doc """
-  Get the current state of the store.
+  Get the current state of the config store.
   ## Returns
 
       - `{:ok, state}`  if successful.
       - `{:error, reason}` if unsuccessful.
 
   """
-  def get_state(),
+  def get_state,
     do:
       GenServer.call(
         __MODULE__,
@@ -60,17 +59,16 @@ defmodule ExESDB.Store do
   # Server Callbacks
   @impl true
   def init(opts) do
-    IO.puts("#{Themes.store(self(), "is UP.")}")
+    IO.puts("#{Themes.config_store(self(), "is UP.")}")
     Process.flag(:trap_exit, true)
 
     case start_khepri(opts) do
       {:ok, store} ->
-        Logger.debug("Started store: #{inspect(store)}")
+        Logger.debug("Started config store: #{inspect(store)}")
         {:ok, [config: opts, store: store]}
 
       reason ->
-        Logger.error("Failed to start khepri. reason: #{inspect(reason)}")
-
+        Logger.error("Failed to start config store khepri. reason: #{inspect(reason)}")
         {:error, [config: opts, store: nil]}
     end
   end

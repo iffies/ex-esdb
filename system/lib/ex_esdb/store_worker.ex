@@ -1,4 +1,4 @@
-defmodule ExESDB.Store do
+defmodule ExESDB.StoreWorker do
   @moduledoc """
     A GenServer wrapper around :khepri to act as a distributed event store.
     Inspired by EventStoreDB's API.
@@ -25,7 +25,7 @@ defmodule ExESDB.Store do
       - `{:error, reason}` if unsuccessful.
 
   """
-  def get_state(),
+  def get_state,
     do:
       GenServer.call(
         __MODULE__,

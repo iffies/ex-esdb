@@ -25,7 +25,7 @@ defmodule ExESDB.SnapshotsReaderWorker do
     cluster_id = SnapshotsReader.cluster_id(store, source_uuid, stream_uuid)
     msg = "[#{inspect(self())}] is UP on partition #{inspect(partition)}, joining the cluster."
     Swarm.register_name(cluster_id, self())
-    IO.puts("#{Themes.snapshots_reader_worker(msg)}")
+    IO.puts("#{Themes.snapshots_reader_worker(self(), msg)}")
     {:ok, {store, source_uuid, stream_uuid, partition}}
   end
 

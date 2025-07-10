@@ -21,7 +21,7 @@ defmodule ExESDB.ClusterSystem do
       {ExESDB.NodeMonitor, node_monitor_config(opts)}
     ]
 
-    IO.puts("#{Themes.cluster_system(self())} is UP")
+    IO.puts("#{Themes.cluster_system(self(), "is UP")}")
 
     Supervisor.init(children, strategy: :one_for_one)
   end

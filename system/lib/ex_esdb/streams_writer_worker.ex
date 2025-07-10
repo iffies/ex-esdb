@@ -152,7 +152,7 @@ defmodule ExESDB.StreamsWriterWorker do
     ttl = Options.writer_idle_ms()
     name = StreamsWriter.hr_worker_id_atom(store, stream_id)
     msg = "[#{inspect(name)}] is UP on partition #{inspect(partition)}, joining the cluster."
-    IO.puts("#{Themes.streams_writer_worker(msg)}")
+    IO.puts("#{Themes.streams_writer_worker(self(), msg)}")
     Swarm.register_name(name, self())
     check_idle(ttl)
 

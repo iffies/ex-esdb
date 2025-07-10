@@ -27,7 +27,7 @@ defmodule ExESDB.Subscriptions do
 
   @impl true
   def init(opts) do
-    IO.puts("#{Themes.subscriptions(self())} is UP.")
+    IO.puts("#{Themes.subscriptions(self(), "is UP.")}")
 
     children = [
       {ExESDB.SubscriptionsReader, opts},

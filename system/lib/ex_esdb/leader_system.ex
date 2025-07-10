@@ -17,7 +17,7 @@ defmodule ExESDB.LeaderSystem do
 
   @impl true
   def init(config) do
-    IO.puts("#{Themes.leader_system(self())} is UP!")
+    IO.puts("#{Themes.leader_system(self(), "is UP!")}")
     Process.flag(:trap_exit, true)
 
     children = [

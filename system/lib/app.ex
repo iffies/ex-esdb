@@ -7,7 +7,6 @@ defmodule ExESDB.App do
 
   alias ExESDB.Options, as: Options
   alias ExESDB.Themes, as: Themes
-  alias BCUtils.Banner, as: Banner
 
   require Logger
   require Phoenix.PubSub
@@ -25,7 +24,7 @@ defmodule ExESDB.App do
     opts = [strategy: :one_for_one, name: ExESDB.Supervisor]
     res = Supervisor.start_link(children, opts)
 
-    IO.puts("#{Themes.app(self())} is UP for store #{inspect(store_id)}")
+    IO.puts("#{Themes.app(self(), "is UP for store #{inspect(store_id)}")}")
 
     res
   end
