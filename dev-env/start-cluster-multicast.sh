@@ -20,8 +20,9 @@ if [ -f ".env.cluster" ]; then
     source .env.cluster
 else
     echo -e "${YELLOW}⚠️  .env.cluster file not found, using defaults...${NC}"
-    export REG_GH_CLUSTER_SECRET="dev_cluster_secret_2025"
-    export REG_GH_DEV_CLIQUE="reg_gh_dev_clique"
+    export EX_ESDB_CLUSTER_SECRET="dev_cluster_secret_2025"
+    export EX_ESDB_COOKIE="reg_greenhouse_clique"
+    export EX_ESDB_GOSSIP_MULTICAST_ADDR="255.255.255.255"
 fi
 
 # Ensure Docker network exists

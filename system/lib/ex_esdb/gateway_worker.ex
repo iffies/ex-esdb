@@ -16,6 +16,7 @@ defmodule ExESDB.GatewayWorker do
   alias ExESDB.StreamsWriter, as: StreamsW
 
   alias ExESDB.Themes, as: Themes
+  alias ExESDB.ConsistencyChecker, as: ConsistencyChecker
 
   require Logger
 
@@ -173,16 +174,10 @@ defmodule ExESDB.GatewayWorker do
   end
 
   @impl GenServer
-  def handle_call(:list_stores, _from, state) do
-    stores = ExESDB.StoreManager.list_stores()
-    {:reply, {:ok, stores}, state}
-  end
-
-  @impl GenServer
-  def handle_call({:get_store_status, store_id}, _from, state) do
-    case ExESDB.StoreManager.get_store_status(store_id) do
-      {:ok, status} ->
-        {:reply, {:ok, status}, state}
+  def handle_call({:verify_cluster_consistency, store}, _from, state) do
+    case ConsistencyChecker.verify_cluster_consistency(store) do
+      {:ok, report} ->
+        {:reply, {:ok, report}, state}
 
       {:error, reason} ->
         {:reply, {:error, reason}, state}
@@ -190,10 +185,32 @@ defmodule ExESDB.GatewayWorker do
   end
 
   @impl GenServer
-  def handle_call({:get_store_config, store_id}, _from, state) do
-    case ExESDB.StoreManager.get_store_config(store_id) do
-      {:ok, config} ->
-        {:reply, {:ok, config}, state}
+  def handle_call({:quick_health_check, store}, _from, state) do
+    case ConsistencyChecker.quick_health_check(store) do
+      {:ok, health_report} ->
+        {:reply, {:ok, health_report}, state}
+
+      {:error, reason} ->
+        {:reply, {:error, reason}, state}
+    end
+  end
+
+  @impl GenServer
+  def handle_call({:verify_membership_consensus, store}, _from, state) do
+    case ConsistencyChecker.verify_membership_consensus(store) do
+      {:ok, consensus_report} ->
+        {:reply, {:ok, consensus_report}, state}
+
+      {:error, reason} ->
+        {:reply, {:error, reason}, state}
+    end
+  end
+
+  @impl GenServer
+  def handle_call({:check_raft_log_consistency, store}, _from, state) do
+    case ConsistencyChecker.check_raft_log_consistency(store) do
+      {:ok, log_report} ->
+        {:reply, {:ok, log_report}, state}
 
       {:error, reason} ->
         {:reply, {:error, reason}, state}
@@ -265,36 +282,10 @@ defmodule ExESDB.GatewayWorker do
     {:noreply, state}
   end
 
-  @impl true
-  def handle_cast({:create_store, store_id, config}, state) do
-    case ExESDB.StoreManager.create_store(store_id, config) do
-      {:ok, ^store_id} ->
-        Logger.info("Successfully created store: #{store_id}")
-
-      {:error, reason} ->
-        Logger.error("Failed to create store #{store_id}: #{inspect(reason)}")
-    end
-
-    {:noreply, state}
-  end
-
-  @impl true
-  def handle_cast({:remove_store, store_id}, state) do
-    case ExESDB.StoreManager.remove_store(store_id) do
-      :ok ->
-        Logger.info("Successfully removed store: #{store_id}")
-
-      {:error, reason} ->
-        Logger.error("Failed to remove store #{store_id}: #{inspect(reason)}")
-    end
-
-    {:noreply, state}
-  end
-
   ############# PLUMBING #############
   def child_spec(opts) do
     %{
-      id: __MODULE__,
+      id: {__MODULE__, :rand.uniform(10_000)},
       start: {__MODULE__, :start_link, [opts]},
       type: :worker,
       restart: :permanent,
@@ -305,31 +296,77 @@ defmodule ExESDB.GatewayWorker do
   def start_link(opts) do
     GenServer.start_link(
       __MODULE__,
-      opts,
-      name: __MODULE__
+      opts
     )
   end
 
-  def gateway_worker_name,
-    do: {:gateway_worker, node(), :rand.uniform(10_000)}
+  def gateway_worker_name(store_id),
+    do: {:gateway_worker, store_id, node(), :rand.uniform(10_000)}
 
   @impl true
   def init(opts) do
     Process.flag(:trap_exit, true)
-    name = gateway_worker_name()
+    store_id = Keyword.get(opts, :store_id, :undefined_store_id)
+    name = gateway_worker_name(store_id)
     new_state = Keyword.put(opts, :gateway_worker_name, name)
     msg = "[#{inspect(name)}] is UP, joining the cluster."
-    IO.puts("#{Themes.gateway_worker(msg)}")
-    Swarm.register_name(name, self())
-    {:ok, new_state}
+    IO.puts(Themes.gateway_worker(self(), msg))
+
+    # Register with Swarm if available
+    case register_with_swarm(name) do
+      :ok ->
+        {:ok, new_state}
+
+      {:error, reason} ->
+        Logger.warning(
+          "Failed to register with Swarm: #{inspect(reason)}. Continuing without distributed registration."
+        )
+
+        {:ok, new_state}
+    end
+  end
+
+  # Helper functions for safe Swarm operations
+  defp register_with_swarm(name) do
+    try do
+      case Swarm.register_name(name, self()) do
+        :yes -> :ok
+        :no -> {:error, :already_registered}
+        other -> {:error, other}
+      end
+    rescue
+      error -> {:error, {:exception, error}}
+    catch
+      :exit, reason -> {:error, {:exit, reason}}
+      type, reason -> {:error, {type, reason}}
+    end
+  end
+
+  defp unregister_from_swarm(name) do
+    try do
+      Swarm.unregister_name(name)
+      :ok
+    rescue
+      error ->
+        Logger.warning("Failed to unregister from Swarm: #{inspect(error)}")
+        :error
+    catch
+      :exit, reason ->
+        Logger.warning("Failed to unregister from Swarm (exit): #{inspect(reason)}")
+        :error
+
+      type, reason ->
+        Logger.warning("Failed to unregister from Swarm (#{type}): #{inspect(reason)}")
+        :error
+    end
   end
 
   @impl true
   def terminate(reason, state) do
     name = Keyword.get(state, :gateway_worker_name)
     msg = "[#{inspect(name)}] is TERMINATED with reason #{inspect(reason)}, leaving the cluster."
-    IO.puts("#{Themes.gateway_worker(msg)}")
-    Swarm.unregister_name(name)
+    IO.puts("#{Themes.gateway_worker(self(), msg)}")
+    unregister_from_swarm(name)
     :ok
   end
 
@@ -337,8 +374,8 @@ defmodule ExESDB.GatewayWorker do
   def handle_info({:EXIT, _pid, reason}, state) do
     name = Keyword.get(state, :gateway_worker_name)
     msg = "[#{inspect(name)}] is EXITING with reason #{inspect(reason)}, leaving the cluster."
-    IO.puts("#{Themes.gateway_worker(msg)}")
-    Swarm.unregister_name(name)
+    IO.puts("#{Themes.gateway_worker(self(), msg)}")
+    unregister_from_swarm(name)
     {:noreply, state}
   end
 end

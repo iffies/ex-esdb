@@ -33,10 +33,10 @@ config :libcluster,
         # The IP address or hostname on which to listen for cluster connections.
         if_addr: "0.0.0.0",
         # Use broadcast for cluster discovery
-        multicast_addr: "255.255.255.255",
-        broadcast_only: true
+        multicast_addr: System.get_env(EnVars.gossip_multicast_addr()) || "239.255.0.1",
+        broadcast_only: true,
         # Shared secret for cluster security - read from environment at runtime
-        #       secret: System.get_env("EX_ESDB_CLUSTER_SECRET") || "dev_cluster_secret"
+        secret: System.get_env(EnVars.cluster_secret()) || "dev_cluster_secret"
       ]
     ]
   ]

@@ -24,9 +24,12 @@ defmodule ExESDB.LeaderWorker do
   ########## HANDLE_CAST ##########
   @impl true
   def handle_cast({:activate, store}, state) do
-    IO.puts("\n#{Themes.leader_worker(self())} ==> 🚀 ACTIVATING LEADERSHIP RESPONSIBILITIES")
+    IO.puts("\n#{Themes.leader_worker(self(), "🚀 ACTIVATING LEADERSHIP RESPONSIBILITIES")}")
     IO.puts("  🏆 Node: #{inspect(node())}")
     IO.puts("  📊 Store: #{inspect(store)}")
+    
+    # Register store with Gater APIs (with retry mechanism)
+    ExESDB.StoreCluster.register_store_with_retry(store)
 
     subscriptions =
       store
@@ -103,13 +106,13 @@ defmodule ExESDB.LeaderWorker do
 
   @impl true
   def terminate(reason, _state) do
-    Logger.warning("#{Themes.cluster(self())} terminating with reason: #{inspect(reason)}")
+    Logger.warning("#{Themes.cluster(self(), "terminating with reason: #{inspect(reason)}")}")
     :ok
   end
 
   @impl true
   def init(config) do
-    IO.puts("#{Themes.leader_worker(self())} is UP!")
+    IO.puts("#{Themes.leader_worker(self(), "is UP!")}")
     Process.flag(:trap_exit, true)
     {:ok, config}
   end

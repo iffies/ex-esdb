@@ -11,26 +11,26 @@ defmodule ExESDB.EventProjector do
 
   @impl true
   def handle_info({:event, event}, state) do
-    Logger.info("#{Themes.projector(self())} => Received event: #{inspect(event, pretty: true)}")
+    Logger.info("#{Themes.projector(self(), "Received event: #{inspect(event, pretty: true)}")}")
     {:noreply, state}
   end
 
   @impl true
   def handle_info({:DOWN, _ref, :process, _pid, _reason}, state) do
-    Logger.info("#{Themes.projector(self())} => Projector DOWN")
+    Logger.info("#{Themes.projector(self(), "Projector DOWN")}")
     {:noreply, state}
   end
 
   @impl true
   def handle_info(msg, state) do
-    Logger.info("#{Themes.projector(self())} => Unknown message: #{inspect(msg, pretty: true)}")
+    Logger.info("#{Themes.projector(self(), "Unknown message: #{inspect(msg, pretty: true)}")}")
     {:noreply, state}
   end
 
   ##### PLUMBING #####
   @impl true
   def init(opts) do
-    Logger.info("#{Themes.projector(self())} is UP.")
+    Logger.info("#{Themes.projector(self(), "is UP.")}")
     opts[:pub_sub]
     |> PubSub.subscribe(to_string(opts[:store_id]))
     {:ok, opts}

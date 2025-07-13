@@ -39,7 +39,7 @@ defmodule ExESDB.Snapshots do
     ]
 
     ret = Supervisor.init(children, strategy: :one_for_one)
-    IO.puts("#{Themes.snapshots_system(self())} is UP.")
+    IO.puts("#{Themes.snapshots_system(self(), "is UP.")}")
     ret
   end
 

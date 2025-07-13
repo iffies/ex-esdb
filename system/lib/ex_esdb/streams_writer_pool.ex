@@ -11,7 +11,7 @@ defmodule ExESDB.StreamsWriterPool do
   ######################## PLUMBING ########################
   @impl true
   def init(opts) do
-    IO.puts("#{Themes.streams_writer_pool(self())} is UP with #{inspect(opts)}")
+    IO.puts("#{Themes.streams_writer_pool(self(), "is UP with #{inspect(opts)}")}")
     DynamicSupervisor.init(strategy: :one_for_one)
   end
 end

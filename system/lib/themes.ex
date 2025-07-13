@@ -2,121 +2,127 @@ defmodule ExESDB.Themes do
   @moduledoc false
   alias BCUtils.ColorFuncs, as: CF
 
-  def app(pid),
-    do: "ExESDB APP [#{CF.black_on_blue()}#{inspect(pid)}#{CF.reset()}]"
+  def app(pid, msg),
+    do: "[#{CF.black_on_blue()}#{inspect(pid)}#{CF.reset()}][App] #{msg}"
 
   def system(pid, msg),
-    do: "[#{CF.black_on_magenta()}#{inspect(pid)}#{CF.reset()}][ExESDB SYSTEM] #{msg}"
+    do: "[#{CF.black_on_magenta()}#{inspect(pid)}#{CF.reset()}][System] #{msg}"
 
-  def store(pid),
-    do: "STORE [#{CF.black_on_green()}#{inspect(pid)}#{CF.reset()}]"
+  def core_system(pid, msg),
+    do: "[#{CF.black_on_magenta()}#{inspect(pid)}#{CF.reset()}][CoreSystem] #{msg}"
 
-  def cluster(pid),
-    do: "KHEPRI CLUSTER [#{CF.yellow_on_blue()}#{inspect(pid)}#{CF.reset()}]"
+  def store(pid, msg),
+    do: "[#{CF.black_on_green()}#{inspect(pid)}#{CF.reset()}][Store] #{msg}"
 
-  def cluster_coordinator(pid),
-    do: "CLUSTER_COORDINATOR [#{CF.white_on_blue()}#{inspect(pid)}#{CF.reset()}]"
+  def cluster(pid, msg),
+    do: "[#{CF.yellow_on_blue()}#{inspect(pid)}#{CF.reset()}][Cluster] #{msg}"
 
-  def cluster_system(pid),
-    do: "CLUSTER_SYSTEM [#{CF.bright_white_on_blue()}#{inspect(pid)}#{CF.reset()}]"
+  def store_cluster(pid, msg),
+    do: "[#{CF.yellow_on_black()}#{inspect(pid)}#{CF.reset()}][StoreCluster] #{msg}"
 
-  def node_monitor(pid),
-    do: "NODE_MONITOR [#{CF.yellow_on_magenta()}#{inspect(pid)}#{CF.reset()}]"
+  def store_coordinator(pid, msg),
+    do: "[#{CF.white_on_blue()}#{inspect(pid)}#{CF.reset()}][StoreCoordinator] #{msg}"
 
-  def projector(pid),
-    do: "PROJECTOR [#{CF.black_on_white()}#{inspect(pid)}#{CF.reset()}]"
+  def cluster_system(pid, msg),
+    do: "[#{CF.bright_white_on_blue()}#{inspect(pid)}#{CF.reset()}][ClusterSystem] #{msg}"
 
-  def monitor(pid),
-    do: "MONITOR [#{CF.yellow_on_magenta()}#{inspect(pid)}#{CF.reset()}]"
+  def node_monitor(pid, msg),
+    do: "[#{CF.yellow_on_magenta()}#{inspect(pid)}#{CF.reset()}][NodeMonitor] #{msg}"
+
+  def projector(pid, msg),
+    do: "[#{CF.black_on_white()}#{inspect(pid)}#{CF.reset()}][Projector] #{msg}"
+
+  def monitor(pid, msg),
+    do: "[#{CF.yellow_on_magenta()}#{inspect(pid)}#{CF.reset()}][Monitor] #{msg}"
 
   def emitter_pool(pid, msg),
-    do: "[#{CF.yellow_on_black()}#{inspect(pid)}#{CF.reset()}][EMITTER_POOL] #{msg}"
+    do: "[#{CF.yellow_on_black()}#{inspect(pid)}#{CF.reset()}][EmitterPool] #{msg}"
 
   def emitter_worker(pid, msg),
-    do: "[#{CF.yellow_on_black()}#{inspect(pid)}#{CF.reset()}][EMITTER] #{msg}"
+    do: "[#{CF.yellow_on_black()}#{inspect(pid)}#{CF.reset()}][Emitter] #{msg}"
 
   def persistent_emitter_worker(pid, msg),
-    do: "[#{CF.yellow_on_black()}#{inspect(pid)}#{CF.reset()}][PERS.EMITTER] #{msg}"
+    do: "[#{CF.yellow_on_black()}#{inspect(pid)}#{CF.reset()}][PersistentEmitter] #{msg}"
 
-  def pubsub(pid),
-    do: "PUBSUB [#{CF.black_on_cyan()}#{inspect(pid)}#{CF.reset()}]"
+  def pubsub(pid, msg),
+    do: "[#{CF.black_on_cyan()}#{inspect(pid)}#{CF.reset()}][PubSub] #{msg}"
 
   ############ LEADER SYSTEM ##############
-  def leader_system(pid),
-    do: "LEADER_SYSTEM [#{CF.black_on_magenta()}#{inspect(pid)}#{CF.reset()}]"
+  def leader_system(pid, msg),
+    do: "[#{CF.black_on_magenta()}#{inspect(pid)}#{CF.reset()}][LeaderSystem] #{msg}"
 
-  def leader_worker(pid),
-    do: "LEADER_WORKER [#{CF.black_on_magenta()}#{inspect(pid)}#{CF.reset()}]"
+  def leader_worker(pid, msg),
+    do: "[#{CF.black_on_magenta()}#{inspect(pid)}#{CF.reset()}][LeaderWorker] #{msg}"
 
-  def leader_tracker(msg),
-    do: "LEADER_TRACKER [#{CF.black_on_magenta()}#{inspect(msg)}#{CF.reset()}]"
+  def leader_tracker(pid, msg),
+    do: "[#{CF.black_on_magenta()}#{inspect(pid)}#{CF.reset()}][LeaderTracker] #{msg}"
 
   ######## SUBSCRIPTIONS ############
-  def subscriptions(msg),
-    do: "SUBSCRIPTIONS [#{CF.black_on_white()}#{inspect(msg)}#{CF.reset()}]"
+  def subscriptions(pid, msg),
+    do: "[#{CF.black_on_white()}#{inspect(pid)}#{CF.reset()}][Subscriptions] #{msg}"
 
-  def subscriptions_reader(msg),
-    do: "SUBSCRIPTIONS_READER [#{CF.black_on_white()}#{inspect(msg)}#{CF.reset()}]"
+  def subscriptions_reader(pid, msg),
+    do: "[#{CF.black_on_white()}#{inspect(pid)}#{CF.reset()}][SubscriptionsReader] #{msg}"
 
-  def subscriptions_writer(msg),
-    do: "SUBSCRIPTIONS_WRITER [#{CF.black_on_white()}#{inspect(msg)}#{CF.reset()}]"
+  def subscriptions_writer(pid, msg),
+    do: "[#{CF.black_on_white()}#{inspect(pid)}#{CF.reset()}][SubscriptionsWriter] #{msg}"
 
   ########## STREAMS ###############
-  def streams(msg),
-    do: "STREAMS [#{CF.bright_yellow_on_blue()}#{inspect(msg)}#{CF.reset()}]"
+  def streams(pid, msg),
+    do: "[#{CF.bright_yellow_on_blue()}#{inspect(pid)}#{CF.reset()}][Streams] #{msg}"
 
   ############## STREAMS_READER ##############
-  def streams_reader(msg),
-    do: "STREAMS_READER [#{CF.bright_yellow_on_blue()}#{inspect(msg)}#{CF.reset()}]"
+  def streams_reader(pid, msg),
+    do: "[#{CF.bright_yellow_on_blue()}#{inspect(pid)}#{CF.reset()}][StreamsReader] #{msg}"
 
-  def streams_reader_pool(msg),
-    do: "STREAMS_READER_POOL [#{CF.bright_yellow_on_blue()}#{inspect(msg)}#{CF.reset()}]"
+  def streams_reader_pool(pid, msg),
+    do: "[#{CF.bright_yellow_on_blue()}#{inspect(pid)}#{CF.reset()}][StreamsReaderPool] #{msg}"
 
-  def streams_reader_worker(msg),
-    do: "STREAMS_READER_WORKER [#{CF.bright_yellow_on_blue()}#{inspect(msg)}#{CF.reset()}]"
+  def streams_reader_worker(pid, msg),
+    do: "[#{CF.bright_yellow_on_blue()}#{inspect(pid)}#{CF.reset()}][StreamsReaderWorker] #{msg}"
 
   ############## STREAMS_WRITER ##############
-  def streams_writer(msg),
-    do: "STREAMS_WRITER [#{CF.bright_yellow_on_black()}#{inspect(msg)}#{CF.reset()}]"
+  def streams_writer(pid, msg),
+    do: "[#{CF.bright_yellow_on_black()}#{inspect(pid)}#{CF.reset()}][StreamsWriter] #{msg}"
 
-  def streams_writer_pool(msg),
-    do: "STREAMS_WRITER_POOL [#{CF.bright_yellow_on_black()}#{inspect(msg)}#{CF.reset()}]"
+  def streams_writer_pool(pid, msg),
+    do: "[#{CF.bright_yellow_on_black()}#{inspect(pid)}#{CF.reset()}][StreamsWriterPool] #{msg}"
 
-  def streams_writer_system(msg),
-    do: "STREAMS_WRITER_SYSTEM [#{CF.bright_yellow_on_black()}#{inspect(msg)}#{CF.reset()}]"
+  def streams_writer_system(pid, msg),
+    do: "[#{CF.bright_yellow_on_black()}#{inspect(pid)}#{CF.reset()}][StreamsWriterSystem] #{msg}"
 
-  def streams_writer_worker(msg),
-    do: "STREAMS_WRITER_WORKER [#{CF.bright_yellow_on_black()}#{inspect(msg)}#{CF.reset()}]"
+  def streams_writer_worker(pid, msg),
+    do: "[#{CF.bright_yellow_on_black()}#{inspect(pid)}#{CF.reset()}][StreamsWriterWorker] #{msg}"
 
   ########## GATEWAY ###############
-  def gateway_worker(pid),
-    do: "GATEWAY_WORKER [#{CF.bright_cyan_on_black()}#{inspect(pid)}#{CF.reset()}]"
+  def gateway_worker(pid, msg),
+    do: "[#{CF.bright_cyan_on_black()}#{inspect(pid)}#{CF.reset()}][GatewayWorker] #{msg}"
 
-  def gateway_supervisor(pid),
-    do: "GATEWAY_SUPERVISOR [#{CF.bright_cyan_on_black()}#{inspect(pid)}#{CF.reset()}]"
+  def gateway_supervisor(pid, msg),
+    do: "[#{CF.bright_cyan_on_black()}#{inspect(pid)}#{CF.reset()}][GatewaySupervisor] #{msg}"
 
-  def gateway_api(pid),
-    do: "GATEWAY_API [#{CF.bright_cyan_on_black()}#{inspect(pid)}#{CF.reset()}]"
+  def gateway_api(pid, msg),
+    do: "[#{CF.bright_cyan_on_black()}#{inspect(pid)}#{CF.reset()}][GatewayApi] #{msg}"
 
   ################ SNAPSHOTS ################
-  def snapshots_system(pid),
-    do: "SNAPSHOT_SYSTEM [#{CF.blue_on_yellow()}#{inspect(pid)}#{CF.reset()}]"
+  def snapshots_system(pid, msg),
+    do: "[#{CF.blue_on_yellow()}#{inspect(pid)}#{CF.reset()}][SnapshotsSystem] #{msg}"
 
-  def snapshots_reader(pid),
-    do: "SNAPSHOT_READER [#{CF.blue_on_yellow()}#{inspect(pid)}#{CF.reset()}]"
+  def snapshots_reader(pid, msg),
+    do: "[#{CF.blue_on_yellow()}#{inspect(pid)}#{CF.reset()}][SnapshotsReader] #{msg}"
 
-  def snapshots_reader_pool(pid),
-    do: "SNAPSHOT_READER_POOL [#{CF.blue_on_yellow()}#{inspect(pid)}#{CF.reset()}]"
+  def snapshots_reader_pool(pid, msg),
+    do: "[#{CF.blue_on_yellow()}#{inspect(pid)}#{CF.reset()}][SnapshotsReaderPool] #{msg}"
 
-  def snapshots_reader_worker(pid),
-    do: "SNAPSHOT_READER_WORKER [#{CF.blue_on_yellow()}#{inspect(pid)}#{CF.reset()}]"
+  def snapshots_reader_worker(pid, msg),
+    do: "[#{CF.blue_on_yellow()}#{inspect(pid)}#{CF.reset()}][SnapshotsReaderWorker] #{msg}"
 
-  def snapshots_writer(pid),
-    do: "SNAPSHOT_WRITER [#{CF.blue_on_yellow()}#{inspect(pid)}#{CF.reset()}]"
+  def snapshots_writer(pid, msg),
+    do: "[#{CF.blue_on_yellow()}#{inspect(pid)}#{CF.reset()}][SnapshotsWriter] #{msg}"
 
-  def snapshots_writer_pool(pid),
-    do: "SNAPSHOT_WRITER_POOL [#{CF.blue_on_yellow()}#{inspect(pid)}#{CF.reset()}]"
+  def snapshots_writer_pool(pid, msg),
+    do: "[#{CF.blue_on_yellow()}#{inspect(pid)}#{CF.reset()}][SnapshotsWriterPool] #{msg}"
 
-  def snapshots_writer_worker(pid),
-    do: "SNAPSHOT_WRITER_WORKER [#{CF.blue_on_yellow()}#{inspect(pid)}#{CF.reset()}]"
+  def snapshots_writer_worker(pid, msg),
+    do: "[#{CF.blue_on_yellow()}#{inspect(pid)}#{CF.reset()}][SnapshotsWriterWorker] #{msg}"
 end

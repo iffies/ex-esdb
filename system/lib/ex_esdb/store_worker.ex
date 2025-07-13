@@ -1,6 +1,7 @@
-defmodule ExESDB.Store do
+defmodule ExESDB.StoreWorker do
   @moduledoc """
     A GenServer wrapper around :khepri to act as a distributed event store.
+    Inspired by EventStoreDB's API.
   """
   use GenServer
 
@@ -24,7 +25,7 @@ defmodule ExESDB.Store do
       - `{:error, reason}` if unsuccessful.
 
   """
-  def get_state(),
+  def get_state,
     do:
       GenServer.call(
         __MODULE__,
@@ -59,7 +60,7 @@ defmodule ExESDB.Store do
   # Server Callbacks
   @impl true
   def init(opts) do
-    IO.puts("#{Themes.store(self(), "is UP.")}")
+    IO.puts(Themes.store(self(), "is UP."))
     Process.flag(:trap_exit, true)
 
     case start_khepri(opts) do

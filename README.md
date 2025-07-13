@@ -309,6 +309,12 @@ The Docker Compose setup includes:
 
 #### Environment Variables
 
+> **📌 Important**: When using the dev-env Docker Compose configurations, you must export the `EX_ESDB_COOKIE` environment variable on your host machine. This single environment variable is used for all cluster authentication purposes (cookies, secrets, etc.).
+> 
+> ```bash
+> export EX_ESDB_COOKIE="your-secure-cookie-value"
+> ```
+
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
 | `EX_ESDB_STORE_ID` | Unique store identifier | - | Yes |
