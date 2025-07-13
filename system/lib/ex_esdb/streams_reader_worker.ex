@@ -11,15 +11,36 @@ defmodule ExESDB.StreamsReaderWorker do
 
   import ExESDB.Khepri.Conditions
 
-  ############ CALLBACKS ############
-  @impl true
-  def handle_call(
-        {:stream_events, store, stream_id, start_version, count, direction},
-        _from,
-        state
-      ) do
-    result = stream_events(store, stream_id, start_version, count, direction)
-    {:reply, result, state}
+  defp try_register_with_swarm(name, store, stream_id, partition) do
+    # Register with Swarm - handle potential registration failures
+    case register_with_swarm(name) do
+      :ok ->
+        {:ok, build_initial_state(name, store, stream_id, partition)}
+
+      {:error, reason} ->
+        Logger.error("Failed to register worker #{inspect(name)}: #{inspect(reason)}")
+        {:stop, {:registration_failed, reason}}
+    end
+  end
+
+  defp fetch_single_event(store, stream_id, version) do
+    # Use 0-based version directly as storage key
+    padded_version = Helper.pad_version(version, 6)
+
+    case :khepri.get(store, [:streams, stream_id, padded_version]) do
+      {:ok, event} ->
+        event
+
+      {:error, :not_found} ->
+        nil
+
+      {:error, reason} ->
+        Logger.warning(
+          "Failed to read event #{version} from stream #{stream_id}: #{inspect(reason)}"
+        )
+
+        nil
+    end
   end
 
   defp stream_events(store, stream_id, start_version, count, direction) do
@@ -30,13 +51,21 @@ defmodule ExESDB.StreamsReaderWorker do
       # If stream doesn't exist, check if that's the real issue
       {:error, :stream_not_found} = error ->
         case validate_stream_exists(store, stream_id) do
-          :ok -> error  # Stream exists but fetch failed - propagate original error
-          {:error, :stream_not_found} -> 
-            Logger.info("Stream #{stream_id} not found, returning empty stream for aggregate loading")
-            {:ok, []}  # Return empty stream for aggregate loading
+          # Stream exists but fetch failed - propagate original error
+          :ok ->
+            error
+
+          {:error, :stream_not_found} ->
+            Logger.info(
+              "Stream #{stream_id} not found, returning empty stream for aggregate loading"
+            )
+
+            # Return empty stream for aggregate loading
+            {:ok, []}
         end
-      
-      error -> error
+
+      error ->
+        error
     end
   rescue
     error ->
@@ -46,26 +75,26 @@ defmodule ExESDB.StreamsReaderWorker do
 
   defp validate_stream_exists(store, stream_id) do
     exists = Helper.stream_exists?(store, stream_id)
-    
+
     if exists do
       Logger.debug("Stream validation: #{stream_id} exists")
       :ok
     else
       Logger.warning("Stream validation: #{stream_id} not found in store #{store}")
-      
+
       # Try to list available streams for debugging
       case get_streams_safe(store) do
         {:ok, streams} when is_list(streams) and length(streams) > 0 ->
           sample_streams = Enum.take(streams, 5)
           Logger.warning("Available streams (sample): #{inspect(sample_streams)}")
-        
+
         {:ok, []} ->
           Logger.warning("No streams found in store #{store}")
-        
+
         {:error, reason} ->
           Logger.warning("Could not list streams: #{inspect(reason)}")
       end
-      
+
       {:error, :stream_not_found}
     end
   end
@@ -82,41 +111,43 @@ defmodule ExESDB.StreamsReaderWorker do
 
   defp fetch_events(store, stream_id, start_version, count, direction) do
     stream_length = Helper.get_version!(store, stream_id)
-    
+
     # Validate stream_length is a proper integer
     case stream_length do
       length when is_integer(length) and length >= -1 ->
         desired_versions = Helper.calculate_versions(start_version, count, direction)
-        
-        valid_versions = Enum.filter(desired_versions, fn version ->
-          version >= 0 && version <= length
-        end)
-        
+
+        valid_versions =
+          Enum.filter(desired_versions, fn version ->
+            version >= 0 && version <= length
+          end)
+
         event_stream =
           valid_versions
           |> Stream.map(&fetch_single_event(store, stream_id, &1))
           |> Stream.reject(&is_nil/1)
-        
+
         {:ok, event_stream}
-        
+
       invalid_length ->
-        Logger.warning("Invalid stream length #{inspect(invalid_length)} for stream #{stream_id}, treating as empty stream")
+        Logger.warning(
+          "Invalid stream length #{inspect(invalid_length)} for stream #{stream_id}, treating as empty stream"
+        )
+
         # Return empty stream instead of error to avoid breaking aggregate loading
         {:ok, []}
     end
   end
 
-  defp fetch_single_event(store, stream_id, version) do
-    # Use 0-based version directly as storage key
-    padded_version = Helper.pad_version(version, 6)
-    
-    case :khepri.get(store, [:streams, stream_id, padded_version]) do
-      {:ok, event} -> event
-      {:error, :not_found} -> nil
-      {:error, reason} -> 
-        Logger.warning("Failed to read event #{version} from stream #{stream_id}: #{inspect(reason)}")
-        nil
-    end
+  ############ CALLBACKS ############
+  @impl true
+  def handle_call(
+        {:stream_events, store, stream_id, start_version, count, direction},
+        _from,
+        state
+      ) do
+    result = stream_events(store, stream_id, start_version, count, direction)
+    {:reply, result, state}
   end
 
   @impl true
@@ -135,19 +166,23 @@ defmodule ExESDB.StreamsReaderWorker do
   defp get_streams_safe(store) do
     try do
       case :khepri.get_many(store, [
-        :streams,
-        if_node_exists(exists: true)
-      ]) do
+             :streams,
+             if_node_exists(exists: true)
+           ]) do
         {:ok, stream_data} ->
-          streams = Enum.reduce(stream_data, [], fn
-            {[:streams, stream_id], _stream}, acc when is_binary(stream_id) or is_atom(stream_id) ->
-              [stream_id | acc]
-            {invalid_key, _}, acc ->
-              Logger.warning("Invalid stream key format: #{inspect(invalid_key)}")
-              acc
-          end)
+          streams =
+            Enum.reduce(stream_data, [], fn
+              {[:streams, stream_id], _stream}, acc
+              when is_binary(stream_id) or is_atom(stream_id) ->
+                [stream_id | acc]
+
+              {invalid_key, _}, acc ->
+                Logger.warning("Invalid stream key format: #{inspect(invalid_key)}")
+                acc
+            end)
+
           {:ok, Enum.reverse(streams)}
-        
+
         {:error, reason} ->
           Logger.error("Failed to get streams: #{inspect(reason)}")
           {:error, :store_access_failed}
@@ -165,22 +200,16 @@ defmodule ExESDB.StreamsReaderWorker do
   def init({store, stream_id, partition}) do
     try do
       # Validate initialization parameters
-      with :ok <- validate_init_params(store, stream_id, partition) do
-        Process.flag(:trap_exit, true)
-        name = StreamsReader.worker_id(store, stream_id)
-        
-        # Safe logging - avoid potential crashes from theme formatting
-        safe_log_startup(name, partition)
-        
-        # Register with Swarm - handle potential registration failures
-        case register_with_swarm(name) do
-          :ok ->
-            {:ok, build_initial_state(name, store, stream_id, partition)}
-          {:error, reason} ->
-            Logger.error("Failed to register worker #{inspect(name)}: #{inspect(reason)}")
-            {:stop, {:registration_failed, reason}}
-        end
-      else
+      case validate_init_params(store, stream_id, partition) do
+        :ok ->
+          Process.flag(:trap_exit, true)
+          name = StreamsReader.worker_id(store, stream_id)
+
+          # Safe logging - avoid potential crashes from theme formatting
+          safe_log_startup(name, partition)
+
+          try_register_with_swarm(name, store, stream_id, partition)
+
         {:error, reason} ->
           Logger.error("Invalid initialization parameters: #{inspect(reason)}")
           {:stop, {:invalid_params, reason}}
@@ -209,7 +238,9 @@ defmodule ExESDB.StreamsReaderWorker do
     rescue
       _error ->
         # Fallback to basic logging if theme formatting fails
-        Logger.info("StreamsReaderWorker #{inspect(name)} starting on partition #{inspect(partition)}")
+        Logger.info(
+          "StreamsReaderWorker #{inspect(name)} starting on partition #{inspect(partition)}"
+        )
     end
   end
 
@@ -248,6 +279,7 @@ defmodule ExESDB.StreamsReaderWorker do
           restart: :permanent,
           shutdown: 5000
         }
+
       {:error, reason} ->
         raise ArgumentError, "Invalid child_spec parameters: #{inspect(reason)}"
     end
@@ -268,11 +300,13 @@ defmodule ExESDB.StreamsReaderWorker do
     case validate_child_spec_params(store, stream_id, partition) do
       :ok ->
         worker_id = StreamsReader.worker_id(store, stream_id)
+
         GenServer.start_link(
           __MODULE__,
           args,
           name: {:global, worker_id}
         )
+
       {:error, reason} ->
         {:error, {:invalid_params, reason}}
     end
@@ -296,18 +330,23 @@ defmodule ExESDB.StreamsReaderWorker do
   @impl true
   def terminate(reason, state) do
     worker_name = Map.get(state, :worker_name, "unknown")
-    
+
     case reason do
       :normal ->
         Logger.info("StreamsReaderWorker #{inspect(worker_name)} terminating normally")
+
       :shutdown ->
         Logger.info("StreamsReaderWorker #{inspect(worker_name)} shutting down")
+
       {:shutdown, _} ->
         Logger.info("StreamsReaderWorker #{inspect(worker_name)} shutting down")
+
       _ ->
-        Logger.warning("StreamsReaderWorker #{inspect(worker_name)} terminating: #{inspect(reason)}")
+        Logger.warning(
+          "StreamsReaderWorker #{inspect(worker_name)} terminating: #{inspect(reason)}"
+        )
     end
-    
+
     :ok
   end
 end

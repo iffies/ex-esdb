@@ -1,18 +1,19 @@
 defmodule ExESDB.System do
   @moduledoc """
     This module is the top level supervisor for the ExESDB system.
-    It is responsible for supervising:
-    - The PubSub mechanism
-    - the Event Store (starts and stops khepri)
-    - the Cluster (joins and leaves the cluster)
-    - the Leader (manages Ra leader-specific functionality)
-    - the Subscriptions Supervisor (manages subscriptions)
+    
+    It uses a layered supervision architecture for better fault tolerance:
+    - CoreSystem: Critical infrastructure (StoreSystem + PersistenceSystem)
+    - LeadershipSystem: Leader election and event emission
+    - GatewaySystem: External interface with pooled workers
+    - Conditional clustering components (LibCluster, ClusterSystem)
+    
+    Note: Store management is now handled by the distributed ex-esdb-gater API.
   """
   use Supervisor
 
   alias ExESDB.Options, as: Options
   alias ExESDB.Themes, as: Themes
-  alias BCUtils.PubSubManager
 
   require Logger
   require Phoenix.PubSub
@@ -24,16 +25,12 @@ defmodule ExESDB.System do
     Logger.info("Starting ExESDB in #{db_type} mode")
 
     children = [
-      add_pub_sub(opts),
-      {PartitionSupervisor, child_spec: DynamicSupervisor, name: ExESDB.EmitterPools},
-      {ExESDB.StoreManager, opts},
-      {ExESDB.Streams, opts},
-      {ExESDB.Snapshots, opts},
-      {ExESDB.Subscriptions, opts},
-      {ExESDB.LeaderSystem, opts},
-      # Always include KhepriCluster - it's mode-aware
-      {ExESDB.KhepriCluster, opts},
-      {ExESDB.GatewaySupervisor, opts}
+      # Core infrastructure - must start first
+      {ExESDB.CoreSystem, opts},
+      # Leadership and event emission
+      {ExESDB.LeadershipSystem, opts},
+      # External interface
+      {ExESDB.GatewaySystem, opts}
     ]
 
     # Conditionally add clustering components based on db_type
@@ -65,39 +62,12 @@ defmodule ExESDB.System do
     ret =
       Supervisor.init(
         children,
-        strategy: :one_for_one
+        strategy: :rest_for_one
       )
 
     msg = "is UP in #{db_type} mode!"
     IO.puts("#{Themes.system(self(), msg)}")
     ret
-  end
-
-  defp add_pub_sub(opts) do
-    pub_sub = Keyword.get(opts, :pub_sub)
-
-    case pub_sub do
-      nil ->
-        add_pub_sub([pub_sub: :native] ++ opts)
-
-      :native ->
-        {ExESDB.PubSub, opts}
-
-      pub_sub ->
-        # Use PubSubManager to conditionally start Phoenix.PubSub
-        case PubSubManager.maybe_child_spec(pub_sub) do
-          nil ->
-            # PubSub already running, create a dummy child that does nothing
-            %{
-              id: :dummy_pubsub,
-              start: {Task, :start_link, [fn -> :ok end]},
-              restart: :temporary
-            }
-
-          child_spec ->
-            child_spec
-        end
-    end
   end
 
   defp handle_os_signal do
@@ -146,6 +116,4 @@ defmodule ExESDB.System do
       type: :supervisor
     }
   end
-
-  defp store(opts), do: Keyword.get(opts, :store, Options.store_id())
 end

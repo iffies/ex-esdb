@@ -313,7 +313,9 @@ defmodule ExESDB.NodeMonitor do
   end
 
   defp log_swarm_cleanup_error(error) do
-    Logger.error("#{Themes.node_monitor(node(), "Error during Swarm cleanup: #{inspect(error)}")}")
+    Logger.error(
+      "#{Themes.node_monitor(node(), "Error during Swarm cleanup: #{inspect(error)}")}"
+    )
   end
 
   defp notify_cluster_failure(failed_node, store_id) do

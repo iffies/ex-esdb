@@ -23,10 +23,6 @@ defmodule ExESDB.EnVars do
   def timeout, do: "EX_ESDB_TIMEOUT"
 
   @doc """
-    Returns the seed nodes. default: `nil`
-  """
-
-  @doc """
     Returns the name of the pub/sub. default: `ex_esdb_pub_sub`
   """
   def pub_sub, do: "EX_ESDB_PUB_SUB"
@@ -40,4 +36,11 @@ defmodule ExESDB.EnVars do
     Returns the idle readers timeout in milliseconds. default: `10_000`
   """
   def reader_idle_ms, do: "EX_ESDB_READER_IDLE_MS"
+
+  @doc """
+    Returns the gossip multicast address. default: `255.255.255.255`
+  """
+  def gossip_multicast_addr, do: "EX_ESDB_GOSSIP_MULTICAST_ADDR"
+
+  def cluster_secret, do: "EX_ESDB_CLUSTER_SECRET"
 end

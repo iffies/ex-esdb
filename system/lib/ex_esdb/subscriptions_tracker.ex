@@ -1,4 +1,4 @@
-defmodule ExESDB.LeaderTracker do
+defmodule ExESDB.SubscriptionsTracker do
   @moduledoc """
     As part of the ExESDB.System, the SubscriptionsTracker is responsible for
     observing the subscriptions that are maintained in the Store.
@@ -13,7 +13,7 @@ defmodule ExESDB.LeaderTracker do
   use GenServer
 
   alias ExESDB.Emitters, as: Emitters
-  alias ExESDB.KhepriCluster, as: KhepriCluster
+  alias ExESDB.StoreCluster, as: StoreCluster
   alias ExESDB.Themes, as: Themes
 
   ########### HANDLE_INFO ###########
@@ -22,7 +22,7 @@ defmodule ExESDB.LeaderTracker do
     IO.puts("Subscription #{inspect(data)} registered")
     store = state[:store_id]
 
-    if KhepriCluster.leader?(store) do
+    if StoreCluster.leader?(store) do
       # Extract subscription data and start emitter pool
 
       case Emitters.start_emitter_pool(store, data) do
@@ -46,7 +46,7 @@ defmodule ExESDB.LeaderTracker do
   def handle_info({:feature_updated, :subscriptions, data}, state) do
     IO.puts("Subscription #{inspect(data)} updated")
 
-    if KhepriCluster.leader?(state[:store_id]) do
+    if StoreCluster.leader?(state[:store_id]) do
       try do
         Emitters.update_emitter_pool(state[:store_id], data)
 
@@ -66,7 +66,7 @@ defmodule ExESDB.LeaderTracker do
   def handle_info({:feature_deleted, :subscriptions, data}, state) do
     IO.puts("Subscription #{inspect(data)} deleted")
 
-    if KhepriCluster.leader?(state[:store_id]) do
+    if StoreCluster.leader?(state[:store_id]) do
       try do
         Emitters.stop_emitter_pool(state[:store_id], data)
 

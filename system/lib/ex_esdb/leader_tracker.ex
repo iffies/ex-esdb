@@ -13,7 +13,7 @@ defmodule ExESDB.LeaderTracker do
   use GenServer
 
   alias ExESDB.Emitters, as: Emitters
-  alias ExESDB.KhepriCluster, as: KhepriCluster
+  alias ExESDB.StoreCluster, as: StoreCluster
   alias ExESDB.Themes, as: Themes
 
   ########### PRIVATE HELPERS ###########
@@ -65,7 +65,7 @@ defmodule ExESDB.LeaderTracker do
     IO.puts("Subscription #{inspect(data)} registered")
     store = state[:store_id]
 
-    if KhepriCluster.leader?(store) do
+    if StoreCluster.leader?(store) do
       # Extract subscription data and start emitter pool
       subscription_data = format_subscription_data(data)
 
@@ -94,7 +94,7 @@ defmodule ExESDB.LeaderTracker do
   def handle_info({:feature_updated, :subscriptions, data}, state) do
     IO.puts("Subscription #{inspect(data)} updated")
 
-    if KhepriCluster.leader?(state[:store_id]) do
+    if StoreCluster.leader?(state[:store_id]) do
       subscription_data = format_subscription_data(data)
 
       try do
@@ -118,7 +118,7 @@ defmodule ExESDB.LeaderTracker do
   def handle_info({:feature_deleted, :subscriptions, data}, state) do
     IO.puts("Subscription #{inspect(data)} deleted")
 
-    if KhepriCluster.leader?(state[:store_id]) do
+    if StoreCluster.leader?(state[:store_id]) do
       subscription_data = format_subscription_data(data)
 
       try do

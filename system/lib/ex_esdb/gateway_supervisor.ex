@@ -1,7 +1,12 @@
 defmodule ExESDB.GatewaySupervisor do
   @moduledoc """
+    @deprecated "Use ExESDB.GatewaySystem instead"
+    
     The GatewaySupervisor is responsible for starting and supervising the
     GatewayWorkers.
+    
+    This module is deprecated in favor of ExESDB.GatewaySystem which provides
+    improved fault tolerance with pooled workers.
   """
   use Supervisor
   require Logger

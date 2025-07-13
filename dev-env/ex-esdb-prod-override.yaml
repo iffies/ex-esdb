@@ -4,7 +4,7 @@
 # Production environment template
 x-prod-environment: &prod-env
   EX_ESDB_STORE_ID: "reg_gh_prod"
-  EX_ESDB_COOKIE: $REG_GH_PROD_CLIQUE
+  EX_ESDB_COOKIE: $EX_ESDB_COOKIE
   EX_ESDB_DB_TYPE: "cluster"
   EX_ESDB_TIMEOUT: "5000"
   LOG_LEVEL: "info"

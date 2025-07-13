@@ -6,7 +6,7 @@ defmodule ExESDB.ClusterSystem do
   - ClusterCoordinator: Handles coordination logic and split-brain prevention
   - NodeMonitor: Monitors node health and handles failures
 
-  Note: KhepriCluster is managed at the System level since it's mode-aware.
+  Note: StoreCluster is managed at the System level since it's mode-aware.
   """
   use Supervisor
 
@@ -15,8 +15,8 @@ defmodule ExESDB.ClusterSystem do
   @impl true
   def init(opts) do
     children = [
-      # ClusterCoordinator handles coordination logic and split-brain prevention
-      {ExESDB.ClusterCoordinator, opts},
+      # StoreCoordinator handles coordination logic and split-brain prevention
+      {ExESDB.StoreCoordinator, opts},
       # NodeMonitor provides fast failure detection
       {ExESDB.NodeMonitor, node_monitor_config(opts)}
     ]

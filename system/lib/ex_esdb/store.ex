@@ -1,7 +1,6 @@
 defmodule ExESDB.Store do
   @moduledoc """
     A GenServer wrapper around :khepri to act as a distributed event store.
-    Inspired by EventStoreDB's API.
   """
   use GenServer
 

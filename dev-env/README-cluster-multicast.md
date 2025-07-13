@@ -25,16 +25,13 @@ Create `.env.cluster` file or set these environment variables:
 
 ```bash
 # Cluster security
-export REG_GH_CLUSTER_SECRET="dev_cluster_secret_2025"
-
-# Erlang distribution
-export REG_GH_DEV_CLIQUE="reg_gh_dev_clique"
-export REG_GH_PROD_CLIQUE="reg_gh_prod_clique"
+export EX_ESDB_CLUSTER_SECRET="dev_cluster_secret_2025"
+export EX_ESDB_COOKIE="reg_greenhouse_clique"
+export RELEASE_COOKIE="reg_greenhouse_clique"
 
 # Gossip configuration  
-export GOSSIP_MULTICAST_ADDR="233.252.1.32"
+export EX_ESDB_GOSSIP_MULTICAST_ADDR="255.255.255.255"
 export GOSSIP_PORT="45892"
-export GOSSIP_TTL="1"
 ```
 
 ## Quick Start
@@ -130,7 +127,7 @@ docker-compose -f ex-esdb-cluster.yaml logs -f ex-esdb0
        ▲                  ▲                  ▲
        │                  │                  │
        ▼                  ▼                  ▼
-    Gossip MultiCast Network (233.252.1.32:45892)
+    Gossip MultiCast Network (255.255.255.255:45892)
        ▲                  ▲                  ▲
        │                  │                  │
        ▼                  ▼                  ▼
@@ -160,7 +157,7 @@ config :libcluster,
       config: [
         port: 45_892,
         if_addr: "0.0.0.0",
-        multicast_addr: "233.252.1.32",
+        multicast_addr: System.get_env("EX_ESDB_GOSSIP_MULTICAST_ADDR") || "255.255.255.255",
         multicast_ttl: 1,
         secret: System.get_env("EX_ESDB_CLUSTER_SECRET") || "dev_cluster_secret"
       ]
