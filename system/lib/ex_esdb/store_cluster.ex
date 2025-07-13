@@ -7,7 +7,6 @@ defmodule ExESDB.StoreCluster do
   alias ExESDB.LeaderWorker, as: LeaderWorker
 
   alias ExESDB.Options, as: Options
-  alias ExESDB.Themes, as: Themes
 
   # defp ping?(node) do
   #   case :net_adm.ping(node) do
@@ -17,27 +16,22 @@ defmodule ExESDB.StoreCluster do
   # end
 
   def leader?(store) do
-    Logger.debug(Themes.store_cluster(node(), "checking if node is leader"))
+    Logger.debug("checking if node is leader", component: :store_cluster, pid: node())
 
     case :ra_leaderboard.lookup_leader(store) do
       {_, leader_node} ->
-        Logger.debug(Themes.store_cluster(node(), "node is leader: #{inspect(leader_node)}"))
+        Logger.debug("node is leader: #{inspect(leader_node)}", component: :store_cluster, pid: node())
         node() == leader_node
 
       msg ->
-        Logger.debug(Themes.store_cluster(node(), "leader lookup failed: #{inspect(msg)}"))
+        Logger.debug("leader lookup failed: #{inspect(msg)}", component: :store_cluster, pid: node())
         false
     end
   end
 
   def activate_leader_worker(store, leader_node) do
     if node() == leader_node do
-      IO.puts(
-        Themes.store_cluster(
-          self(),
-          "==> 🚀 This node is the leader, activating LeaderWorker"
-        )
-      )
+      Logger.info("🚀 This node is the leader, activating LeaderWorker", component: :store_cluster, pid: self(), arrow: true)
 
       store |> LeaderWorker.activate()
     end
@@ -47,12 +41,7 @@ defmodule ExESDB.StoreCluster do
   Registers a store with all Gater APIs in the cluster via Swarm.
   """
   def register_store(store, node \\ node()) do
-    IO.puts(
-      Themes.store_cluster(
-        self(),
-        "📝 Registering store #{inspect(store)} on node #{inspect(node)} with Gater APIs"
-      )
-    )
+    Logger.info("📝 Registering store #{inspect(store)} on node #{inspect(node)} with Gater APIs", component: :store_cluster, pid: self())
 
     # Create store config map that the gater API expects
     store_config = %{store_id: store}
@@ -60,17 +49,12 @@ defmodule ExESDB.StoreCluster do
     # Send registration message to all Gater APIs via ExESDBGater.API
     case broadcast_to_gater_apis({:register_store, store_config, node}) do
       :ok ->
-        IO.puts(
-          Themes.store_cluster(
-            self(),
-            "✅ Successfully registered store #{inspect(store)} on node #{inspect(node)}"
-          )
-        )
+        Logger.info("✅ Successfully registered store #{inspect(store)} on node #{inspect(node)}", component: :store_cluster, pid: self())
 
         :ok
 
       {:error, reason} ->
-        IO.puts(Themes.store_cluster(self(), "❌ Failed to register store: #{inspect(reason)}"))
+        Logger.error("❌ Failed to register store: #{inspect(reason)}", component: :store_cluster, pid: self())
 
         {:error, reason}
     end
@@ -111,10 +95,8 @@ defmodule ExESDB.StoreCluster do
         retry_delay = min(attempt * 2000, 30_000)
 
         Logger.info(
-          Themes.store_cluster(
-            self(),
-            "No Gater APIs available (attempt #{attempt}), retrying in #{retry_delay}ms"
-          )
+          "No Gater APIs available (attempt #{attempt}), retrying in #{retry_delay}ms",
+          component: :store_cluster, pid: self()
         )
 
         Process.send_after(self(), {:retry_register_store, store, node, attempt + 1}, retry_delay)
@@ -126,10 +108,8 @@ defmodule ExESDB.StoreCluster do
         retry_delay = min(attempt * 1000, 10_000)
 
         Logger.warning(
-          Themes.store_cluster(
-            self(),
-            "Store registration failed (attempt #{attempt}): #{inspect(reason)}, retrying in #{retry_delay}ms"
-          )
+          "Store registration failed (attempt #{attempt}): #{inspect(reason)}, retrying in #{retry_delay}ms",
+          component: :store_cluster, pid: self()
         )
 
         Process.send_after(self(), {:retry_register_store, store, node, attempt + 1}, retry_delay)
@@ -142,10 +122,8 @@ defmodule ExESDB.StoreCluster do
   """
   def unregister_store(store, node \\ node()) do
     Logger.info(
-      Themes.store_cluster(
-        self(),
-        "Unregistering store #{inspect(store)} on node #{inspect(node)} from Gater APIs"
-      )
+      "Unregistering store #{inspect(store)} on node #{inspect(node)} from Gater APIs",
+      component: :store_cluster, pid: self()
     )
 
     # Create store config map that the gater API expects
@@ -155,17 +133,16 @@ defmodule ExESDB.StoreCluster do
     case broadcast_to_gater_apis({:unregister_store, store_config, node}) do
       :ok ->
         Logger.info(
-          Themes.store_cluster(
-            self(),
-            "Successfully unregistered store #{inspect(store)} on node #{inspect(node)}"
-          )
+          "Successfully unregistered store #{inspect(store)} on node #{inspect(node)}",
+          component: :store_cluster, pid: self()
         )
 
         :ok
 
       {:error, reason} ->
         Logger.warning(
-          Themes.store_cluster(self(), "Failed to unregister store: #{inspect(reason)}")
+          "Failed to unregister store: #{inspect(reason)}",
+          component: :store_cluster, pid: self()
         )
 
         {:error, reason}
@@ -182,7 +159,8 @@ defmodule ExESDB.StoreCluster do
         case Process.whereis(ExESDB.StoreCoordinator) do
           nil ->
             Logger.warning(
-              Themes.store_cluster(node(), "StoreCoordinator not available, trying direct join")
+              "StoreCoordinator not available, trying direct join",
+              component: :store_cluster, pid: node()
             )
 
             join_cluster_direct(store)
@@ -193,12 +171,13 @@ defmodule ExESDB.StoreCluster do
 
       :single ->
         # In single mode, just ensure the store is started locally
-        Logger.info(Themes.store_cluster(node(), "Running in single-node mode"))
+        Logger.info("Running in single-node mode", component: :store_cluster, pid: node())
         :coordinator
 
       _ ->
         Logger.warning(
-          Themes.store_cluster(node(), "Unknown db_type, defaulting to single-node mode")
+          "Unknown db_type, defaulting to single-node mode",
+          component: :store_cluster, pid: node()
         )
 
         :coordinator
@@ -211,20 +190,23 @@ defmodule ExESDB.StoreCluster do
 
     if Enum.empty?(connected_nodes) do
       Logger.info(
-        Themes.store_cluster(node(), "No connected nodes, starting as single node cluster")
+        "No connected nodes, starting as single node cluster",
+        component: :store_cluster, pid: node()
       )
 
       :no_nodes
     else
       Logger.info(
-        "#{Themes.store_cluster(node(), "Attempting direct join to cluster via: #{inspect(connected_nodes)}")}"
+        "Attempting direct join to cluster via: #{inspect(connected_nodes)}",
+        component: :store_cluster, pid: node()
       )
 
       # Try to find a node with an existing cluster
       case find_cluster_node(store, connected_nodes) do
         nil ->
           Logger.info(
-            Themes.store_cluster(node(), "No existing cluster found, starting as coordinator")
+            "No existing cluster found, starting as coordinator",
+            component: :store_cluster, pid: node()
           )
 
           :coordinator
@@ -233,20 +215,16 @@ defmodule ExESDB.StoreCluster do
           case :khepri_cluster.join(store, target_node) do
             :ok ->
               Logger.info(
-                Themes.store_cluster(
-                  node(),
-                  "Successfully joined cluster via #{inspect(target_node)}"
-                )
+                "Successfully joined cluster via #{inspect(target_node)}",
+                component: :store_cluster, pid: node()
               )
 
               :ok
 
             {:error, reason} ->
               Logger.warning(
-                Themes.store_cluster(
-                  node(),
-                  "Failed to join via #{inspect(target_node)}: #{inspect(reason)}"
-                )
+                "Failed to join via #{inspect(target_node)}: #{inspect(reason)}",
+                component: :store_cluster, pid: node()
               )
 
               :failed
@@ -256,21 +234,21 @@ defmodule ExESDB.StoreCluster do
   end
 
   defp report_leadership_change(old_leader, new_leader, _store) do
-    IO.puts("\n#{Themes.store_cluster(self(), "🔄 LEADERSHIP CHANGED")}")
-    IO.puts("  🔴 Previous leader: #{inspect(old_leader)}")
-    IO.puts("  🟢 New leader:      🏆 #{inspect(new_leader)}")
+    Logger.info("🔄 LEADERSHIP CHANGED", component: :store_cluster, pid: self(), arrow: true)
+    Logger.info("🔴 Previous leader: #{inspect(old_leader)}", component: :store_cluster, pid: self(), indent: 1)
+    Logger.info("🟢 New leader:      🏆 #{inspect(new_leader)}", component: :store_cluster, pid: self(), indent: 1)
 
     # Check if we are the new leader
     if node() == new_leader do
-      IO.puts("  🚀 This node is now the leader!")
+      Logger.info("🚀 This node is now the leader!", component: :store_cluster, pid: self(), indent: 1)
     else
-      IO.puts("  📞 Following new leader: #{inspect(new_leader)}")
+      Logger.info("📞 Following new leader: #{inspect(new_leader)}", component: :store_cluster, pid: self(), indent: 1)
     end
 
     # Also trigger a membership check to show updated leadership in membership
     Process.send(self(), :check_members, [])
 
-    IO.puts("")
+    # Empty line removed - not needed with Logger
   end
 
   defp find_cluster_node(store, nodes) do
@@ -320,12 +298,13 @@ defmodule ExESDB.StoreCluster do
   defp leave(store) do
     case store |> :khepri_cluster.reset() do
       :ok ->
-        IO.puts(Themes.store_cluster(node(), "=> Left cluster"))
+        Logger.info("Left cluster", component: :store_cluster, pid: node(), arrow: true)
         :ok
 
       {:error, reason} ->
         Logger.error(
-          Themes.store_cluster(node(), "=> Failed to leave cluster. reason: #{inspect(reason)}")
+          "Failed to leave cluster. reason: #{inspect(reason)}",
+          component: :store_cluster, pid: node(), arrow: true
         )
 
         {:error, reason}
@@ -343,11 +322,12 @@ defmodule ExESDB.StoreCluster do
       gater_api_pids = ExESDBGater.API.get_gater_api_pids()
 
       if Enum.empty?(gater_api_pids) do
-        Logger.warning(Themes.store_cluster(self(), "No Gater APIs found in Swarm registry"))
+        Logger.warning("No Gater APIs found in Swarm registry", component: :store_cluster, pid: self())
         {:error, :no_gater_apis}
       else
         Logger.debug(
-          Themes.store_cluster(self(), "Broadcasting to #{length(gater_api_pids)} Gater APIs")
+          "Broadcasting to #{length(gater_api_pids)} Gater APIs",
+          component: :store_cluster, pid: self()
         )
 
         # Send message to all Gater API processes
@@ -360,10 +340,8 @@ defmodule ExESDB.StoreCluster do
             rescue
               error ->
                 Logger.warning(
-                  Themes.store_cluster(
-                    self(),
-                    "Failed to send message to Gater API #{inspect(pid)}: #{inspect(error)}"
-                  )
+                  "Failed to send message to Gater API #{inspect(pid)}: #{inspect(error)}",
+                  component: :store_cluster, pid: self()
                 )
 
                 {:error, error}
@@ -379,14 +357,16 @@ defmodule ExESDB.StoreCluster do
     rescue
       error ->
         Logger.error(
-          Themes.store_cluster(self(), "Error broadcasting to Gater APIs: #{inspect(error)}")
+          "Error broadcasting to Gater APIs: #{inspect(error)}",
+          component: :store_cluster, pid: self()
         )
 
         {:error, error}
     catch
       :exit, reason ->
         Logger.error(
-          Themes.store_cluster(self(), "Exit during Gater API broadcast: #{inspect(reason)}")
+          "Exit during Gater API broadcast: #{inspect(reason)}",
+          component: :store_cluster, pid: self()
         )
 
         {:error, {:exit, reason}}
@@ -401,7 +381,8 @@ defmodule ExESDB.StoreCluster do
     case join_via_connected_nodes(store) do
       :ok ->
         Logger.info(
-          Themes.store_cluster(node(), "=> Successfully joined [#{inspect(store)}] cluster")
+          "Successfully joined [#{inspect(store)}] cluster",
+          component: :store_cluster, pid: node(), arrow: true
         )
 
         # Register store after successful cluster join
@@ -409,10 +390,8 @@ defmodule ExESDB.StoreCluster do
 
       :coordinator ->
         Logger.info(
-          Themes.store_cluster(
-            node(),
-            " => Acting as cluster coordinator, Khepri cluster already initialized"
-          )
+          "Acting as cluster coordinator, Khepri cluster already initialized",
+          component: :store_cluster, pid: node(), arrow: true
         )
 
         # Register store when acting as coordinator
@@ -430,20 +409,16 @@ defmodule ExESDB.StoreCluster do
 
       :waiting ->
         Logger.alert(
-          Themes.store_cluster(
-            node(),
-            " => Waiting for cluster coordinator, will retry in #{timeout * 2}ms"
-          )
+          "Waiting for cluster coordinator, will retry in #{timeout * 2}ms",
+          component: :store_cluster, pid: node(), arrow: true
         )
 
         Process.send_after(self(), :join, timeout * 2)
 
       :failed ->
         Logger.alert(
-          Themes.store_cluster(
-            node(),
-            " => Failed to join discovered nodes, will retry in #{timeout * 3}ms"
-          )
+          "Failed to join discovered nodes, will retry in #{timeout * 3}ms",
+          component: :store_cluster, pid: node(), arrow: true
         )
 
         Process.send_after(self(), :join, timeout * 3)
@@ -464,7 +439,7 @@ defmodule ExESDB.StoreCluster do
         last_error = Keyword.get(state, :last_member_error)
 
         if last_error != reason do
-          IO.puts("⚠️⚠️ Failed to get store members. reason: #{inspect(reason)} ⚠️⚠️")
+          Logger.warning("⚠️⚠️ Failed to get store members. reason: #{inspect(reason)} ⚠️⚠️", component: :store_cluster, pid: self())
         end
 
         new_state = Keyword.put(state, :last_member_error, reason)
@@ -478,7 +453,7 @@ defmodule ExESDB.StoreCluster do
 
         # Only report if membership has changed
         if normalized_current != normalized_previous do
-          IO.puts("\n#{Themes.store_cluster(self(), "MEMBERSHIP CHANGED")}")
+          Logger.info("MEMBERSHIP CHANGED", component: :store_cluster, pid: self(), arrow: true)
 
           # Report additions
           new_members = normalized_current -- normalized_previous
@@ -486,7 +461,7 @@ defmodule ExESDB.StoreCluster do
           if !Enum.empty?(new_members) do
             Enum.each(new_members, fn {_store, member} ->
               medal = get_medal(leader, member)
-              IO.puts("  ✅ #{medal} #{inspect(member)} joined")
+              Logger.info("✅ #{medal} #{inspect(member)} joined", component: :store_cluster, pid: self(), indent: 1)
             end)
           end
 
@@ -495,20 +470,20 @@ defmodule ExESDB.StoreCluster do
 
           if !Enum.empty?(removed_members) do
             Enum.each(removed_members, fn {_store, member} ->
-              IO.puts("  ❌ #{inspect(member)} left")
+              Logger.info("❌ #{inspect(member)} left", component: :store_cluster, pid: self(), indent: 1)
             end)
           end
 
           # Show current full membership
-          IO.puts("\n  Current members:")
+          Logger.info("Current members:", component: :store_cluster, pid: self(), indent: 1)
 
           normalized_current
           |> Enum.each(fn {_store, member} ->
             medal = get_medal(leader, member)
-            IO.puts("  #{medal} #{inspect(member)}")
+            Logger.info("#{medal} #{inspect(member)}", component: :store_cluster, pid: self(), indent: 1)
           end)
 
-          IO.puts("")
+          # Empty line removed - not needed with Logger
         end
 
         # Update state with current members and clear any previous error
@@ -548,9 +523,7 @@ defmodule ExESDB.StoreCluster do
             # First time detecting leader or same leader
             previous_leader == nil ->
               if leader_node != nil do
-                IO.puts(
-                  Themes.store_cluster(self(), "==> LEADER DETECTED: 🏆 #{inspect(leader_node)}")
-                )
+                Logger.info("LEADER DETECTED: 🏆 #{inspect(leader_node)}", component: :store_cluster, pid: self(), arrow: true)
 
                 activate_leader_worker(store, leader_node)
               end
@@ -565,7 +538,7 @@ defmodule ExESDB.StoreCluster do
         :undefined ->
           # Only report if we previously had a leader
           if previous_leader != nil do
-            IO.puts(Themes.store_cluster(self(), "==> ⚠️ LEADERSHIP LOST: No leader found"))
+            Logger.warning("⚠️ LEADERSHIP LOST: No leader found", component: :store_cluster, pid: self(), arrow: true)
           end
 
           state |> Keyword.put(:current_leader, nil)
@@ -576,19 +549,19 @@ defmodule ExESDB.StoreCluster do
   end
 
   @impl true
-  def handle_info({:DOWN, _ref, :process, pid, reason}, state) do
+  def handle_info({:DOWN, _ref, :process, _pid, reason}, state) do
     state[:store_id]
     |> leave()
 
-    msg = "🔻🔻 #{Themes.store_cluster(pid, "going down with reason: #{inspect(reason)}")} 🔻🔻"
+    msg = "🔻🔻 going down with reason: #{inspect(reason)} 🔻🔻"
 
-    IO.puts(msg)
+    Logger.error(msg, component: :store_cluster, pid: self())
     {:noreply, state}
   end
 
   @impl true
   def handle_info({:EXIT, pid, reason}, state) do
-    IO.puts("#{Themes.store_cluster(pid, "exited with reason: #{inspect(reason)}")}")
+    Logger.error("exited with reason: #{inspect(reason)}", component: :store_cluster, pid: pid)
 
     state[:store_id]
     |> leave()
@@ -598,20 +571,22 @@ defmodule ExESDB.StoreCluster do
 
   @impl true
   def handle_info({:nodeup, node}, state) do
-    Logger.info("#{Themes.store_cluster(self(), "detected new node: #{inspect(node)}")}")
+    Logger.info("detected new node: #{inspect(node)}", component: :store_cluster, pid: self())
 
     store = state[:store_id]
 
     # Check if we should handle this nodeup event
     if should_handle_nodeup?(store) do
       Logger.info(
-        Themes.store_cluster(node(), "attempting coordinated cluster join due to new node")
+        "attempting coordinated cluster join due to new node",
+        component: :store_cluster, pid: node()
       )
 
       case join_via_connected_nodes(store) do
         :ok ->
           Logger.info(
-            Themes.store_cluster(node(), "successfully joined cluster after nodeup event")
+            "successfully joined cluster after nodeup event",
+            component: :store_cluster, pid: node()
           )
 
           # Register store after successful join
@@ -621,7 +596,7 @@ defmodule ExESDB.StoreCluster do
           Process.send(self(), :check_leader, [])
 
         :coordinator ->
-          Logger.info(Themes.store_cluster(node(), "acting as coordinator after nodeup event"))
+          Logger.info("acting as coordinator after nodeup event", component: :store_cluster, pid: node())
           # Register store when acting as coordinator
           register_store_with_retry(store)
           # Trigger immediate leadership check when acting as coordinator
@@ -629,11 +604,12 @@ defmodule ExESDB.StoreCluster do
 
         _ ->
           Logger.debug(
-            Themes.store_cluster(node(), "coordinated join not successful, will retry later")
+            "coordinated join not successful, will retry later",
+            component: :store_cluster, pid: node()
           )
       end
     else
-      Logger.debug(Themes.store_cluster(node(), "already in cluster, ignoring nodeup event"))
+      Logger.debug("already in cluster, ignoring nodeup event", component: :store_cluster, pid: node())
       # Still trigger membership and leadership checks to detect any changes
       Process.send(self(), :check_members, [])
       Process.send(self(), :check_leader, [])
@@ -644,7 +620,7 @@ defmodule ExESDB.StoreCluster do
 
   @impl true
   def handle_info({:nodedown, node}, state) do
-    Logger.info(Themes.store_cluster(self(), "detected node down: #{inspect(node)}"))
+    Logger.info("detected node down: #{inspect(node)}", component: :store_cluster, pid: self())
     # Trigger immediate membership and leadership checks after node down event
     Process.send(self(), :check_members, [])
     Process.send(self(), :check_leader, [])
@@ -653,7 +629,7 @@ defmodule ExESDB.StoreCluster do
 
   @impl true
   def handle_info({:retry_register_store, store, node, attempt}, state) do
-    Logger.debug(Themes.store_cluster(self(), "Retrying store registration (attempt #{attempt})"))
+    Logger.debug("Retrying store registration (attempt #{attempt})", component: :store_cluster, pid: self())
     register_store_with_retry(store, node, attempt)
     {:noreply, state}
   end
@@ -666,7 +642,7 @@ defmodule ExESDB.StoreCluster do
   ############# PLUMBING #############
   @impl true
   def terminate(reason, state) do
-    Logger.warning(Themes.store_cluster(self(), "terminating with reason: #{inspect(reason)}"))
+    Logger.warning("terminating with reason: #{inspect(reason)}", component: :store_cluster, pid: self())
 
     state[:store_id]
     |> leave()
@@ -678,7 +654,7 @@ defmodule ExESDB.StoreCluster do
   def init(config) do
     timeout = config[:timeout] || 1000
     state = Keyword.put(config, :timeout, timeout)
-    IO.puts(Themes.store_cluster(self(), "is UP"))
+    Logger.info("is UP", component: :store_cluster, pid: self())
     Process.flag(:trap_exit, true)
 
     # Subscribe to LibCluster events

@@ -12,14 +12,14 @@ defmodule ExESDB.SubscriptionsTracker do
   """
   use GenServer
 
+  require Logger
   alias ExESDB.Emitters, as: Emitters
   alias ExESDB.StoreCluster, as: StoreCluster
-  alias ExESDB.Themes, as: Themes
 
   ########### HANDLE_INFO ###########
   @impl GenServer
   def handle_info({:feature_created, :subscriptions, data}, state) do
-    IO.puts("Subscription #{inspect(data)} registered")
+    Logger.info("🔔 Subscription #{inspect(data)} registered", component: :subscriptions_tracker)
     store = state[:store_id]
 
     if StoreCluster.leader?(store) do
@@ -27,15 +27,13 @@ defmodule ExESDB.SubscriptionsTracker do
 
       case Emitters.start_emitter_pool(store, data) do
         {:ok, _pid} ->
-          IO.puts("Successfully started EmitterPool for subscription #{data.subscription_name}")
+          Logger.info("✅ Successfully started EmitterPool for subscription #{data.subscription_name}", component: :subscriptions_tracker)
 
         {:error, {:already_started, _pid}} ->
-          IO.puts("EmitterPool already exists for subscription #{data.subscription_name}")
+          Logger.info("ℹ️ EmitterPool already exists for subscription #{data.subscription_name}", component: :subscriptions_tracker)
 
         {:error, reason} ->
-          IO.puts(
-            "Failed to start EmitterPool for subscription #{data.subscription_name}: #{inspect(reason)}"
-          )
+          Logger.error("❌ Failed to start EmitterPool for subscription #{data.subscription_name}: #{inspect(reason)}", component: :subscriptions_tracker)
       end
     end
 
@@ -44,18 +42,16 @@ defmodule ExESDB.SubscriptionsTracker do
 
   @impl GenServer
   def handle_info({:feature_updated, :subscriptions, data}, state) do
-    IO.puts("Subscription #{inspect(data)} updated")
+    Logger.info("🔄 Subscription #{inspect(data)} updated", component: :subscriptions_tracker)
 
     if StoreCluster.leader?(state[:store_id]) do
       try do
         Emitters.update_emitter_pool(state[:store_id], data)
 
-        IO.puts("Successfully updated EmitterPool for subscription #{data.subscription_name}")
+        Logger.info("✅ Successfully updated EmitterPool for subscription #{data.subscription_name}", component: :subscriptions_tracker)
       rescue
         error ->
-          IO.puts(
-            "Failed to update EmitterPool for subscription #{data.subscription_name}: #{inspect(error)}"
-          )
+          Logger.error("❌ Failed to update EmitterPool for subscription #{data.subscription_name}: #{inspect(error)}", component: :subscriptions_tracker)
       end
     end
 
@@ -64,18 +60,16 @@ defmodule ExESDB.SubscriptionsTracker do
 
   @impl GenServer
   def handle_info({:feature_deleted, :subscriptions, data}, state) do
-    IO.puts("Subscription #{inspect(data)} deleted")
+    Logger.info("🗑️ Subscription #{inspect(data)} deleted", component: :subscriptions_tracker)
 
     if StoreCluster.leader?(state[:store_id]) do
       try do
         Emitters.stop_emitter_pool(state[:store_id], data)
 
-        IO.puts("Successfully stopped EmitterPool for subscription #{data.subscription_name}")
+        Logger.info("🛑 Successfully stopped EmitterPool for subscription #{data.subscription_name}", component: :subscriptions_tracker)
       rescue
         error ->
-          IO.puts(
-            "Failed to stop EmitterPool for subscription #{data.subscription_name}: #{inspect(error)}"
-          )
+          Logger.error("❌ Failed to stop EmitterPool for subscription #{data.subscription_name}: #{inspect(error)}", component: :subscriptions_tracker)
       end
     end
 
@@ -83,7 +77,7 @@ defmodule ExESDB.SubscriptionsTracker do
   end
 
   def handle_info({:EXIT, pid, reason}, state) do
-    IO.puts("#{Themes.leader_tracker(pid, "exited with reason: #{inspect(reason)}")}")
+    Logger.warning("🚨 LeaderTracker #{inspect(pid)} exited with reason: #{inspect(reason)}", component: :leader_tracker)
     store = state[:store_id]
 
     store
@@ -102,7 +96,7 @@ defmodule ExESDB.SubscriptionsTracker do
   def init(opts) do
     Process.flag(:trap_exit, true)
     store = Keyword.get(opts, :store_id)
-    IO.puts("#{Themes.leader_tracker(self(), "is UP.")}")
+    Logger.info("📊 LeaderTracker #{inspect(self())} is UP.", component: :leader_tracker)
 
     :ok =
       store
@@ -113,7 +107,7 @@ defmodule ExESDB.SubscriptionsTracker do
 
   @impl true
   def terminate(reason, state) do
-    IO.puts("#{Themes.leader_tracker(self(), "terminating with reason: #{inspect(reason)}")}")
+    Logger.info("🔴 LeaderTracker #{inspect(self())} terminating with reason: #{inspect(reason)}", component: :leader_tracker)
     store = state[:store_id]
 
     store

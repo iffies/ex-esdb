@@ -8,7 +8,6 @@ defmodule ExESDB.StreamsWriterWorker do
   alias ExESDB.Options, as: Options
   alias ExESDB.StreamsHelper, as: Helper
   alias ExESDB.StreamsWriter, as: StreamsWriter
-  alias ExESDB.Themes, as: Themes
 
   require Logger
   require DateTime
@@ -151,8 +150,8 @@ defmodule ExESDB.StreamsWriterWorker do
     Process.flag(:trap_exit, true)
     ttl = Options.writer_idle_ms()
     name = StreamsWriter.hr_worker_id_atom(store, stream_id)
-    msg = "[#{inspect(name)}] is UP on partition #{inspect(partition)}, joining the cluster."
-    IO.puts("#{Themes.streams_writer_worker(self(), msg)}")
+    msg = "[🐛🔥] [#{inspect(self())}][StreamsWriterWorker] [#{inspect(name)}] is UP on partition #{inspect(partition)}, joining the cluster."
+    Logger.info(msg, component: :streams_writer_worker, pid: self())
     Swarm.register_name(name, self())
     check_idle(ttl)
 

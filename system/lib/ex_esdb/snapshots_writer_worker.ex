@@ -6,7 +6,8 @@ defmodule ExESDB.SnapshotsWriterWorker do
 
   alias ExESDB.Snapshots, as: Snapshots
   alias ExESDB.SnapshotsWriter, as: SnapshotsWriter
-  alias ExESDB.Themes, as: Themes
+
+  require Logger
 
   ################ PLUMBING ################
   @doc """
@@ -24,8 +25,8 @@ defmodule ExESDB.SnapshotsWriterWorker do
   def init({store, source_uuid, stream_uuid, partition}) do
     cluster_id = SnapshotsWriter.cluster_id(store, source_uuid, stream_uuid)
     Swarm.register_name(cluster_id, self())
-    msg = "[#{inspect(self())}] is UP on partition #{inspect(partition)}, joining the cluster."
-    IO.puts("#{Themes.snapshots_writer_worker(self(), msg)}")
+    msg = "[🔷📸] [#{inspect(self())}][SnapshotsWriterWorker] [#{inspect(self())}] is UP on partition #{inspect(partition)}, joining the cluster."
+    Logger.info(msg, component: :snapshots_writer_worker, pid: self())
     {:ok, {store, source_uuid, stream_uuid, partition}}
   end
 

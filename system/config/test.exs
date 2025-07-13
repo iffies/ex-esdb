@@ -7,6 +7,14 @@ config :ex_unit,
   exclude: [:skip],
   logger: true
 
+# Configure minimal logging for tests
+config :logger, :console,
+  format: {ExESDB.LogFormatter, :format},
+  level: :warning
+
+# Use minimal visual mode for tests (no emojis, clean output)
+config :ex_esdb, :visual_mode, :minimal
+
 config :ex_esdb, :khepri,
   data_dir: "tmp/ex_esdb_store",
   store_id: :ex_test_store,

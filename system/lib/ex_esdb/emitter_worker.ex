@@ -9,8 +9,6 @@ defmodule ExESDB.EmitterWorker do
   alias ExESDB.Options, as: Options
   alias Phoenix.PubSub, as: PubSub
 
-  require ExESDB.Themes, as: Themes
-
   require Logger
 
   defp send_or_kill_pool(pid, event, store, selector) do
@@ -32,17 +30,17 @@ defmodule ExESDB.EmitterWorker do
     topic = :emitter_group.topic(store, sub_topic)
     :ok = :emitter_group.join(store, sub_topic, self())
 
-    msg = "for #{inspect(topic)} is UP on scheduler #{inspect(scheduler_id)}"
+    msg = "[🟨⚫] [#{inspect(self())}][Emitter] for #{inspect(topic)} is UP on scheduler #{inspect(scheduler_id)}"
 
-    IO.puts("#{Themes.emitter_worker(self(), msg)}")
+    Logger.info(msg, component: :emitter_worker, pid: self())
 
     {:ok, %{subscriber: subscriber, store: store, selector: sub_topic}}
   end
 
   @impl GenServer
   def terminate(reason, %{store: store, selector: selector}) do
-    msg = "is TERMINATED with reason #{inspect(reason)}"
-    IO.puts("#{Themes.emitter_worker(self(), msg)}")
+    msg = "[🟨⚫] [#{inspect(self())}][Emitter] is TERMINATED with reason #{inspect(reason)}"
+    Logger.info(msg, component: :emitter_worker, pid: self())
     :ok = :emitter_group.leave(store, selector, self())
     :ok
   end

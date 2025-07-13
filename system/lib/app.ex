@@ -6,7 +6,6 @@ defmodule ExESDB.App do
     otp_app: :ex_esdb
 
   alias ExESDB.Options, as: Options
-  alias ExESDB.Themes, as: Themes
 
   require Logger
   require Phoenix.PubSub
@@ -24,7 +23,7 @@ defmodule ExESDB.App do
     opts = [strategy: :one_for_one, name: ExESDB.Supervisor]
     res = Supervisor.start_link(children, opts)
 
-    IO.puts("#{Themes.app(self(), "is UP for store #{inspect(store_id)}")}")
+    Logger.info("🚀 ExESDB.App #{inspect(self())} is UP for store #{inspect(store_id)}", component: :app)
 
     res
   end

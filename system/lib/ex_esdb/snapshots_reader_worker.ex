@@ -9,7 +9,7 @@ defmodule ExESDB.SnapshotsReaderWorker do
 
   import ExESDB.Khepri.Conditions
 
-  alias ExESDB.Themes, as: Themes
+  require Logger
 
   ################ PLUMBING ################
   def start_link({store, source_uuid, stream_uuid, partition}) do
@@ -23,9 +23,9 @@ defmodule ExESDB.SnapshotsReaderWorker do
   @impl true
   def init({store, source_uuid, stream_uuid, partition}) do
     cluster_id = SnapshotsReader.cluster_id(store, source_uuid, stream_uuid)
-    msg = "[#{inspect(self())}] is UP on partition #{inspect(partition)}, joining the cluster."
+    msg = "[🔷📸] [#{inspect(self())}][SnapshotsReaderWorker] [#{inspect(self())}] is UP on partition #{inspect(partition)}, joining the cluster."
     Swarm.register_name(cluster_id, self())
-    IO.puts("#{Themes.snapshots_reader_worker(self(), msg)}")
+    Logger.info(msg, component: :snapshots_reader_worker, pid: self())
     {:ok, {store, source_uuid, stream_uuid, partition}}
   end
 

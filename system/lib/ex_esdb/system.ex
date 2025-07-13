@@ -13,7 +13,6 @@ defmodule ExESDB.System do
   use Supervisor
 
   alias ExESDB.Options, as: Options
-  alias ExESDB.Themes, as: Themes
 
   require Logger
   require Phoenix.PubSub
@@ -66,7 +65,7 @@ defmodule ExESDB.System do
       )
 
     msg = "is UP in #{db_type} mode!"
-    IO.puts("#{Themes.system(self(), msg)}")
+    Logger.info("[#{inspect(self())}][System] #{msg}", component: :system, pid: self())
     ret
   end
 
@@ -81,7 +80,7 @@ defmodule ExESDB.System do
         stop(:sigquit)
 
       msg ->
-        IO.puts("Unknown signal: #{inspect(msg)}")
+        Logger.warning("[#{inspect(self())}][System] Unknown signal: #{inspect(msg)}", component: :system, pid: self())
         Logger.warning("Received unknown signal: #{inspect(msg)}")
     end
 

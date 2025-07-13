@@ -11,7 +11,7 @@ defmodule ExESDB.StoreSystem do
   """
   use Supervisor
   
-  alias ExESDB.Themes, as: Themes
+  require Logger
 
   @impl true
   def init(opts) do
@@ -21,7 +21,7 @@ defmodule ExESDB.StoreSystem do
       {ExESDB.StoreCluster, opts}
     ]
 
-    IO.puts("#{Themes.system(self(), "StoreSystem is UP")}")
+    Logger.info("🏗️ StoreSystem #{inspect(self())} is UP", component: :system)
     
     # Use :rest_for_one because StoreCluster depends on Store
     Supervisor.init(children, 

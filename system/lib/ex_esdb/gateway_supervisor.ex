@@ -10,7 +10,6 @@ defmodule ExESDB.GatewaySupervisor do
   """
   use Supervisor
   require Logger
-  alias ExESDB.Themes, as: Themes
 
   @impl Supervisor
   def init(opts) do
@@ -19,7 +18,7 @@ defmodule ExESDB.GatewaySupervisor do
         {ExESDB.GatewayWorker, opts}
       ]
 
-    IO.puts("#{Themes.gateway_supervisor(self(), "is UP!")}")
+    Logger.info("[#{inspect(self())}][GatewaySupervisor] is UP!", component: :gateway_supervisor, pid: self())
     Supervisor.init(children, strategy: :one_for_one)
   end
 

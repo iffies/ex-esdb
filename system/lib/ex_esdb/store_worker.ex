@@ -7,8 +7,6 @@ defmodule ExESDB.StoreWorker do
 
   require Logger
 
-  alias ExESDB.Themes, as: Themes
-
   defp start_khepri(opts) do
     store = opts[:store_id]
     timeout = opts[:timeout]
@@ -60,7 +58,7 @@ defmodule ExESDB.StoreWorker do
   # Server Callbacks
   @impl true
   def init(opts) do
-    IO.puts(Themes.store(self(), "is UP."))
+    Logger.info("💾 Store #{inspect(self())} is UP.", component: :store)
     Process.flag(:trap_exit, true)
 
     case start_khepri(opts) do

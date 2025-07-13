@@ -11,10 +11,10 @@ defmodule ExESDB.LeaderTracker do
     the associated EmitterPool.
   """
   use GenServer
+  require Logger
 
   alias ExESDB.Emitters, as: Emitters
   alias ExESDB.StoreCluster, as: StoreCluster
-  alias ExESDB.Themes, as: Themes
 
   ########### PRIVATE HELPERS ###########
 
@@ -48,7 +48,7 @@ defmodule ExESDB.LeaderTracker do
 
       # Fallback: log the data format and return a default structure
       _ ->
-        IO.puts("Warning: Unknown subscription data format: #{inspect(data)}")
+        Logger.warning("Unknown subscription data format", data: data)
 
         %{
           type: :by_stream,
@@ -62,7 +62,7 @@ defmodule ExESDB.LeaderTracker do
   ########### HANDLE_INFO ###########
   @impl GenServer
   def handle_info({:feature_created, :subscriptions, data}, state) do
-    IO.puts("Subscription #{inspect(data)} registered")
+    Logger.info("Subscription registered", data: data)
     store = state[:store_id]
 
     if StoreCluster.leader?(store) do
@@ -71,19 +71,13 @@ defmodule ExESDB.LeaderTracker do
 
       case Emitters.start_emitter_pool(store, subscription_data) do
         {:ok, _pid} ->
-          IO.puts(
-            "Successfully started EmitterPool for subscription #{subscription_data.subscription_name}"
-          )
+          Logger.info("Successfully started EmitterPool for subscription", subscription_name: subscription_data.subscription_name)
 
         {:error, {:already_started, _pid}} ->
-          IO.puts(
-            "EmitterPool already exists for subscription #{subscription_data.subscription_name}"
-          )
+          Logger.info("EmitterPool already exists for subscription", subscription_name: subscription_data.subscription_name)
 
         {:error, reason} ->
-          IO.puts(
-            "Failed to start EmitterPool for subscription #{subscription_data.subscription_name}: #{inspect(reason)}"
-          )
+          Logger.error("Failed to start EmitterPool for subscription", subscription_name: subscription_data.subscription_name, reason: reason)
       end
     end
 
@@ -92,7 +86,7 @@ defmodule ExESDB.LeaderTracker do
 
   @impl GenServer
   def handle_info({:feature_updated, :subscriptions, data}, state) do
-    IO.puts("Subscription #{inspect(data)} updated")
+    Logger.info("Subscription updated", data: data)
 
     if StoreCluster.leader?(state[:store_id]) do
       subscription_data = format_subscription_data(data)
@@ -100,14 +94,10 @@ defmodule ExESDB.LeaderTracker do
       try do
         Emitters.update_emitter_pool(state[:store_id], subscription_data)
 
-        IO.puts(
-          "Successfully updated EmitterPool for subscription #{subscription_data.subscription_name}"
-        )
+        Logger.info("Successfully updated EmitterPool for subscription", subscription_name: subscription_data.subscription_name)
       rescue
         error ->
-          IO.puts(
-            "Failed to update EmitterPool for subscription #{subscription_data.subscription_name}: #{inspect(error)}"
-          )
+          Logger.error("Failed to update EmitterPool for subscription", subscription_name: subscription_data.subscription_name, error: error)
       end
     end
 
@@ -116,7 +106,7 @@ defmodule ExESDB.LeaderTracker do
 
   @impl GenServer
   def handle_info({:feature_deleted, :subscriptions, data}, state) do
-    IO.puts("Subscription #{inspect(data)} deleted")
+    Logger.info("Subscription deleted", data: data)
 
     if StoreCluster.leader?(state[:store_id]) do
       subscription_data = format_subscription_data(data)
@@ -124,14 +114,10 @@ defmodule ExESDB.LeaderTracker do
       try do
         Emitters.stop_emitter_pool(state[:store_id], subscription_data)
 
-        IO.puts(
-          "Successfully stopped EmitterPool for subscription #{subscription_data.subscription_name}"
-        )
+        Logger.info("Successfully stopped EmitterPool for subscription", subscription_name: subscription_data.subscription_name)
       rescue
         error ->
-          IO.puts(
-            "Failed to stop EmitterPool for subscription #{subscription_data.subscription_name}: #{inspect(error)}"
-          )
+          Logger.error("Failed to stop EmitterPool for subscription", subscription_name: subscription_data.subscription_name, error: error)
       end
     end
 
@@ -139,7 +125,7 @@ defmodule ExESDB.LeaderTracker do
   end
 
   def handle_info({:EXIT, pid, reason}, state) do
-    IO.puts("#{Themes.leader_tracker(pid, "exited with reason: #{inspect(reason)}")}")
+    Logger.info("exited with reason", component: :leader_tracker, pid: pid, reason: reason)
     store = state[:store_id]
 
     store
@@ -158,7 +144,7 @@ defmodule ExESDB.LeaderTracker do
   def init(opts) do
     Process.flag(:trap_exit, true)
     store = Keyword.get(opts, :store_id)
-    IO.puts("#{Themes.leader_tracker(self(), "is UP.")}")
+    Logger.info("is UP.", component: :leader_tracker, pid: self())
 
     :ok =
       store
@@ -169,7 +155,7 @@ defmodule ExESDB.LeaderTracker do
 
   @impl true
   def terminate(reason, state) do
-    IO.puts("#{Themes.leader_tracker(self(), "terminating with reason: #{inspect(reason)}")}")
+    Logger.info("terminating with reason", component: :leader_tracker, pid: self(), reason: reason)
     store = state[:store_id]
 
     store

@@ -6,7 +6,6 @@ defmodule ExESDB.SubscriptionsReader do
 
   import ExESDB.Khepri.Conditions
 
-  alias ExESDB.Themes, as: Themes
   require Logger
 
   def get_subscriptions(store),
@@ -48,7 +47,7 @@ defmodule ExESDB.SubscriptionsReader do
 
   @impl true
   def init(opts) do
-    IO.puts("#{Themes.subscriptions_reader(self(), "is UP")}")
+    Logger.info("📖 SubscriptionsReader #{inspect(self())} is UP", component: :subscriptions_reader)
     {:ok, opts}
   end
 

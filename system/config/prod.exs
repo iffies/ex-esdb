@@ -10,9 +10,10 @@ config :ra,
   logger: true
 
 config :logger, :console,
-  format: "$time ($metadata) [$level] $message\n",
-  metadata: [:mfa],
+  format: {ExESDB.LogFormatter, :format},
+  metadata: [:component],
   level: :info,
+  colors: [enabled: false],
   # Production filters to minimize noise
   filters: [
     ra_noise: {ExESDB.LoggerFilters, :filter_ra},
@@ -20,6 +21,9 @@ config :logger, :console,
     swarm_noise: {ExESDB.LoggerFilters, :filter_swarm},
     libcluster_noise: {ExESDB.LoggerFilters, :filter_libcluster}
   ]
+
+# Use minimal visual mode for production (no emojis, clean timestamps)
+config :ex_esdb, :visual_mode, :minimal
 
 config :ex_esdb,
   logger: true,

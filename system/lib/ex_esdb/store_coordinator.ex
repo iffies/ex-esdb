@@ -11,7 +11,6 @@ defmodule ExESDB.StoreCoordinator do
   use GenServer
   require Logger
 
-  alias ExESDB.Themes, as: Themes
 
   @doc """
   Attempts to join a Khepri cluster using coordinated approach to prevent split-brain.
@@ -32,7 +31,7 @@ defmodule ExESDB.StoreCoordinator do
 
   @impl true
   def init(_opts) do
-    IO.puts(Themes.store_coordinator(self(), "is UP"))
+    Logger.info("[#{inspect(self())}][StoreCoordinator] is UP", component: :store_coordinator, pid: self())
     {:ok, %{}}
   end
 
@@ -65,10 +64,8 @@ defmodule ExESDB.StoreCoordinator do
       :no_nodes
     else
       Logger.info(
-        Themes.store_coordinator(
-          node(),
-          "=> Attempting to join Khepri cluster via LibCluster discovered nodes: #{inspect(connected_nodes)}"
-        )
+        "[#{inspect(node())}][StoreCoordinator] => Attempting to join Khepri cluster via LibCluster discovered nodes: #{inspect(connected_nodes)}",
+        component: :store_coordinator, node: node()
       )
 
       # Find nodes that already have Khepri clusters running
@@ -89,19 +86,15 @@ defmodule ExESDB.StoreCoordinator do
   defp handle_no_existing_clusters(connected_nodes) do
     if should_be_store_coordinator(connected_nodes) do
       Logger.info(
-        Themes.store_coordinator(
-          node(),
-          "=> Elected as cluster coordinator, starting new cluster"
-        )
+        "[#{inspect(node())}][StoreCoordinator] => Elected as cluster coordinator, starting new cluster",
+        component: :store_coordinator, node: node()
       )
 
       :coordinator
     else
       Logger.info(
-        Themes.store_coordinator(
-          node(),
-          "=> Waiting for cluster coordinator to establish cluster"
-        )
+        "[#{inspect(node())}][StoreCoordinator] => Waiting for cluster coordinator to establish cluster",
+        component: :store_coordinator, node: node()
       )
 
       :waiting
@@ -110,49 +103,39 @@ defmodule ExESDB.StoreCoordinator do
 
   defp join_existing_cluster(store, target_node) do
     Logger.info(
-      Themes.store_coordinator(
-        node(),
-        "=> Joining existing ExESDB cluster via: #{inspect(target_node)}"
-      )
+      "[#{inspect(node())}][StoreCoordinator] => Joining existing ExESDB cluster via: #{inspect(target_node)}",
+      component: :store_coordinator, node: node()
     )
 
     case :khepri_cluster.join(store, target_node) do
       :ok ->
         Logger.info(
-          Themes.store_coordinator(
-            node(),
-            "=> Successfully joined existing Khepri cluster via #{inspect(target_node)}"
-          )
+          "[#{inspect(node())}][StoreCoordinator] => Successfully joined existing Khepri cluster via #{inspect(target_node)}",
+          component: :store_coordinator, node: node()
         )
 
         # Verify we actually joined by checking members
         case :khepri_cluster.members(store) do
           {:ok, members} when length(members) > 1 ->
             Logger.info(
-              Themes.store_coordinator(
-                node(),
-                "=> Cluster join verified, now part of #{length(members)}-node cluster"
-              )
+              "[#{inspect(node())}][StoreCoordinator] => Cluster join verified, now part of #{length(members)}-node cluster",
+              component: :store_coordinator, node: node()
             )
 
             :ok
 
           {:ok, [_single]} ->
             Logger.warning(
-              Themes.store_coordinator(
-                node(),
-                "=> Join appeared successful but still only 1 member, may need retry"
-              )
+              "[#{inspect(node())}][StoreCoordinator] => Join appeared successful but still only 1 member, may need retry",
+              component: :store_coordinator, node: node()
             )
 
             :ok
 
           {:error, verify_reason} ->
             Logger.error(
-              Themes.store_coordinator(
-                node(),
-                "=> Join succeeded but verification failed: #{inspect(verify_reason)}"
-              )
+              "[#{inspect(node())}][StoreCoordinator] => Join succeeded but verification failed: #{inspect(verify_reason)}",
+              component: :store_coordinator, node: node()
             )
 
             :ok
@@ -160,10 +143,8 @@ defmodule ExESDB.StoreCoordinator do
 
       {:error, reason} ->
         Logger.warning(
-          Themes.store_coordinator(
-            node(),
-            "=> Failed to join via #{inspect(target_node)}: #{inspect(reason)}"
-          )
+          "[#{inspect(node())}][StoreCoordinator] => Failed to join via #{inspect(target_node)}: #{inspect(reason)}",
+          component: :store_coordinator, node: node()
         )
 
         :failed
@@ -178,37 +159,32 @@ defmodule ExESDB.StoreCoordinator do
         case :rpc.call(node, :khepri_cluster, :members, [store], 5000) do
           {:ok, members} when members != [] ->
             Logger.debug(
-              Themes.store_coordinator(
-                node(),
-                "=> Found existing cluster on #{inspect(node)} with #{length(members)} members"
-              )
+              "[#{inspect(node())}][StoreCoordinator] => Found existing cluster on #{inspect(node)} with #{length(members)} members",
+              component: :store_coordinator, node: node()
             )
 
             true
 
           {:ok, []} ->
             Logger.debug(
-              Themes.store_coordinator(node(), " => Node #{inspect(node)} has empty cluster")
+              "[#{inspect(node())}][StoreCoordinator] => Node #{inspect(node)} has empty cluster",
+              component: :store_coordinator, node: node()
             )
 
             false
 
           {:error, reason} ->
             Logger.debug(
-              Themes.store_coordinator(
-                node(),
-                "=> Node #{inspect(node)} cluster check failed: #{inspect(reason)}"
-              )
+              "[#{inspect(node())}][StoreCoordinator] => Node #{inspect(node)} cluster check failed: #{inspect(reason)}",
+              component: :store_coordinator, node: node()
             )
 
             false
 
           other ->
             Logger.debug(
-              Themes.store_coordinator(
-                node(),
-                " => Node #{inspect(node)} unexpected response: #{inspect(other)}"
-              )
+              "[#{inspect(node())}][StoreCoordinator] => Node #{inspect(node)} unexpected response: #{inspect(other)}",
+              component: :store_coordinator, node: node()
             )
 
             false
@@ -216,20 +192,16 @@ defmodule ExESDB.StoreCoordinator do
       rescue
         e ->
           Logger.debug(
-            Themes.store_coordinator(
-              node(),
-              "=> Node #{inspect(node)} cluster check exception: #{inspect(e)}"
-            )
+            "[#{inspect(node())}][StoreCoordinator] => Node #{inspect(node)} cluster check exception: #{inspect(e)}",
+            component: :store_coordinator, node: node()
           )
 
           false
       catch
         type, reason ->
           Logger.debug(
-            Themes.store_coordinator(
-              node(),
-              "=> Node #{inspect(node)} cluster check caught: #{inspect(type)} #{inspect(reason)}"
-            )
+            "[#{inspect(node())}][StoreCoordinator] => Node #{inspect(node)} cluster check caught: #{inspect(type)} #{inspect(reason)}",
+            component: :store_coordinator, node: node()
           )
 
           false

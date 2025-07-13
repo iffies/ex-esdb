@@ -15,7 +15,6 @@ defmodule ExESDB.GatewayWorker do
   alias ExESDB.StreamsReader, as: StreamsR
   alias ExESDB.StreamsWriter, as: StreamsW
 
-  alias ExESDB.Themes, as: Themes
   alias ExESDB.ConsistencyChecker, as: ConsistencyChecker
 
   require Logger
@@ -310,7 +309,7 @@ defmodule ExESDB.GatewayWorker do
     name = gateway_worker_name(store_id)
     new_state = Keyword.put(opts, :gateway_worker_name, name)
     msg = "[#{inspect(name)}] is UP, joining the cluster."
-    IO.puts(Themes.gateway_worker(self(), msg))
+    Logger.info(msg, component: :gateway_worker, pid: self())
 
     # Register with Swarm if available
     case register_with_swarm(name) do
@@ -365,7 +364,7 @@ defmodule ExESDB.GatewayWorker do
   def terminate(reason, state) do
     name = Keyword.get(state, :gateway_worker_name)
     msg = "[#{inspect(name)}] is TERMINATED with reason #{inspect(reason)}, leaving the cluster."
-    IO.puts("#{Themes.gateway_worker(self(), msg)}")
+    Logger.info(msg, component: :gateway_worker, pid: self())
     unregister_from_swarm(name)
     :ok
   end
@@ -374,7 +373,7 @@ defmodule ExESDB.GatewayWorker do
   def handle_info({:EXIT, _pid, reason}, state) do
     name = Keyword.get(state, :gateway_worker_name)
     msg = "[#{inspect(name)}] is EXITING with reason #{inspect(reason)}, leaving the cluster."
-    IO.puts("#{Themes.gateway_worker(self(), msg)}")
+    Logger.info(msg, component: :gateway_worker, pid: self())
     unregister_from_swarm(name)
     {:noreply, state}
   end

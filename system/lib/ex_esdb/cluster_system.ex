@@ -9,8 +9,7 @@ defmodule ExESDB.ClusterSystem do
   Note: StoreCluster is managed at the System level since it's mode-aware.
   """
   use Supervisor
-
-  alias ExESDB.Themes, as: Themes
+  require Logger
 
   @impl true
   def init(opts) do
@@ -21,7 +20,7 @@ defmodule ExESDB.ClusterSystem do
       {ExESDB.NodeMonitor, node_monitor_config(opts)}
     ]
 
-    IO.puts("#{Themes.cluster_system(self(), "is UP")}")
+    Logger.info("[#{inspect(self())}][ClusterSystem] is UP", component: :cluster_system, pid: self())
 
     Supervisor.init(children, strategy: :one_for_one)
   end
