@@ -28,13 +28,13 @@ The visual logging system converts traditional `IO.puts` calls to structured `Lo
 - ⚙️ Processing/working
 - 🥈 Follower/non-leader node
 
-### Component Themes
-Each component has a unique colored prefix:
-- `KHEPRI CLUSTER` - Yellow on blue
-- `LEADER_WORKER` - Black on magenta
-- `GATEWAY_WORKER` - Bright cyan on black
-- `EMITTER_POOL` - Yellow on black
-- And many more...
+### Component Prefixes
+Each component has a clear bracketed prefix format:
+- `[STORE CLUSTER #PID<0.123.0>]` - Cluster operations
+- `[LEADER WORKER #PID<0.456.0>]` - Leader responsibilities  
+- `[GATEWAY WORKER #PID<0.789.0>]` - API gateway operations
+- `[EMITTER POOL #PID<0.234.0>]` - Event emission
+- And more components following the same pattern
 
 ## Configuration
 
@@ -50,7 +50,7 @@ config :ex_esdb, :visual_mode, :full
 
 Output example:
 ```
-KHEPRI CLUSTER [#PID<0.685.0>] ==> 🚀 ACTIVATING LEADERSHIP RESPONSIBILITIES
+[STORE CLUSTER #PID<0.685.0>] ==> 🚀 ACTIVATING LEADERSHIP RESPONSIBILITIES
   🏆 Node: :node1@host
   📊 Store: :ex_esdb_store
   📝 Managing 3 active subscriptions
@@ -68,7 +68,7 @@ config :ex_esdb, :visual_mode, :standard
 
 Output example:
 ```
-[12:34:56] [info] [KHEPRI CLUSTER #PID<0.685.0>] ==> 🚀 ACTIVATING LEADERSHIP RESPONSIBILITIES
+[12:34:56] [info] [STORE CLUSTER #PID<0.685.0>] ==> 🚀 ACTIVATING LEADERSHIP RESPONSIBILITIES
 [12:34:56] [info]   🏆 Node: :node1@host
 ```
 
@@ -84,8 +84,8 @@ config :ex_esdb, :visual_mode, :minimal
 
 Output example:
 ```
-[12:34:56] [info] [KHEPRI CLUSTER] ACTIVATING LEADERSHIP RESPONSIBILITIES
-[12:34:56] [info] [KHEPRI CLUSTER] Node: :node1@host
+[12:34:56] [info] [STORE CLUSTER] ACTIVATING LEADERSHIP RESPONSIBILITIES
+[12:34:56] [info] [STORE CLUSTER] Node: :node1@host
 ```
 
 ### Testing (Suppressed)
@@ -130,7 +130,7 @@ The `ExESDB.LogFormatter` module provides three formatting modes:
 3. **`:minimal`** - Production-ready minimal output without emojis
 
 The formatter automatically:
-- Applies component-specific color themes in full mode
+- Applies component-specific bracketed prefixes in full mode
 - Handles hierarchical indentation
 - Adds arrow indicators for main events
 - Strips emojis in minimal mode for clean production logs
@@ -150,11 +150,11 @@ The conversion from `IO.puts` to `Logger` preserves all visual elements:
 
 ```elixir
 # Before
-IO.puts("#{Themes.cluster(self())} ==> 🚀 ACTIVATING")
+IO.puts("#{Themes.store_cluster(self(), "🚀 ACTIVATING")}")
 
 # After
 Logger.info("🚀 ACTIVATING",
-  component: :cluster,
+  component: :store_cluster,
   pid: self(),
   arrow: true
 )

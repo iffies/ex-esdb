@@ -54,11 +54,7 @@ defmodule ExESDB.LogFormatter do
     
     # Get the themed prefix if component is specified
     prefix = if component && pid do
-      try do
-        apply(ExESDB.Themes, component, [pid, ""])
-      rescue
-        _ -> format_fallback_prefix(component, pid)
-      end
+      format_fallback_prefix(component, pid)
     else
       ""
     end
